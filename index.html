@@ -1,253 +1,294 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chronomètre Vitesse</title>
-    <style>
-        /* Styles de base */
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f4f4f4;
-        }
-        h1 {
-            color: #333;
-        }
-        #timer-display {
-            font-size: 2em;
-            margin-bottom: 20px;
-        }
-        #input-controls {
-            margin-top: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        #input-controls label {
-            margin: 5px;
-            font-size: 16px; /* Augmenter la taille de la police pour les labels */
-        }
-        #input-controls input {
-            margin: 5px;
-            font-size: 16px; /* Augmenter la taille de la police pour les champs de saisie */
-            padding: 10px; /* Ajouter du rembourrage pour agrandir les champs */
-            width: 150px; /* Largeur des champs de saisie */
-            max-width: 80%; /* Limiter la largeur à 80% pour être responsive */
-        }
-        #timer-controls {
-            margin-top: 20px;
-            display: flex;
-            justify-content: center;
-        }
-        #timer-controls button {
-            padding: 0;
-            font-size: 14px;
-            font-weight: bold;
-            width: 60px;
-            height: 60px;
-            border: none;
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 5px; /* Ajout d'espacement entre les boutons */
-        }
-        #start-button, #stop-button {
-            background-color: #008CBA;
-            border-radius: 50%;
-        }
-        #intermediate-button {
-            background-color: #4CAF50;
-            border-radius: 50%;
-        }
-        #reset-button, #download-button {
-            background-color: #f44336;
-            border-radius: 5px;
-            padding: 10px 20px;
-            margin-top: 10px; /* Pour espacer des boutons du dessus */
-        }
-        #download-button {
-            background-color: #FF9800;
-        }
-        #results {
-            margin-top: 20px;
-            width: 80%;
-            max-width: 400px;
-        }
-        #results ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        #results li {
-            background: #e0e0e0;
-            margin-bottom: 5px;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        #final-result {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 5px;
-            background-color: #D0E8FF;
-            color: #333;
-            font-weight: bold;
-        }
-        #creator {
-            margin-top: 30px;
-            text-align: center;
-            font-size: 0.9em;
-        }
-        #creator a {
-            color: #4CAF50;
-            text-decoration: none;
-        }
-        /* Responsive styles */
-        @media (max-width: 600px) {
-            #timer-controls button {
-                width: 50px;
-                height: 50px;
-                font-size: 12px;
-            }
-            #input-controls input {
-                width: 120px; /* Ajustement pour petits écrans */
-            }
-        }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LaserRun</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f4f7fb; --card:#ffffff; --ink:#111827; --muted:#6b7280; --primary:#0a58ff;
+    --green:#22c55e; --amber:#f59e0b; --red:#ef4444; --violet:#7c3aed; --slate:#334155;
+    --radius:16px; --ring:0 8px 40px rgba(2,6,23,.08);
+    --panel1:#e8f1ff; --panel2:#e9fbe8; --band:#eef2f7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+  header,footer{background:#fff}
+  footer{border-top:1px solid #e5e7eb;color:var(--muted);text-align:center;padding:10px 0}
+  .shell{max-width:980px;margin:0 auto;padding:16px}
+  h1{font-size:clamp(22px,3.4vw,32px);margin:8px 0 4px;font-weight:800;text-align:center}
+  h2{font-size:clamp(20px,2.8vw,28px);margin:8px 0 12px;font-weight:800;text-align:center}
+  h3{margin:0 0 10px;font-size:18px;text-align:center}
+  p{margin:0 0 8px;text-align:center}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--ring);padding:16px;margin:12px 0}
+  .btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  button{border:0;border-radius:16px;padding:14px 18px;font-weight:800;cursor:pointer;font-size:18px}
+  .b-primary{background:var(--primary);color:#fff}
+  .b-green{background:var(--green);color:#fff}
+  .b-amber{background:var(--amber);color:#111}
+  .b-red{background:var(--red);color:#fff}
+  .b-violet{background:var(--violet);color:#fff}
+  .b-slate{background:var(--slate);color:#fff}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .panel{border-radius:16px;padding:16px}
+  .panel h3{margin:0 0 10px;font-size:16px;letter-spacing:.2px}
+  .panel1{background:var(--panel1)}
+  .panel2{background:var(--panel2)}
+  .band{background:var(--band);border-radius:12px;padding:10px 12px;margin-top:16px;font-weight:700}
+  label{display:block;font-weight:800;margin:10px 0 6px}
+  input,select{width:100%;padding:14px 16px;border:2px solid #e5e7eb;border-radius:14px;background:#fff;font:inherit}
+  input[type=number]{appearance:textfield}
+  select{background:#fff}
+  .muted{color:var(--muted)}
+  .hidden{display:none!important}
+  .center{text-align:center}
+  .big{font-size:40px;font-weight:900}
+  .xl{font-size:60px;font-weight:900}
+  .pill{display:inline-block;padding:6px 12px;border-radius:999px;background:#eef2f7}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:12px;border-bottom:1px solid #e5e7eb;text-align:center;font-size:16px}
+</style>
 </head>
 <body>
+  <!-- ===== Page de garde ===== -->
+  <main class="shell" id="view-cover">
+    <section class="card center">
+      <h1>LaserRun</h1>
+      <p class="muted">Application EPS — compatible ScanProf</p>
+      <div class="btns" style="margin-top:20px">
+        <button class="b-primary tap" id="btnStart">▶️ Démarrer</button>
+        <button class="b-slate tap" id="btnHelp">❓ Aide</button>
+      </div>
+    </section>
+  </main>
 
-    <h1>Chronomètre Vitesse</h1>
+  <!-- ===== Page Saisie 2 élèves ===== -->
+  <main class="shell hidden" id="view-duo">
+    <section class="card">
+      <h2>Saisie des informations</h2>
+      <p class="muted">Identité des deux coureurs + paramètres de course communs.</p>
+      <div class="row">
+        <div class="panel panel1">
+          <h3>COUREUR 1</h3>
+          <label>Prénom</label>
+          <input id="p1_prenom" required autocomplete="off"/>
+          <label>Nom</label>
+          <input id="p1_nom" required autocomplete="off"/>
+          <label>Classe</label>
+          <input id="p1_classe" required autocomplete="off"/>
+          <label>Sexe</label>
+          <select id="p1_sexe" required>
+            <option value="">—</option>
+            <option>F</option>
+            <option>M</option>
+          </select>
+        </div>
+        <div class="panel panel2">
+          <h3>COUREUR 2</h3>
+          <label>Prénom</label>
+          <input id="p2_prenom" required autocomplete="off"/>
+          <label>Nom</label>
+          <input id="p2_nom" required autocomplete="off"/>
+          <label>Classe</label>
+          <input id="p2_classe" required autocomplete="off"/>
+          <label>Sexe</label>
+          <select id="p2_sexe" required>
+            <option value="">—</option>
+            <option>F</option>
+            <option>M</option>
+          </select>
+        </div>
+      </div>
 
-    <div id="input-controls">
-        <label for="total-distance">Distance Totale (m) :</label>
-        <input type="number" id="total-distance" value="800">
-        <label for="intermediate-distance">Distance Intermédiaire (m) :</label>
-        <input type="number" id="intermediate-distance" value="200">
-    </div>
+      <div class="band">Paramètres de course (communs)</div>
+      <div class="row">
+        <div>
+          <label>Durée (minutes)</label>
+          <input id="duree_min" type="number" inputmode="numeric" min="1" step="1" placeholder="ex. 20" required/>
+        </div>
+        <div>
+          <label>Longueur d'un tour (m)</label>
+          <input id="tour_m" type="number" inputmode="numeric" min="10" step="1" placeholder="ex. 200" required/>
+        </div>
+      </div>
 
-    <div id="timer-display">00:00:00</div>
+      <div class="btns" style="margin-top:18px">
+        <button class="b-primary" id="goCourse" disabled>Accéder à la course</button>
+        <button class="b-slate" id="goHome">🏠 Accueil</button>
+      </div>
+    </section>
+  </main>
 
-    <div id="timer-controls">
-        <button id="start-button">Start</button>
-        <button id="intermediate-button">Tour</button>
-        <button id="stop-button">Stop</button>
-    </div>
-    
-    <div id="additional-controls">
-        <button id="reset-button">Réinitialiser</button>
-        <button id="download-button">Télécharger</button>
-    </div>
+  <!-- ===== Page course : chrono + tours + tir ===== -->
+  <main class="shell hidden" id="view-course">
+    <section class="card center">
+      <div class="btns" style="margin-bottom:8px">
+        <button class="b-slate" id="backToDuo">⬅ Retour saisie</button>
+        <span class="pill" id="courseMeta">—</span>
+      </div>
+      <h2 id="runnerTitle">Coureur — </h2>
+      <div class="btns" style="margin-bottom:6px">
+        <button class="b-green" id="pickP1">👟 Coureur 1</button>
+        <button class="b-green" id="pickP2">👟 Coureur 2</button>
+      </div>
 
-    <div id="results">
-        <h3>Temps Intermédiaires</h3>
-        <ul id="time-list"></ul>
-        <p id="final-result"></p>
-    </div>
+      <div class="card" style="max-width:720px;margin:0 auto 12px">
+        <div class="xl" id="clock">00:00.0</div>
+        <div class="btns" style="margin-top:8px">
+          <button class="b-primary" id="btnStartCourse">▶️ Start</button>
+          <button class="b-amber" id="btnPause" disabled>⏸️ Pause</button>
+          <button class="b-red" id="btnReset" disabled>↺ Réinit.</button>
+        </div>
+        <p class="muted">Durée cible : <strong id="target"></strong> min</p>
+      </div>
 
-    <div id="creator">
-        <p>Créé par Jérôme BARLETTA</p>
-        <a href="http://bjerome.eklablog.com/accueil-c30088056" target="_blank">Accéder au blog</a>
-    </div>
+      <div class="row" style="max-width:720px;margin:0 auto">
+        <div class="card">
+          <h3>🏁 Tours</h3>
+          <div class="big" id="laps">0</div>
+          <p class="muted">1 tour = <span id="lapMeters">—</span> m</p>
+          <div class="btns">
+            <button class="b-green" id="lapPlus">+1 tour</button>
+            <button class="b-slate" id="lapMinus">−1</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>🎯 Tir (5 LED)</h3>
+          <div class="btns">
+            <select id="ledSelect" style="max-width:220px">
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5" selected>5</option>
+            </select>
+            <button class="b-violet" id="addShot">+ Ajouter session</button>
+          </div>
+          <div style="overflow:auto;margin-top:8px">
+            <table>
+              <thead><tr><th>#</th><th>LED allumées</th><th>Action</th></tr></thead>
+              <tbody id="shotsTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
-    <script>
-        let startTime = null;
-        let intervalId = null;
-        let intermediateTimes = [];
-        let totalDistance = 800;
-        let intermediateDistance = 200;
-        let currentDistance = 0;
+      <div class="card hidden" id="endCard" style="max-width:720px;margin:12px auto 0">
+        <h3>⏱️ Temps écoulé — compléter la fraction de tour</h3>
+        <div class="btns">
+          <button class="b-slate" data-frac="0.25">+ 1/4 tour</button>
+          <button class="b-slate" data-frac="0.5">+ 1/2 tour</button>
+          <button class="b-slate" data-frac="0.75">+ 3/4 tour</button>
+          <button class="b-green" id="finishRunner">✅ Valider le coureur</button>
+        </div>
+        <p class="muted" id="distanceOut">Distance: — m</p>
+      </div>
+    </section>
+  </main>
 
-        const timerDisplay = document.getElementById('timer-display');
-        const timeList = document.getElementById('time-list');
-        const finalResult = document.getElementById('final-result');
+  <footer>
+    <div>LaserRun - Équipe EPS Lycée Vauban - LUXEMBOURG - JB</div>
+  </footer>
 
-        const startButton = document.getElementById('start-button');
-        const intermediateButton = document.getElementById('intermediate-button');
-        const stopButton = document.getElementById('stop-button');
-        const resetButton = document.getElementById('reset-button');
-        const downloadButton = document.getElementById('download-button');
+  <script>
+  'use strict';
+  // ===== helpers / navigation =====
+  function qs(sel){ return document.querySelector(sel); }
+  const V = { cover: qs('#view-cover'), duo: qs('#view-duo'), course: qs('#view-course') };
+  function show(name){ Object.values(V).forEach(v=>v.classList.add('hidden')); V[name].classList.remove('hidden'); window.scrollTo(0,0); }
+  qs('#btnStart').onclick = ()=> show('duo');
+  qs('#btnHelp').onclick = ()=> alert('1) Démarrer → saisir les 2 élèves.\\n2) Accéder à la course : Start, +1 tour, tir.\\n3) À la fin : ajoutez 1/4, 1/2 ou 3/4 de tour.');
+  qs('#goHome').onclick = ()=> show('cover');
 
-        const totalDistanceInput = document.getElementById('total-distance');
-        const intermediateDistanceInput = document.getElementById('intermediate-distance');
+  // ===== Validation & récupération =====
+  function val(id){ const e=document.getElementById(id); return (e.value||'').trim(); }
+  function okNumber(v,min){ const n=+v; return Number.isFinite(n) && n>=min; }
+  function validateForm(){
+    const ids = ['p1_prenom','p1_nom','p1_classe','p1_sexe','p2_prenom','p2_nom','p2_classe','p2_sexe','duree_min','tour_m'];
+    let ok = true, firstBad=null;
+    ids.forEach(id=>{
+      const el = document.getElementById(id);
+      let good = !!val(id);
+      if(id==='duree_min') good = okNumber(val(id),1);
+      if(id==='tour_m') good = okNumber(val(id),10);
+      el.style.borderColor = good ? '#e5e7eb' : '#ef4444';
+      if(!good && !firstBad) firstBad = el;
+      ok = ok && good;
+    });
+    if(!ok && firstBad){ firstBad.focus(); }
+    qs('#goCourse').disabled = !ok;
+    return ok;
+  }
+  // activer/désactiver le bouton en live
+  ['p1_prenom','p1_nom','p1_classe','p1_sexe','p2_prenom','p2_nom','p2_classe','p2_sexe','duree_min','tour_m']
+    .forEach(id=>{
+      const el = document.getElementById(id);
+      el.addEventListener('input', validateForm);
+      el.addEventListener('change', validateForm);
+    });
 
-        totalDistanceInput.addEventListener('input', () => {
-            totalDistance = parseInt(totalDistanceInput.value);
-        });
+  const session = { p1:null, p2:null, tourM:0, dureeMin:0, active:'p1', laps:0, shots:[], frac:0 };
 
-        intermediateDistanceInput.addEventListener('input', () => {
-            intermediateDistance = parseInt(intermediateDistanceInput.value);
-        });
+  qs('#goCourse').onclick = ()=>{
+    if(!validateForm()){ alert('Veuillez remplir tous les champs (chiffres seulement pour durée et longueur).'); return; }
+    session.p1 = { prenom:val('p1_prenom'), nom:val('p1_nom'), classe:val('p1_classe'), sexe:val('p1_sexe') };
+    session.p2 = { prenom:val('p2_prenom'), nom:val('p2_nom'), classe:val('p2_classe'), sexe:val('p2_sexe') };
+    session.dureeMin = +val('duree_min');
+    session.tourM = +val('tour_m');
+    session.active = 'p1';
+    resetRunnerState();
+    paintCourseHeader();
+    show('course');
+  };
 
-        function formatTime(seconds) {
-            const hours = Math.floor(seconds / 3600);
-            const minutes = Math.floor((seconds % 3600) / 60);
-            const remainingSeconds = Math.floor(seconds % 60);
-            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-        }
+  // ===== Course =====
+  const clockEl = document.getElementById('clock');
+  const lapsEl = document.getElementById('laps');
+  const lapMetersEl = document.getElementById('lapMeters');
+  const targetEl = document.getElementById('target');
+  const shotsTable = document.getElementById('shotsTable');
+  const runnerTitle = document.getElementById('runnerTitle');
+  const courseMeta = document.getElementById('courseMeta');
+  const endCard = document.getElementById('endCard');
+  const distanceOut = document.getElementById('distanceOut');
 
-        function calculateSpeed(timeInSeconds, distance) {
-            if (timeInSeconds === 0) return 0;
-            return ((distance / timeInSeconds) * 3.6).toFixed(2);
-        }
+  document.getElementById('pickP1').onclick = ()=> switchRunner('p1');
+  document.getElementById('pickP2').onclick = ()=> switchRunner('p2');
+  document.getElementById('lapPlus').onclick = ()=>{ session.laps++; renderLaps(); };
+  document.getElementById('lapMinus').onclick = ()=>{ session.laps = Math.max(0, session.laps-1); renderLaps(); };
+  document.getElementById('addShot').onclick = addShot;
+  document.getElementById('backToDuo').onclick = ()=> show('duo');
 
-        function updateTimer() {
-            const elapsed = Math.floor((new Date() - startTime) / 1000);
-            timerDisplay.textContent = formatTime(elapsed);
-        }
+  let t0=0, elapsed=0, timer=null, running=false;
+  function start(){ if(running) return; running=true; t0=Date.now()-elapsed; timer=setInterval(tick,100); document.getElementById('btnStartCourse').disabled=true; document.getElementById('btnPause').disabled=false; document.getElementById('btnReset').disabled=false; }
+  function pause(){ if(!running) return; running=false; clearInterval(timer); document.getElementById('btnStartCourse').disabled=false; document.getElementById('btnPause').disabled=true; }
+  function reset(){ pause(); elapsed=0; clockEl.textContent='00:00.0'; document.getElementById('btnReset').disabled=true; session.laps=0; session.shots=[]; session.frac=0; renderLaps(); renderShots(); hideEnd(); }
+  function tick(){ elapsed = Date.now()-t0; const cs=Math.floor(elapsed/100); const m=Math.floor(cs/600), s=Math.floor((cs%600)/10), d=cs%10; clockEl.textContent = `${m<10?'0':''}${m}:${s<10?'0':''}${s}.${d}`; if(m>=session.dureeMin){ pause(); showEnd(); } }
+  document.getElementById('btnStartCourse').onclick = start; document.getElementById('btnPause').onclick = pause; document.getElementById('btnReset').onclick = reset;
 
-        startButton.addEventListener('click', () => {
-            if (!intervalId) {
-                startTime = new Date();
-                intervalId = setInterval(updateTimer, 1000);
-                currentDistance = 0;
-                intermediateTimes = [];
-                timeList.innerHTML = '';
-                finalResult.textContent = '';
-            }
-        });
+  function showEnd(){ endCard.classList.remove('hidden'); updateDistanceOutput(); }
+  function hideEnd(){ endCard.classList.add('hidden'); }
 
-        intermediateButton.addEventListener('click', () => {
-            if (intervalId && currentDistance + intermediateDistance <= totalDistance) {
-                const now = new Date();
-                const elapsed = Math.floor((now - startTime) / 1000);
-                currentDistance += intermediateDistance;
+  endCard.querySelectorAll('[data-frac]').forEach(b=> b.onclick = ()=>{ session.frac = +b.getAttribute('data-frac'); updateDistanceOutput(); });
+  document.getElementById('finishRunner').onclick = ()=>{ alert('Coureur validé. (Export/QR à venir)'); };
 
-                const speed = calculateSpeed(elapsed, currentDistance);
-                const timeEntry = document.createElement('li');
-                timeEntry.textContent = `Distance: ${currentDistance}m - Temps: ${formatTime(elapsed)} - Vitesse: ${speed} km/h`;
-                timeList.appendChild(timeEntry);
+  function updateDistanceOutput(){ const meters = Math.round(session.laps*session.tourM + session.frac*session.tourM); distanceOut.textContent = `Distance: ${meters} m (${session.laps} tours + ${session.frac||0} tour)`; }
 
-                intermediateTimes.push({
-                    distance: currentDistance,
-                    time: formatTime(elapsed),
-                    speed: speed
-                });
-            }
-        });
+  function addShot(){ const n = session.shots.length+1; const leds = +document.getElementById('ledSelect').value; session.shots.push({n, leds}); renderShots(); }
+  function renderShots(){ shotsTable.innerHTML=''; session.shots.forEach(s=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${s.n}</td><td>${s.leds}</td><td><button class=\"b-red\">Retirer</button></td>`; tr.querySelector('button').onclick = ()=>{ session.shots = session.shots.filter(x=>x.n!==s.n); session.shots = session.shots.map((x,i)=> ({n:i+1, leds:x.leds})); renderShots(); }; shotsTable.append(tr); }); }
 
-        stopButton.addEventListener('click', () => {
-            if (intervalId) {
-                clearInterval(intervalId);
-                intervalId = null;
+  function renderLaps(){ lapsEl.textContent = session.laps; updateDistanceOutput(); }
 
-                const elapsed = Math.floor((new Date() - startTime) / 1000);
-                const averageSpeed = calculateSpeed(elapsed, totalDistance);
-                finalResult.textContent = `Distance totale réalisée : ${totalDistance}m - Temps final : ${formatTime(elapsed)}, Vitesse moyenne : ${averageSpeed} km/h`;
-            }
-        });
+  function switchRunner(which){ session.active = which; reset(); resetRunnerState(); paintCourseHeader(); }
+  function resetRunnerState(){ session.laps=0; session.shots=[]; session.frac=0; renderLaps(); renderShots(); hideEnd(); }
+  function paintCourseHeader(){ const R = session[session.active]; runnerTitle.textContent = `Coureur — ${R.prenom} ${R.nom}`; courseMeta.textContent = `${R.classe} • ${R.sexe}`; lapMetersEl.textContent = session.tourM; targetEl.textContent = session.dureeMin; }
 
-        resetButton.addEventListener('click', () => {
-            clearInterval(intervalId);
-            intervalId = null;
-            startTime = null;
-            currentDistance = 0
+  // smoke test (évite erreurs silencieuses)
+  (function(){ console.assert(!!V.cover && !!V.duo && !!V.course,'vues ok'); })();
+  </script>
+</body>
+</html>
