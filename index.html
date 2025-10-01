@@ -1,294 +1,232 @@
-<!doctype html>
-<html lang="fr">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>LaserRun</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --bg:#f4f7fb; --card:#ffffff; --ink:#111827; --muted:#6b7280; --primary:#0a58ff;
-    --green:#22c55e; --amber:#f59e0b; --red:#ef4444; --violet:#7c3aed; --slate:#334155;
-    --radius:16px; --ring:0 8px 40px rgba(2,6,23,.08);
-    --panel1:#e8f1ff; --panel2:#e9fbe8; --band:#eef2f7;
+<!-- QRCode lib (CDN léger) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+'use strict';
+// ===== helpers / navigation =====
+function qs(sel){ return document.querySelector(sel); }
+const V = {
+  cover: qs('#view-cover'),
+  duo: qs('#view-duo'),
+  course: qs('#view-course'),
+  summary: qs('#view-summary')
+};
+function show(name){
+  Object.values(V).forEach(v=>v.classList.add('hidden'));
+  V[name].classList.remove('hidden');
+  window.scrollTo(0,0);
+}
+qs('#btnStart').onclick = ()=> show('duo');
+qs('#btnHelp').onclick = ()=> alert('1) Démarrer → saisir les 2 élèves.\\n2) Accéder à la course : Start, +1 tour, tir.\\n3) À la fin : ajoutez 1/4, 1/2 ou 3/4 de tour.');
+qs('#goHome').onclick = ()=> show('cover');
+
+// ===== Validation stricte (empêche "J" puis champ suivant) =====
+function clean(s){ return (s||'').replace(/\s+/g,' ').trim(); }
+function minLen(s, n){ return clean(s).length >= n; }
+function onlyLetters(s){ return /^[A-Za-zÀ-ÖØ-öø-ÿ\-\s']+$/.test(clean(s)); }
+function val(id){ return clean(document.getElementById(id).value); }
+function okNumber(v,min){ const n=+v; return Number.isFinite(n) && n>=min; }
+
+function validateForm(){
+  const fields = [
+    {id:'p1_prenom', min:2, letters:true},
+    {id:'p1_nom',    min:2, letters:true},
+    {id:'p1_classe', min:2, letters:false},
+    {id:'p1_sexe',   min:1, letters:false},
+    {id:'p2_prenom', min:2, letters:true},
+    {id:'p2_nom',    min:2, letters:true},
+    {id:'p2_classe', min:2, letters:false},
+    {id:'p2_sexe',   min:1, letters:false},
+  ];
+  let ok = true, firstBad=null;
+  fields.forEach(f=>{
+    const el = document.getElementById(f.id);
+    const v = val(f.id);
+    let good = minLen(v, f.min);
+    if(f.letters) good = good && onlyLetters(v);
+    el.style.borderColor = good ? '#e5e7eb' : '#ef4444';
+    if(!good && !firstBad) firstBad = el;
+    ok = ok && good;
+  });
+  const okDur = okNumber(val('duree_min'),1);
+  const okTour = okNumber(val('tour_m'),10);
+  document.getElementById('duree_min').style.borderColor = okDur ? '#e5e7eb' : '#ef4444';
+  document.getElementById('tour_m').style.borderColor = okTour ? '#e5e7eb' : '#ef4444';
+  ok = ok && okDur && okTour;
+  qs('#goCourse').disabled = !ok;
+  return ok;
+}
+// live validation
+['p1_prenom','p1_nom','p1_classe','p1_sexe','p2_prenom','p2_nom','p2_classe','p2_sexe','duree_min','tour_m']
+  .forEach(id=>{
+    const el=document.getElementById(id);
+    el.addEventListener('input', validateForm);
+    el.addEventListener('change', validateForm);
+  });
+
+const session = {
+  p1:null, p2:null, tourM:0, dureeMin:0,
+  active:'p1', laps:0, shots:[], frac:0,
+  finished:false
+};
+
+qs('#goCourse').onclick = ()=>{
+  if(!validateForm()){
+    alert('Champs incomplets : prénoms/noms ≥ 2 lettres (lettres/accents autorisés), durée et longueur en chiffres.');
+    return;
   }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
-  header,footer{background:#fff}
-  footer{border-top:1px solid #e5e7eb;color:var(--muted);text-align:center;padding:10px 0}
-  .shell{max-width:980px;margin:0 auto;padding:16px}
-  h1{font-size:clamp(22px,3.4vw,32px);margin:8px 0 4px;font-weight:800;text-align:center}
-  h2{font-size:clamp(20px,2.8vw,28px);margin:8px 0 12px;font-weight:800;text-align:center}
-  h3{margin:0 0 10px;font-size:18px;text-align:center}
-  p{margin:0 0 8px;text-align:center}
-  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--ring);padding:16px;margin:12px 0}
-  .btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
-  button{border:0;border-radius:16px;padding:14px 18px;font-weight:800;cursor:pointer;font-size:18px}
-  .b-primary{background:var(--primary);color:#fff}
-  .b-green{background:var(--green);color:#fff}
-  .b-amber{background:var(--amber);color:#111}
-  .b-red{background:var(--red);color:#fff}
-  .b-violet{background:var(--violet);color:#fff}
-  .b-slate{background:var(--slate);color:#fff}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  .panel{border-radius:16px;padding:16px}
-  .panel h3{margin:0 0 10px;font-size:16px;letter-spacing:.2px}
-  .panel1{background:var(--panel1)}
-  .panel2{background:var(--panel2)}
-  .band{background:var(--band);border-radius:12px;padding:10px 12px;margin-top:16px;font-weight:700}
-  label{display:block;font-weight:800;margin:10px 0 6px}
-  input,select{width:100%;padding:14px 16px;border:2px solid #e5e7eb;border-radius:14px;background:#fff;font:inherit}
-  input[type=number]{appearance:textfield}
-  select{background:#fff}
-  .muted{color:var(--muted)}
-  .hidden{display:none!important}
-  .center{text-align:center}
-  .big{font-size:40px;font-weight:900}
-  .xl{font-size:60px;font-weight:900}
-  .pill{display:inline-block;padding:6px 12px;border-radius:999px;background:#eef2f7}
-  table{width:100%;border-collapse:collapse}
-  th,td{padding:12px;border-bottom:1px solid #e5e7eb;text-align:center;font-size:16px}
-</style>
-</head>
-<body>
-  <!-- ===== Page de garde ===== -->
-  <main class="shell" id="view-cover">
-    <section class="card center">
-      <h1>LaserRun</h1>
-      <p class="muted">Application EPS — compatible ScanProf</p>
-      <div class="btns" style="margin-top:20px">
-        <button class="b-primary tap" id="btnStart">▶️ Démarrer</button>
-        <button class="b-slate tap" id="btnHelp">❓ Aide</button>
-      </div>
-    </section>
-  </main>
+  session.p1 = { prenom:val('p1_prenom'), nom:val('p1_nom'), classe:val('p1_classe'), sexe:val('p1_sexe') };
+  session.p2 = { prenom:val('p2_prenom'), nom:val('p2_nom'), classe:val('p2_classe'), sexe:val('p2_sexe') };
+  session.dureeMin = +val('duree_min');
+  session.tourM = +val('tour_m');
+  session.active = 'p1';
+  resetRunnerState();
+  paintCourseHeader();
+  show('course');
+};
 
-  <!-- ===== Page Saisie 2 élèves ===== -->
-  <main class="shell hidden" id="view-duo">
-    <section class="card">
-      <h2>Saisie des informations</h2>
-      <p class="muted">Identité des deux coureurs + paramètres de course communs.</p>
-      <div class="row">
-        <div class="panel panel1">
-          <h3>COUREUR 1</h3>
-          <label>Prénom</label>
-          <input id="p1_prenom" required autocomplete="off"/>
-          <label>Nom</label>
-          <input id="p1_nom" required autocomplete="off"/>
-          <label>Classe</label>
-          <input id="p1_classe" required autocomplete="off"/>
-          <label>Sexe</label>
-          <select id="p1_sexe" required>
-            <option value="">—</option>
-            <option>F</option>
-            <option>M</option>
-          </select>
-        </div>
-        <div class="panel panel2">
-          <h3>COUREUR 2</h3>
-          <label>Prénom</label>
-          <input id="p2_prenom" required autocomplete="off"/>
-          <label>Nom</label>
-          <input id="p2_nom" required autocomplete="off"/>
-          <label>Classe</label>
-          <input id="p2_classe" required autocomplete="off"/>
-          <label>Sexe</label>
-          <select id="p2_sexe" required>
-            <option value="">—</option>
-            <option>F</option>
-            <option>M</option>
-          </select>
-        </div>
-      </div>
+// ===== Course =====
+const clockEl = document.getElementById('clock');
+const lapsEl = document.getElementById('laps');
+const lapMetersEl = document.getElementById('lapMeters');
+const targetEl = document.getElementById('target');
+const shotsTable = document.getElementById('shotsTable');
+const runnerTitle = document.getElementById('runnerTitle');
+const courseMeta = document.getElementById('courseMeta');
+const endCard = document.getElementById('endCard');
+const distanceOut = document.getElementById('distanceOut');
+const courseCard = document.getElementById('courseCard');
+const toSummaryWrap = document.getElementById('toSummaryWrap');
 
-      <div class="band">Paramètres de course (communs)</div>
-      <div class="row">
-        <div>
-          <label>Durée (minutes)</label>
-          <input id="duree_min" type="number" inputmode="numeric" min="1" step="1" placeholder="ex. 20" required/>
-        </div>
-        <div>
-          <label>Longueur d'un tour (m)</label>
-          <input id="tour_m" type="number" inputmode="numeric" min="10" step="1" placeholder="ex. 200" required/>
-        </div>
-      </div>
+document.getElementById('pickP1').onclick = ()=> switchRunner('p1');
+document.getElementById('pickP2').onclick = ()=> switchRunner('p2');
+document.getElementById('lapPlus').onclick = ()=>{ if(session.finished) return; session.laps++; renderLaps(); };
+document.getElementById('lapMinus').onclick = ()=>{ if(session.finished) return; session.laps = Math.max(0, session.laps-1); renderLaps(); };
+document.getElementById('addShot').onclick = ()=>{ if(session.finished) return; addShot(); };
+document.getElementById('backToDuo').onclick = ()=> show('duo');
 
-      <div class="btns" style="margin-top:18px">
-        <button class="b-primary" id="goCourse" disabled>Accéder à la course</button>
-        <button class="b-slate" id="goHome">🏠 Accueil</button>
-      </div>
-    </section>
-  </main>
+let t0=0, elapsed=0, timer=null, running=false;
+function start(){
+  if(session.finished) return;
+  if(running) return;
+  running=true; t0=Date.now()-elapsed; timer=setInterval(tick,100);
+  document.getElementById('btnStartCourse').disabled=true;
+  document.getElementById('btnPause').disabled=false;
+  document.getElementById('btnReset').disabled=false;
+}
+function pause(){
+  if(!running) return;
+  running=false; clearInterval(timer);
+  document.getElementById('btnStartCourse').disabled=false;
+  document.getElementById('btnPause').disabled=true;
+}
+function reset(){
+  pause(); elapsed=0; clockEl.textContent='00:00.0';
+  document.getElementById('btnReset').disabled=true;
+  session.laps=0; session.shots=[]; session.frac=0;
+  renderLaps(); renderShots(); hideEnd();
+}
+function tick(){
+  elapsed = Date.now()-t0;
+  const cs=Math.floor(elapsed/100);
+  const m=Math.floor(cs/600), s=Math.floor((cs%600)/10), d=cs%10;
+  clockEl.textContent = `${m<10?'0':''}${m}:${s<10?'0':''}${s}.${d}`;
+  if(m>=session.dureeMin){ pause(); showEnd(); }
+}
+document.getElementById('btnStartCourse').onclick = start;
+document.getElementById('btnPause').onclick = pause;
+document.getElementById('btnReset').onclick = reset;
 
-  <!-- ===== Page course : chrono + tours + tir ===== -->
-  <main class="shell hidden" id="view-course">
-    <section class="card center">
-      <div class="btns" style="margin-bottom:8px">
-        <button class="b-slate" id="backToDuo">⬅ Retour saisie</button>
-        <span class="pill" id="courseMeta">—</span>
-      </div>
-      <h2 id="runnerTitle">Coureur — </h2>
-      <div class="btns" style="margin-bottom:6px">
-        <button class="b-green" id="pickP1">👟 Coureur 1</button>
-        <button class="b-green" id="pickP2">👟 Coureur 2</button>
-      </div>
+function showEnd(){ endCard.classList.remove('hidden'); updateDistanceOutput(); }
+function hideEnd(){ endCard.classList.add('hidden'); }
 
-      <div class="card" style="max-width:720px;margin:0 auto 12px">
-        <div class="xl" id="clock">00:00.0</div>
-        <div class="btns" style="margin-top:8px">
-          <button class="b-primary" id="btnStartCourse">▶️ Start</button>
-          <button class="b-amber" id="btnPause" disabled>⏸️ Pause</button>
-          <button class="b-red" id="btnReset" disabled>↺ Réinit.</button>
-        </div>
-        <p class="muted">Durée cible : <strong id="target"></strong> min</p>
-      </div>
+endCard.querySelectorAll('[data-frac]').forEach(b=>
+  b.onclick = ()=>{ if(session.finished) return; session.frac = +b.getAttribute('data-frac'); updateDistanceOutput(); }
+);
+document.getElementById('finishRunner').onclick = ()=>{ finalizeRace(); };
 
-      <div class="row" style="max-width:720px;margin:0 auto">
-        <div class="card">
-          <h3>🏁 Tours</h3>
-          <div class="big" id="laps">0</div>
-          <p class="muted">1 tour = <span id="lapMeters">—</span> m</p>
-          <div class="btns">
-            <button class="b-green" id="lapPlus">+1 tour</button>
-            <button class="b-slate" id="lapMinus">−1</button>
-          </div>
-        </div>
-        <div class="card">
-          <h3>🎯 Tir (5 LED)</h3>
-          <div class="btns">
-            <select id="ledSelect" style="max-width:220px">
-              <option value="0">0</option>
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5" selected>5</option>
-            </select>
-            <button class="b-violet" id="addShot">+ Ajouter session</button>
-          </div>
-          <div style="overflow:auto;margin-top:8px">
-            <table>
-              <thead><tr><th>#</th><th>LED allumées</th><th>Action</th></tr></thead>
-              <tbody id="shotsTable"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+function updateDistanceOutput(){
+  const meters = Math.round((session.laps + (session.frac||0)) * session.tourM);
+  distanceOut.textContent = `Distance: ${meters} m (${session.laps} tours + ${session.frac||0} tour)`;
+}
 
-      <div class="card hidden" id="endCard" style="max-width:720px;margin:12px auto 0">
-        <h3>⏱️ Temps écoulé — compléter la fraction de tour</h3>
-        <div class="btns">
-          <button class="b-slate" data-frac="0.25">+ 1/4 tour</button>
-          <button class="b-slate" data-frac="0.5">+ 1/2 tour</button>
-          <button class="b-slate" data-frac="0.75">+ 3/4 tour</button>
-          <button class="b-green" id="finishRunner">✅ Valider le coureur</button>
-        </div>
-        <p class="muted" id="distanceOut">Distance: — m</p>
-      </div>
-    </section>
-  </main>
+function addShot(){
+  const n = session.shots.length+1;
+  const leds = +document.getElementById('ledSelect').value;
+  session.shots.push({n, leds}); renderShots();
+}
+function renderShots(){
+  shotsTable.innerHTML='';
+  session.shots.forEach(s=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${s.n}</td><td>${s.leds}</td><td><button class="b-red">Retirer</button></td>`;
+    tr.querySelector('button').onclick = ()=>{
+      if(session.finished) return;
+      session.shots = session.shots.filter(x=>x.n!==s.n);
+      session.shots = session.shots.map((x,i)=> ({n:i+1, leds:x.leds}));
+      renderShots();
+    };
+    shotsTable.append(tr);
+  });
+}
 
-  <footer>
-    <div>LaserRun - Équipe EPS Lycée Vauban - LUXEMBOURG - JB</div>
-  </footer>
+function renderLaps(){ lapsEl.textContent = session.laps; updateDistanceOutput(); }
 
-  <script>
-  'use strict';
-  // ===== helpers / navigation =====
-  function qs(sel){ return document.querySelector(sel); }
-  const V = { cover: qs('#view-cover'), duo: qs('#view-duo'), course: qs('#view-course') };
-  function show(name){ Object.values(V).forEach(v=>v.classList.add('hidden')); V[name].classList.remove('hidden'); window.scrollTo(0,0); }
-  qs('#btnStart').onclick = ()=> show('duo');
-  qs('#btnHelp').onclick = ()=> alert('1) Démarrer → saisir les 2 élèves.\\n2) Accéder à la course : Start, +1 tour, tir.\\n3) À la fin : ajoutez 1/4, 1/2 ou 3/4 de tour.');
-  qs('#goHome').onclick = ()=> show('cover');
+function switchRunner(which){
+  if(session.finished) return;
+  session.active = which;
+  reset(); resetRunnerState(); paintCourseHeader();
+}
+function resetRunnerState(){ session.laps=0; session.shots=[]; session.frac=0; renderLaps(); renderShots(); hideEnd(); }
+function paintCourseHeader(){
+  const R = session[session.active];
+  runnerTitle.textContent = `Coureur — ${R.prenom} ${R.nom}`;
+  courseMeta.textContent = `${R.classe} • ${R.sexe}`;
+  lapMetersEl.textContent = session.tourM;
+  targetEl.textContent = session.dureeMin;
+}
 
-  // ===== Validation & récupération =====
-  function val(id){ const e=document.getElementById(id); return (e.value||'').trim(); }
-  function okNumber(v,min){ const n=+v; return Number.isFinite(n) && n>=min; }
-  function validateForm(){
-    const ids = ['p1_prenom','p1_nom','p1_classe','p1_sexe','p2_prenom','p2_nom','p2_classe','p2_sexe','duree_min','tour_m'];
-    let ok = true, firstBad=null;
-    ids.forEach(id=>{
-      const el = document.getElementById(id);
-      let good = !!val(id);
-      if(id==='duree_min') good = okNumber(val(id),1);
-      if(id==='tour_m') good = okNumber(val(id),10);
-      el.style.borderColor = good ? '#e5e7eb' : '#ef4444';
-      if(!good && !firstBad) firstBad = el;
-      ok = ok && good;
-    });
-    if(!ok && firstBad){ firstBad.focus(); }
-    qs('#goCourse').disabled = !ok;
-    return ok;
+function finalizeRace(){
+  session.finished = true;
+  // Verrouille toutes les interactions de la page course
+  document.getElementById('courseCard').classList.add('lock');
+  document.getElementById('pickP1').disabled = true;
+  document.getElementById('pickP2').disabled = true;
+  toSummaryWrap.classList.remove('hidden'); // bouton Aller au bilan
+}
+
+// ===== Bilan / QR =====
+const backToCourseBtn = document.getElementById('backToCourse');
+const backHome2Btn = document.getElementById('backHome2');
+const goSummaryBtn = document.getElementById('goSummary');
+
+goSummaryBtn.onclick = ()=>{
+  const R = session[session.active];
+  const meters = Math.round((session.laps + (session.frac||0)) * session.tourM);
+  // Format simple CSV (à ajuster si ScanProf attend un format strict) :
+  // LASERRUN;prenom;nom;classe;sexe;duree_min;tour_m;laps;frac;distance;shots(leds-...)
+  const shots = session.shots.map(s=>s.leds).join('-');
+  const payload = [
+    'LASERRUN', R.prenom, R.nom, R.classe, R.sexe,
+    session.dureeMin, session.tourM, session.laps, session.frac||0, meters, shots
+  ].join(';');
+
+  show('summary');
+
+  // QR
+  const qrBox = document.getElementById('qr');
+  qrBox.innerHTML = '';
+  try {
+    new QRCode(qrBox, { text: payload, width: 256, height: 256, correctLevel: QRCode.CorrectLevel.M });
+    document.getElementById('qrText').textContent = payload;
+  } catch(e){
+    document.getElementById('qrText').textContent = 'QR indisponible — contenu: '+payload;
   }
-  // activer/désactiver le bouton en live
-  ['p1_prenom','p1_nom','p1_classe','p1_sexe','p2_prenom','p2_nom','p2_classe','p2_sexe','duree_min','tour_m']
-    .forEach(id=>{
-      const el = document.getElementById(id);
-      el.addEventListener('input', validateForm);
-      el.addEventListener('change', validateForm);
-    });
+};
 
-  const session = { p1:null, p2:null, tourM:0, dureeMin:0, active:'p1', laps:0, shots:[], frac:0 };
+backToCourseBtn.onclick = ()=> show('course');
+backHome2Btn.onclick = ()=> show('cover');
 
-  qs('#goCourse').onclick = ()=>{
-    if(!validateForm()){ alert('Veuillez remplir tous les champs (chiffres seulement pour durée et longueur).'); return; }
-    session.p1 = { prenom:val('p1_prenom'), nom:val('p1_nom'), classe:val('p1_classe'), sexe:val('p1_sexe') };
-    session.p2 = { prenom:val('p2_prenom'), nom:val('p2_nom'), classe:val('p2_classe'), sexe:val('p2_sexe') };
-    session.dureeMin = +val('duree_min');
-    session.tourM = +val('tour_m');
-    session.active = 'p1';
-    resetRunnerState();
-    paintCourseHeader();
-    show('course');
-  };
-
-  // ===== Course =====
-  const clockEl = document.getElementById('clock');
-  const lapsEl = document.getElementById('laps');
-  const lapMetersEl = document.getElementById('lapMeters');
-  const targetEl = document.getElementById('target');
-  const shotsTable = document.getElementById('shotsTable');
-  const runnerTitle = document.getElementById('runnerTitle');
-  const courseMeta = document.getElementById('courseMeta');
-  const endCard = document.getElementById('endCard');
-  const distanceOut = document.getElementById('distanceOut');
-
-  document.getElementById('pickP1').onclick = ()=> switchRunner('p1');
-  document.getElementById('pickP2').onclick = ()=> switchRunner('p2');
-  document.getElementById('lapPlus').onclick = ()=>{ session.laps++; renderLaps(); };
-  document.getElementById('lapMinus').onclick = ()=>{ session.laps = Math.max(0, session.laps-1); renderLaps(); };
-  document.getElementById('addShot').onclick = addShot;
-  document.getElementById('backToDuo').onclick = ()=> show('duo');
-
-  let t0=0, elapsed=0, timer=null, running=false;
-  function start(){ if(running) return; running=true; t0=Date.now()-elapsed; timer=setInterval(tick,100); document.getElementById('btnStartCourse').disabled=true; document.getElementById('btnPause').disabled=false; document.getElementById('btnReset').disabled=false; }
-  function pause(){ if(!running) return; running=false; clearInterval(timer); document.getElementById('btnStartCourse').disabled=false; document.getElementById('btnPause').disabled=true; }
-  function reset(){ pause(); elapsed=0; clockEl.textContent='00:00.0'; document.getElementById('btnReset').disabled=true; session.laps=0; session.shots=[]; session.frac=0; renderLaps(); renderShots(); hideEnd(); }
-  function tick(){ elapsed = Date.now()-t0; const cs=Math.floor(elapsed/100); const m=Math.floor(cs/600), s=Math.floor((cs%600)/10), d=cs%10; clockEl.textContent = `${m<10?'0':''}${m}:${s<10?'0':''}${s}.${d}`; if(m>=session.dureeMin){ pause(); showEnd(); } }
-  document.getElementById('btnStartCourse').onclick = start; document.getElementById('btnPause').onclick = pause; document.getElementById('btnReset').onclick = reset;
-
-  function showEnd(){ endCard.classList.remove('hidden'); updateDistanceOutput(); }
-  function hideEnd(){ endCard.classList.add('hidden'); }
-
-  endCard.querySelectorAll('[data-frac]').forEach(b=> b.onclick = ()=>{ session.frac = +b.getAttribute('data-frac'); updateDistanceOutput(); });
-  document.getElementById('finishRunner').onclick = ()=>{ alert('Coureur validé. (Export/QR à venir)'); };
-
-  function updateDistanceOutput(){ const meters = Math.round(session.laps*session.tourM + session.frac*session.tourM); distanceOut.textContent = `Distance: ${meters} m (${session.laps} tours + ${session.frac||0} tour)`; }
-
-  function addShot(){ const n = session.shots.length+1; const leds = +document.getElementById('ledSelect').value; session.shots.push({n, leds}); renderShots(); }
-  function renderShots(){ shotsTable.innerHTML=''; session.shots.forEach(s=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${s.n}</td><td>${s.leds}</td><td><button class=\"b-red\">Retirer</button></td>`; tr.querySelector('button').onclick = ()=>{ session.shots = session.shots.filter(x=>x.n!==s.n); session.shots = session.shots.map((x,i)=> ({n:i+1, leds:x.leds})); renderShots(); }; shotsTable.append(tr); }); }
-
-  function renderLaps(){ lapsEl.textContent = session.laps; updateDistanceOutput(); }
-
-  function switchRunner(which){ session.active = which; reset(); resetRunnerState(); paintCourseHeader(); }
-  function resetRunnerState(){ session.laps=0; session.shots=[]; session.frac=0; renderLaps(); renderShots(); hideEnd(); }
-  function paintCourseHeader(){ const R = session[session.active]; runnerTitle.textContent = `Coureur — ${R.prenom} ${R.nom}`; courseMeta.textContent = `${R.classe} • ${R.sexe}`; lapMetersEl.textContent = session.tourM; targetEl.textContent = session.dureeMin; }
-
-  // smoke test (évite erreurs silencieuses)
-  (function(){ console.assert(!!V.cover && !!V.duo && !!V.course,'vues ok'); })();
-  </script>
-</body>
-</html>
+// Initial
+validateForm();
+</script>
