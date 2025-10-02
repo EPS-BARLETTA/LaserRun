@@ -49,6 +49,7 @@
   table{width:100%;border-collapse:collapse}
   th,td{padding:12px;border-bottom:1px solid #e5e7eb;text-align:center;font-size:16px}
   .lock *{pointer-events:none; opacity:.7}
+  .shot-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px}
 </style>
 </head>
 <body>
@@ -149,6 +150,7 @@
           <h3>🏁 Tours</h3>
           <div class="big" id="laps">0</div>
           <p class="muted">1 tour = <span id="lapMeters">—</span> m</p>
+          <p class="muted"><strong>Distance provisoire :</strong> <span id="liveDistance">0</span> m</p>
           <div class="btns">
             <button class="b-green" id="lapPlus">+1 tour</button>
             <button class="b-slate" id="lapMinus">−1</button>
@@ -167,12 +169,21 @@
             </select>
             <button class="b-violet" id="addShot">+ Ajouter session</button>
           </div>
+          <div class="shot-grid">
+            <button class="b-slate" data-quick="0">0</button>
+            <button class="b-slate" data-quick="1">1</button>
+            <button class="b-slate" data-quick="2">2</button>
+            <button class="b-slate" data-quick="3">3</button>
+            <button class="b-slate" data-quick="4">4</button>
+            <button class="b-slate" data-quick="5">5</button>
+          </div>
           <div style="overflow:auto;margin-top:8px">
             <table>
               <thead><tr><th>#</th><th>LED allumées</th><th>Action</th></tr></thead>
               <tbody id="shotsTable"></tbody>
             </table>
           </div>
+          <p class="muted" id="liveCounts" style="margin-top:8px"></p>
         </div>
       </div>
 
@@ -223,7 +234,16 @@
   function show(name){ Object.values(V).forEach(v=>v.classList.add('hidden')); V[name].classList.remove('hidden'); window.scrollTo(0,0); }
   qs('#btnStart').onclick = ()=> show('duo');
   qs('#btnHelp').onclick = ()=> alert('1) Démarrer → saisir les 2 élèves.\\n2) Course : Start, +1 tour, Tir (0–5 LED), fraction de tour.\\n3) Fin : QR JSON (ScanProf).');
-  qs('#goHome').onclick = ()=> show('cover');
+
+  // protèger Accueil / Retour si course en cours
+  function confirmLeaveIfNeeded(){
+    if(!session.finished && (session.laps>0 || session.shots.length>0 || elapsed>0)){
+      return confirm('Quitter la course ? Les données non terminées pourraient être perdues.');
+    }
+    return true;
+  }
+  qs('#goHome').onclick = ()=> { if(confirmLeaveIfNeeded()) show('cover'); };
+  qs('#backToDuo').onclick = ()=> { if(confirmLeaveIfNeeded()) show('duo'); };
 
   // ===== Validation stricte (empêche la navigation si manquant) =====
   function clean(s){ return (s||'').replace(/\\s+/g,' ').trim(); }
@@ -270,13 +290,17 @@
   const shotsTable=qs('#shotsTable'), runnerTitle=qs('#runnerTitle'), courseMeta=qs('#courseMeta');
   const endCard=qs('#endCard'), distanceOut=qs('#distanceOut'), courseCard=qs('#courseCard');
   const toSummaryWrap=qs('#toSummaryWrap');
+  const liveDistanceEl=qs('#liveDistance');
 
   qs('#pickP1').onclick=()=> switchRunner('p1');
   qs('#pickP2').onclick=()=> switchRunner('p2');
   qs('#lapPlus').onclick=()=>{ if(session.finished) return; session.laps++; renderLaps(); };
   qs('#lapMinus').onclick=()=>{ if(session.finished) return; session.laps=Math.max(0,session.laps-1); renderLaps(); };
   qs('#addShot').onclick=()=>{ if(session.finished) return; addShot(); };
-  qs('#backToDuo').onclick=()=> show('duo');
+
+  document.querySelectorAll('[data-quick]').forEach(btn=>{
+    btn.onclick=()=>{ if(session.finished) return; const v=+btn.getAttribute('data-quick'); addShot(v); };
+  });
 
   let t0=0, elapsed=0, timer=null, running=false;
   function start(){ if(session.finished||running) return; running=true; t0=Date.now()-elapsed; timer=setInterval(tick,100); qs('#btnStartCourse').disabled=true; qs('#btnPause').disabled=false; qs('#btnReset').disabled=false; }
@@ -285,21 +309,85 @@
   function tick(){ elapsed=Date.now()-t0; const cs=Math.floor(elapsed/100); const m=Math.floor(cs/600), s=Math.floor((cs%600)/10), d=cs%10; document.getElementById('clock').textContent=`${m<10?'0':''}${m}:${s<10?'0':''}${s}.${d}`; if(m>=session.dureeMin){ pause(); showEnd(); } }
   qs('#btnStartCourse').onclick=start; qs('#btnPause').onclick=pause; qs('#btnReset').onclick=reset;
 
-  function showEnd(){ endCard.classList.remove('hidden'); updateDistanceOutput(); }
+  // beep (WebAudio)
+  function beep(freq=880, dur=250){
+    try{
+      const ctx=new (window.AudioContext||window.webkitAudioContext)();
+      const o=ctx.createOscillator(); const g=ctx.createGain();
+      o.type='sine'; o.frequency.value=freq; o.connect(g); g.connect(ctx.destination);
+      g.gain.setValueAtTime(0.001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime+0.02);
+      o.start();
+      setTimeout(()=>{ g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.05); o.stop(ctx.currentTime+0.07); ctx.close(); }, dur);
+    }catch(e){}
+  }
+
+  function showEnd(){
+    endCard.classList.remove('hidden');
+    updateDistanceOutput();
+    if(navigator.vibrate) navigator.vibrate(150);
+    beep();
+  }
   function hideEnd(){ endCard.classList.add('hidden'); }
 
   endCard.querySelectorAll('[data-frac]').forEach(b=> b.onclick=()=>{ if(session.finished) return; session.frac=+b.getAttribute('data-frac'); updateDistanceOutput(); });
   qs('#finishRunner').onclick=()=> finalizeRunner();
 
-  function updateDistanceOutput(){ const meters=Math.round((session.laps+(session.frac||0))*session.tourM); distanceOut.textContent=`Distance: ${meters} m (${session.laps} tours + ${session.frac||0} tour)`; }
-  function renderLaps(){ document.getElementById('laps').textContent=session.laps; updateDistanceOutput(); }
+  function updateDistanceOutput(){
+    const meters=Math.round((session.laps+(session.frac||0))*session.tourM);
+    distanceOut.textContent=`Distance: ${meters} m (${session.laps} tours + ${session.frac||0} tour)`;
+  }
+  function renderLaps(){
+    document.getElementById('laps').textContent=session.laps;
+    liveDistanceEl.textContent = Math.round((session.laps+(session.frac||0))*session.tourM);
+    updateDistanceOutput();
+  }
 
-  function addShot(){ const n=session.shots.length+1; const leds=+qs('#ledSelect').value; session.shots.push({n,leds}); renderShots(); }
-  function renderShots(){ shotsTable.innerHTML=''; session.shots.forEach(s=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${s.n}</td><td>${s.leds}</td><td><button class="b-red">Retirer</button></td>`; tr.querySelector('button').onclick=()=>{ if(session.finished) return; session.shots=session.shots.filter(x=>x.n!==s.n).map((x,i)=>({n:i+1,leds:x.leds})); renderShots(); }; shotsTable.append(tr); }); }
+  function addShot(val){
+    const n=session.shots.length+1;
+    const leds=(typeof val==='number')? val : +qs('#ledSelect').value;
+    session.shots.push({n,leds});
+    renderShots();
+  }
+  function renderShots(){
+    shotsTable.innerHTML='';
+    session.shots.forEach(s=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${s.n}</td><td>${s.leds}</td><td><button class="b-red">Retirer</button></td>`;
+      tr.querySelector('button').onclick=()=>{ if(session.finished) return; session.shots=session.shots.filter(x=>x.n!==s.n).map((x,i)=>({n:i+1,leds:x.leds})); renderShots(); };
+      shotsTable.append(tr);
+    });
+    renderCounts();
+  }
+  function renderCounts(){
+    const c={0:0,1:0,2:0,3:0,4:0,5:0};
+    session.shots.forEach(s=>{ if(c.hasOwnProperty(s.leds)) c[s.leds]++; });
+    qs('#liveCounts').innerHTML =
+      `<span class="pill">Nb LED 5 : <b>${c[5]}</b></span>
+       <span class="pill">Nb LED 4 : <b>${c[4]}</b></span>
+       <span class="pill">Nb LED 3 : <b>${c[3]}</b></span>
+       <span class="pill">Nb LED 2 : <b>${c[2]}</b></span>
+       <span class="pill">Nb LED 1 : <b>${c[1]}</b></span>
+       <span class="pill">Nb LED 0 : <b>${c[0]}</b></span>`;
+  }
 
-  function switchRunner(which){ if(session.finished) return; saveTemp(); session.active=which; reset(); resetRunnerState(); paintCourseHeader(); loadTemp(); }
+  function switchRunner(which){
+    if(session.finished) return;
+    saveTemp();
+    session.active=which;
+    reset();
+    resetRunnerState();
+    paintCourseHeader();
+    loadTemp();
+  }
   function resetRunnerState(){ session.laps=0; session.shots=[]; session.frac=0; renderLaps(); renderShots(); hideEnd(); }
-  function paintCourseHeader(){ const R=session[session.active]; document.getElementById('runnerTitle').textContent=`Coureur — ${R.prenom} ${R.nom}`; document.getElementById('courseMeta').textContent=`${R.classe} • ${R.sexe}`; document.getElementById('lapMeters').textContent=session.tourM; document.getElementById('target').textContent=session.dureeMin; }
+  function paintCourseHeader(){
+    const R=session[session.active];
+    document.getElementById('runnerTitle').textContent=`Coureur — ${R.prenom} ${R.nom}`;
+    document.getElementById('courseMeta').textContent=`${R.classe} • ${R.sexe}`;
+    document.getElementById('lapMeters').textContent=session.tourM;
+    document.getElementById('target').textContent=session.dureeMin;
+  }
 
   const temp={ p1:{laps:0,frac:0,shots:[]}, p2:{laps:0,frac:0,shots:[]} };
   function saveTemp(){ temp[session.active]={ laps:session.laps, frac:session.frac, shots:JSON.parse(JSON.stringify(session.shots)) }; }
@@ -368,7 +456,7 @@
   };
 
   backToCourseBtn.onclick=()=> show('course');
-  backHome2Btn.onclick=()=> show('cover');
+  backHome2Btn.onclick=()=> { if(confirmLeaveIfNeeded()) show('cover'); };
 
   // ===== Initialisation =====
   validate();
