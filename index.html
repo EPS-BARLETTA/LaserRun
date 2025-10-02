@@ -74,11 +74,11 @@
         <div class="panel panel1">
           <h3>COUREUR 1</h3>
           <label>Prénom</label>
-          <input id="p1_prenom" maxlength="30" autocomplete="off"/>
+          <input id="p1_prenom" maxlength="60" autocomplete="off"/>
           <label>Nom</label>
-          <input id="p1_nom" maxlength="30" autocomplete="off"/>
+          <input id="p1_nom" maxlength="60" autocomplete="off"/>
           <label>Classe</label>
-          <input id="p1_classe" maxlength="30" autocomplete="off"/>
+          <input id="p1_classe" maxlength="60" autocomplete="off"/>
           <label>Sexe</label>
           <select id="p1_sexe">
             <option value="">—</option>
@@ -89,11 +89,11 @@
         <div class="panel panel2">
           <h3>COUREUR 2</h3>
           <label>Prénom</label>
-          <input id="p2_prenom" maxlength="30" autocomplete="off"/>
+          <input id="p2_prenom" maxlength="60" autocomplete="off"/>
           <label>Nom</label>
-          <input id="p2_nom" maxlength="30" autocomplete="off"/>
+          <input id="p2_nom" maxlength="60" autocomplete="off"/>
           <label>Classe</label>
-          <input id="p2_classe" maxlength="30" autocomplete="off"/>
+          <input id="p2_classe" maxlength="60" autocomplete="off"/>
           <label>Sexe</label>
           <select id="p2_sexe">
             <option value="">—</option>
@@ -157,18 +157,8 @@
           </div>
         </div>
         <div class="card">
-          <h3>🎯 Tir (5 LED)</h3>
-          <div class="btns">
-            <select id="ledSelect" style="max-width:220px">
-              <option value="0">0</option>
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5" selected>5</option>
-            </select>
-            <button class="b-violet" id="addShot">+ Ajouter session</button>
-          </div>
+          <h3>🎯 Tir — Nombre de LED allumées</h3>
+          <!-- Gros boutons 0–5 uniquement -->
           <div class="shot-grid">
             <button class="b-slate" data-quick="0">0</button>
             <button class="b-slate" data-quick="1">1</button>
@@ -233,7 +223,7 @@
   const V = { cover: qs('#view-cover'), duo: qs('#view-duo'), course: qs('#view-course'), summary: qs('#view-summary') };
   function show(name){ Object.values(V).forEach(v=>v.classList.add('hidden')); V[name].classList.remove('hidden'); window.scrollTo(0,0); }
   qs('#btnStart').onclick = ()=> show('duo');
-  qs('#btnHelp').onclick = ()=> alert('1) Démarrer → saisir les 2 élèves.\\n2) Course : Start, +1 tour, Tir (0–5 LED), fraction de tour.\\n3) Fin : QR JSON (ScanProf).');
+  qs('#btnHelp').onclick = ()=> alert('1) Démarrer → saisir les 2 élèves.\\n2) Course : Start, +1 tour, Tir (boutons 0–5), fraction de tour.\\n3) Fin : QR JSON (ScanProf).');
 
   // protèger Accueil / Retour si course en cours
   function confirmLeaveIfNeeded(){
@@ -245,25 +235,23 @@
   qs('#goHome').onclick = ()=> { if(confirmLeaveIfNeeded()) show('cover'); };
   qs('#backToDuo').onclick = ()=> { if(confirmLeaveIfNeeded()) show('duo'); };
 
-  // ===== Validation stricte (empêche la navigation si manquant) =====
+  // ===== Validation (présence obligatoire) =====
   function clean(s){ return (s||'').replace(/\\s+/g,' ').trim(); }
-  function minLen(s,n){ return clean(s).length>=n; }
-  function onlyLetters(s){ return /^[A-Za-zÀ-ÖØ-öø-ÿ\\-\\s']+$/.test(clean(s)); }
+  function hasValue(id){ return clean(document.getElementById(id).value).length>0; }
   function okNumber(v,min){ const n=+v; return Number.isFinite(n)&&n>=min; }
   function val(id){ return clean(document.getElementById(id).value); }
 
   function validate(){
-    const fields=[
-      ['p1_prenom',2,true],['p1_nom',2,true],['p1_classe',1,false],['p1_sexe',1,false],
-      ['p2_prenom',2,true],['p2_nom',2,true],['p2_classe',1,false],['p2_sexe',1,false]
-    ];
+    const fields=['p1_prenom','p1_nom','p1_classe','p1_sexe','p2_prenom','p2_nom','p2_classe','p2_sexe'];
     let ok=true;
-    fields.forEach(([id,min,letters])=>{
-      const el=document.getElementById(id); const v=val(id);
-      let good=minLen(v,min); if(letters) good=good&&onlyLetters(v);
-      el.style.borderColor = good?'#e5e7eb':'#ef4444'; ok=ok&&good;
+    fields.forEach(id=>{
+      const el=document.getElementById(id);
+      const good=hasValue(id);
+      el.style.borderColor = good?'#e5e7eb':'#ef4444';
+      ok = ok && good;
     });
-    const okDur=okNumber(val('duree_min'),1); const okTour=okNumber(val('tour_m'),10);
+    const okDur=okNumber(val('duree_min'),1);
+    const okTour=okNumber(val('tour_m'),10);
     document.getElementById('duree_min').style.borderColor = okDur?'#e5e7eb':'#ef4444';
     document.getElementById('tour_m').style.borderColor = okTour?'#e5e7eb':'#ef4444';
     ok = ok && okDur && okTour;
@@ -278,7 +266,7 @@
 
   // Accès course
   qs('#goCourse').onclick = ()=>{
-    if(!validate()) { alert('Complétez tous les champs (noms ≥ 2 lettres, durée/tour en chiffres).'); return; }
+    if(!validate()) { alert('Complétez tous les champs (obligatoires) et vérifiez les nombres.'); return; }
     session.p1={ prenom:val('p1_prenom'), nom:val('p1_nom'), classe:val('p1_classe'), sexe:val('p1_sexe') };
     session.p2={ prenom:val('p2_prenom'), nom:val('p2_nom'), classe:val('p2_classe'), sexe:val('p2_sexe') };
     session.dureeMin=+val('duree_min'); session.tourM=+val('tour_m');
@@ -296,7 +284,6 @@
   qs('#pickP2').onclick=()=> switchRunner('p2');
   qs('#lapPlus').onclick=()=>{ if(session.finished) return; session.laps++; renderLaps(); };
   qs('#lapMinus').onclick=()=>{ if(session.finished) return; session.laps=Math.max(0,session.laps-1); renderLaps(); };
-  qs('#addShot').onclick=()=>{ if(session.finished) return; addShot(); };
 
   document.querySelectorAll('[data-quick]').forEach(btn=>{
     btn.onclick=()=>{ if(session.finished) return; const v=+btn.getAttribute('data-quick'); addShot(v); };
@@ -343,9 +330,8 @@
     updateDistanceOutput();
   }
 
-  function addShot(val){
+  function addShot(leds){
     const n=session.shots.length+1;
-    const leds=(typeof val==='number')? val : +qs('#ledSelect').value;
     session.shots.push({n,leds});
     renderShots();
   }
