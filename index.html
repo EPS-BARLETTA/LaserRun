@@ -197,9 +197,10 @@
   <main class="shell hidden" id="view-summary">
     <section class="card center">
       <h2>Bilan — QR compatible ScanProf</h2>
-      <p class="muted">Format : tableau JSON d'objets {nom, prenom, classe, sexe, distance, vitesse, tir_0..tir_5}</p>
+      <p class="muted">Format : tableau JSON d'objets {nom, prenom, classe, sexe, distance, vitesse, <strong>nb_led_0..nb_led_5</strong>}</p>
       <div id="qr" class="card" style="display:inline-block"></div>
       <p class="muted" id="qrText" style="word-break:break-all"></p>
+      <div id="resume"></div>
       <div class="btns" style="margin-top:8px">
         <button class="b-slate" id="backToCourse">⬅ Retour course</button>
         <button class="b-green" id="backHome2">🏠 Accueil</button>
@@ -221,13 +222,13 @@
   const V = { cover: qs('#view-cover'), duo: qs('#view-duo'), course: qs('#view-course'), summary: qs('#view-summary') };
   function show(name){ Object.values(V).forEach(v=>v.classList.add('hidden')); V[name].classList.remove('hidden'); window.scrollTo(0,0); }
   qs('#btnStart').onclick = ()=> show('duo');
-  qs('#btnHelp').onclick = ()=> alert('1) Démarrer → saisir les 2 élèves.\n2) Course : Start, +1 tour, Tir (0–5 LED), fraction de tour.\n3) Fin : QR JSON (ScanProf).');
+  qs('#btnHelp').onclick = ()=> alert('1) Démarrer → saisir les 2 élèves.\\n2) Course : Start, +1 tour, Tir (0–5 LED), fraction de tour.\\n3) Fin : QR JSON (ScanProf).');
   qs('#goHome').onclick = ()=> show('cover');
 
   // ===== Validation stricte (empêche la navigation si manquant) =====
-  function clean(s){ return (s||'').replace(/\s+/g,' ').trim(); }
+  function clean(s){ return (s||'').replace(/\\s+/g,' ').trim(); }
   function minLen(s,n){ return clean(s).length>=n; }
-  function onlyLetters(s){ return /^[A-Za-zÀ-ÖØ-öø-ÿ\-\s']+$/.test(clean(s)); }
+  function onlyLetters(s){ return /^[A-Za-zÀ-ÖØ-öø-ÿ\\-\\s']+$/.test(clean(s)); }
   function okNumber(v,min){ const n=+v; return Number.isFinite(n)&&n>=min; }
   function val(id){ return clean(document.getElementById(id).value); }
 
@@ -313,7 +314,7 @@
     const counts=countShotsArray(session.shots.map(s=>s.leds));
     session.results[session.active]={ prenom:R.prenom, nom:R.nom, classe:R.classe, sexe:R.sexe,
       distance:meters, vitesse:vitesse,
-      tir_0:counts[0], tir_1:counts[1], tir_2:counts[2], tir_3:counts[3], tir_4:counts[4], tir_5:counts[5]
+      nb_led_0:counts[0], nb_led_1:counts[1], nb_led_2:counts[2], nb_led_3:counts[3], nb_led_4:counts[4], nb_led_5:counts[5]
     };
 
     // verrouille les contrôles pour ce coureur
@@ -321,7 +322,7 @@
     setTimeout(()=> document.getElementById('courseCard').classList.remove('lock'), 300);
 
     const other=session.active==='p1'?'p2':'p1';
-    if(!session.results[other]){ alert('Course du coureur terminée.\nPassez au second coureur.'); switchRunner(other); return; }
+    if(!session.results[other]){ alert('Course du coureur terminée.\\nPassez au second coureur.'); switchRunner(other); return; }
 
     session.finished=true;
     document.getElementById('pickP1').disabled=true;
@@ -334,8 +335,8 @@
 
   goSummaryBtn.onclick=()=>{
     const out=[];
-    if(session.results.p1){ const r=session.results.p1; out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse, tir_0:r.tir_0, tir_1:r.tir_1, tir_2:r.tir_2, tir_3:r.tir_3, tir_4:r.tir_4, tir_5:r.tir_5 }); }
-    if(session.results.p2){ const r=session.results.p2; out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse, tir_0:r.tir_0, tir_1:r.tir_1, tir_2:r.tir_2, tir_3:r.tir_3, tir_4:r.tir_4, tir_5:r.tir_5 }); }
+    if(session.results.p1){ const r=session.results.p1; out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse, nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5 }); }
+    if(session.results.p2){ const r=session.results.p2; out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse, nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5 }); }
 
     const payload=JSON.stringify(out);
     show('summary');
@@ -344,6 +345,26 @@
     qrBox.innerHTML='';
     try{ new QRCode(qrBox,{ text:payload, width:256, height:256, correctLevel:QRCode.CorrectLevel.M }); document.getElementById('qrText').textContent=payload; }
     catch(e){ document.getElementById('qrText').textContent='QR indisponible — contenu: '+payload; }
+
+    // Résumé lisible sous le QR
+    const rows = out.map(d => `
+      <tr>
+        <td>${d.nom}</td><td>${d.prenom}</td><td>${d.classe}</td><td>${d.sexe}</td>
+        <td>${d.distance}</td><td>${d.vitesse}</td>
+        <td>${d.nb_led_0}</td><td>${d.nb_led_1}</td><td>${d.nb_led_2}</td><td>${d.nb_led_3}</td><td>${d.nb_led_4}</td><td>${d.nb_led_5}</td>
+      </tr>
+    `).join('');
+    document.getElementById('resume').innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Nom</th><th>Prénom</th><th>Classe</th><th>Sexe</th>
+            <th>Distance (m)</th><th>Vitesse (km/h)</th>
+            <th>Nb LED 0</th><th>Nb LED 1</th><th>Nb LED 2</th><th>Nb LED 3</th><th>Nb LED 4</th><th>Nb LED 5</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
   };
 
   backToCourseBtn.onclick=()=> show('course');
