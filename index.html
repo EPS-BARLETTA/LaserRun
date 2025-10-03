@@ -82,6 +82,20 @@
   /* === Gros bouton +1 tour (ergonomie iPad) === */
   #lapPlus{font-size:22px; padding:18px 26px; border-radius:22px; min-width:180px}
   #lapMinus{font-size:20px; padding:16px 22px; border-radius:20px}
+
+  /* === OVERLAY fin de course (obligatoire) === */
+  #endOverlay{
+    position:fixed; inset:0; display:none; z-index:60;
+    align-items:center; justify-content:center;
+    background:rgba(2,6,23,.55);
+  }
+  #endOverlay.show{display:flex;}
+  .end-card{
+    background:#fff; border-radius:20px; padding:20px; width:min(720px,92%);
+    box-shadow:0 12px 48px rgba(2,6,23,.25); text-align:center;
+  }
+  .end-card h3{margin-top:0}
+  .end-note{color:var(--muted); margin-top:8px}
 </style>
 </head>
 <body>
@@ -263,6 +277,7 @@
         </div>
       </div>
 
+      <!-- Ancienne carte fin : on la garde cachée, remplacée par l'overlay -->
       <div class="card hidden" id="endCard" style="max-width:720px;margin:12px auto 0">
         <h3>⏱️ Temps écoulé — compléter la fraction de tour</h3>
         <div class="btns">
@@ -279,6 +294,24 @@
       </div>
     </section>
   </main>
+
+  <!-- ===== OVERLAY Fin obligatoire ===== -->
+  <div id="endOverlay" aria-modal="true" role="dialog">
+    <div class="end-card">
+      <h3>⏳ Temps écoulé</h3>
+      <p class="muted">Compléter la fraction de tour si besoin, puis valider la course.</p>
+      <div class="btns" style="margin:10px 0 4px">
+        <button class="b-slate" data-frac-overlay="0">+ 0</button>
+        <button class="b-slate" data-frac-overlay="0.25">+ 1/4</button>
+        <button class="b-slate" data-frac-overlay="0.5">+ 1/2</button>
+        <button class="b-slate" data-frac-overlay="0.75">+ 3/4</button>
+      </div>
+      <p class="end-note" id="distanceOutOverlay">Distance: — m</p>
+      <div class="btns" style="margin-top:8px">
+        <button class="b-green" id="finishRunnerOverlay">✅ Terminer la course</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ===== Page Bilan / QR ===== -->
   <main class="shell hidden" id="view-summary">
@@ -392,13 +425,36 @@
   function tick(){ elapsed=Date.now()-t0; const cs=Math.floor(elapsed/100); const m=Math.floor(cs/600), s=Math.floor((cs%600)/10), d=cs%10; document.getElementById('clock').textContent=`${m<10?'0':''}${m}:${s<10?'0':''}${s}.${d}`; if(m>=session.dureeMin){ pause(); showEnd(); } }
   qs('#btnStartCourse').onclick=start; qs('#btnPause').onclick=pause; qs('#btnReset').onclick=reset;
 
+  // === Overlay fin obligatoire ===
+  const endOverlay = document.getElementById('endOverlay');
+  const distanceOutOverlay = document.getElementById('distanceOutOverlay');
+  function updateDistanceOutputOverlay(){
+    const meters=Math.round((session.laps+(session.frac||0))*session.tourM);
+    distanceOutOverlay.textContent = `Distance: ${meters} m (${session.laps} tours + ${session.frac||0} tour)`;
+  }
+
   function showEnd(){
-    endCard.classList.remove('hidden');
-    updateDistanceOutput();
+    // Ancien panneau bas reste caché, on bascule sur overlay
+    endCard.classList.add('hidden');
+    session.frac = session.frac || 0; // par défaut 0
+    updateDistanceOutputOverlay();
+    courseCard.classList.add('lock'); // bloque la saisie en dessous
+    endOverlay.classList.add('show');
     if(navigator.vibrate) navigator.vibrate(150);
   }
-  function hideEnd(){ endCard.classList.add('hidden'); }
+  function hideEnd(){
+    endCard.classList.add('hidden');
+    endOverlay.classList.remove('show');
+    courseCard.classList.remove('lock');
+  }
 
+  // boutons fraction dans l'overlay
+  document.querySelectorAll('[data-frac-overlay]').forEach(b=>{
+    b.onclick=()=>{ if(session.finished) return; session.frac=+b.getAttribute('data-frac-overlay'); updateDistanceOutputOverlay(); };
+  });
+  document.getElementById('finishRunnerOverlay').onclick=()=> finalizeRunner();
+
+  // (carton bas conservé fonctionnel mais non utilisé)
   endCard.querySelectorAll('[data-frac]').forEach(b=> b.onclick=()=>{ if(session.finished) return; session.frac=+b.getAttribute('data-frac'); updateDistanceOutput(); });
   qs('#finishRunner').onclick=()=> finalizeRunner();
 
@@ -410,6 +466,7 @@
     document.getElementById('laps').textContent=session.laps;
     liveDistanceEl.textContent = Math.round((session.laps+(session.frac||0))*session.tourM);
     updateDistanceOutput();
+    updateDistanceOutputOverlay();
   }
 
   function addShot(leds){
@@ -474,12 +531,18 @@
       nb_led_0:counts[0], nb_led_1:counts[1], nb_led_2:counts[2], nb_led_3:counts[3], nb_led_4:counts[4], nb_led_5:counts[5]
     };
 
+    hideEnd(); // on retire l’overlay
     document.getElementById('courseCard').classList.add('lock');
     setTimeout(()=> document.getElementById('courseCard').classList.remove('lock'), 300);
 
     const other=session.active==='p1'?'p2':'p1';
-    if(!session.results[other]){ alert('Course du coureur terminée.\nPassez au second coureur.'); switchRunner(other); return; }
+    if(!session.results[other]){
+      alert('Course du coureur terminée.\nPassez au second coureur.');
+      switchRunner(other);
+      return;
+    }
 
+    // Les deux coureurs sont terminés -> on peut aller au bilan
     session.finished=true;
     document.getElementById('pickP1').disabled=true;
     document.getElementById('pickP2').disabled=true;
