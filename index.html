@@ -67,13 +67,14 @@
   .substack{display:flex; gap:12px; flex-wrap:wrap; justify-content:center;}
   .tagline{color:var(--muted)}
 
-  /* === Modales pro (Aide / Fiche sécurité) === */
+  /* === Modales pro (Aide / Fiche sécurité / Indice) === */
   .modal{position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:50;
     background:linear-gradient(180deg,rgba(2,6,23,.55),rgba(2,6,23,.35));}
   .modal-card{background:#fff; border-radius:20px; max-width:900px; width:92%; overflow:hidden; box-shadow:0 12px 48px rgba(2,6,23,.25)}
   .modal-head{display:flex; align-items:center; gap:12px; padding:16px 18px; color:#fff; font-weight:800}
   .modal-head.help{background:linear-gradient(90deg,#0a58ff,#7c3aed)}
   .modal-head.safe{background:linear-gradient(90deg,#22c55e,#0ea5e9)}
+  .modal-head.indice{background:linear-gradient(90deg,#111827,#0a58ff)}
   .modal-body{padding:18px}
   .modal-body h4{margin:12px 0 6px}
   .help-list{margin:8px 0 12px; line-height:1.55}
@@ -271,6 +272,7 @@
             <button class="b-slate" data-quick="4">4</button>
             <button class="b-slate" data-quick="5">5</button>
           </div>
+          <!-- Cumuls NB LED sous les numéros -->
           <p class="muted" id="liveCounts" style="margin-top:10px"></p>
           <div style="overflow:auto;margin-top:8px">
             <table>
@@ -281,7 +283,6 @@
         </div>
       </div>
 
-      <!-- Ancienne carte fin : conservée mais non utilisée -->
       <div class="card hidden" id="endCard" style="max-width:720px;margin:12px auto 0">
         <h3>⏱️ Temps écoulé — compléter la fraction de tour</h3>
         <div class="btns">
@@ -321,6 +322,9 @@
   <main class="shell hidden" id="view-summary">
     <section class="card center">
       <h2>Bilan — QR compatible ScanProf</h2>
+      <div class="btns" style="margin:8px 0 4px">
+        <button class="b-slate" id="btnIndiceInfo">ℹ️ Indice tir</button>
+      </div>
       <div id="qr" class="card" style="display:inline-block"></div>
 
       <!-- Outils Prof (code 57) -->
@@ -345,6 +349,29 @@
     </section>
   </main>
 
+  <!-- ===== Modale Indice Tir ===== -->
+  <div class="modal hidden" id="modalIndice">
+    <div class="modal-card">
+      <div class="modal-head indice"><span>ℹ️</span><span>Indice de performance au tir</span></div>
+      <div class="modal-body">
+        <p><strong>Comment c’est calculé ?</strong></p>
+        <p>Indice = moyenne des LED allumées (sur 100) <em>+ bonus</em> pour chaque tir parfait (5/5).</p>
+        <ul class="help-list">
+          <li>Plus tu allumes de LED en <strong>moyenne</strong>, plus l’indice est haut.</li>
+          <li>Les <strong>5/5</strong> donnent un petit bonus. La <strong>régularité</strong> reste la clé.</li>
+        </ul>
+        <p><strong>Ce que ça veut dire :</strong></p>
+        <ul class="help-list">
+          <li><b>80 et +</b> : excellent niveau de précision ✅</li>
+          <li><b>60–79</b> : bon niveau 👍</li>
+          <li><b>40–59</b> : en progrès 🟨</li>
+          <li><b>moins de 40</b> : à travailler 🔴</li>
+        </ul>
+        <div class="btns"><button class="b-slate" data-close>Fermer</button></div>
+      </div>
+    </div>
+  </div>
+
   <footer>
     <div>LaserRun - Équipe EPS Lycée Vauban - LUXEMBOURG - JB</div>
   </footer>
@@ -360,11 +387,12 @@
   function show(name){ Object.values(V).forEach(v=>v.classList.add('hidden')); V[name].classList.remove('hidden'); window.scrollTo(0,0); }
   qs('#btnStart').onclick = ()=> show('duo');
 
-  // Modales Aide & Sécurité (pro)
+  // Modales Aide & Sécurité & Indice (pro)
   function openModal(id){ document.getElementById(id).classList.remove('hidden'); }
   function closeModals(){ document.querySelectorAll('.modal').forEach(m=>m.classList.add('hidden')); }
   document.getElementById('btnHelp').onclick = ()=> openModal('modalHelp');
   document.getElementById('btnSafety').onclick = ()=> openModal('modalSafety');
+  document.getElementById('btnIndiceInfo').onclick = ()=> openModal('modalIndice');
   document.querySelectorAll('.modal [data-close]').forEach(b=> b.onclick = closeModals);
   document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModals(); });
 
@@ -488,6 +516,7 @@
   }
   function renderShots(){
     shotsTable.innerHTML='';
+    // ORDRE INVERSE : dernier tir en premier
     [...session.shots].reverse().forEach(s=>{
       const tr=document.createElement('tr');
       tr.innerHTML=`<td>${s.n}</td><td>${s.leds}</td><td><button class="b-red">Retirer</button></td>`;
@@ -532,14 +561,30 @@
 
   function countShotsArray(arr){ const c={0:0,1:0,2:0,3:0,4:0,5:0}; arr.forEach(v=>{ if(c.hasOwnProperty(v)) c[v]++; }); return c; }
 
+  // ===== Indice Tir (option 2 : base + bonus perfection b=0.10) =====
+  function computeIndiceFromCounts(counts){
+    const T = counts[0]+counts[1]+counts[2]+counts[3]+counts[4]+counts[5];
+    if(!T) return {indice:0, niveau:'—'};
+    const totalLed = 0*counts[0] + 1*counts[1] + 2*counts[2] + 3*counts[3] + 4*counts[4] + 5*counts[5];
+    const base = (totalLed / (5*T)) * 100; // 0..100
+    const b = 0.10; // bonus 10%
+    const bonus = b * (counts[5]/T) * 100; // 0..10
+    const indice = +(base + bonus).toFixed(2);
+    let niveau = 'à travailler 🔴';
+    if(indice>=80) niveau='excellent ✅'; else if(indice>=60) niveau='bon 👍'; else if(indice>=40) niveau='en progrès 🟨';
+    return {indice, niveau};
+  }
+
   function finalizeRunner(){
     const R=session[session.active];
     const meters=Math.round((session.laps+(session.frac||0))*session.tourM);
     const vitesse=+(meters*60/(1000*session.dureeMin)).toFixed(2); // km/h
     const counts=countShotsArray(session.shots.map(s=>s.leds));
+    const ind = computeIndiceFromCounts(counts);
     session.results[session.active]={ prenom:R.prenom, nom:R.nom, classe:R.classe, sexe:R.sexe,
       distance:meters, vitesse:vitesse,
-      nb_led_0:counts[0], nb_led_1:counts[1], nb_led_2:counts[2], nb_led_3:counts[3], nb_led_4:counts[4], nb_led_5:counts[5]
+      nb_led_0:counts[0], nb_led_1:counts[1], nb_led_2:counts[2], nb_led_3:counts[3], nb_led_4:counts[4], nb_led_5:counts[5],
+      indice_tir: ind.indice, niveau_tir: ind.niveau
     };
 
     hideEnd();
@@ -576,7 +621,8 @@
   function toCSV(data) {
     const headers = [
       'nom','prenom','classe','sexe','distance','vitesse',
-      'nb_led_0','nb_led_1','nb_led_2','nb_led_3','nb_led_4','nb_led_5'
+      'nb_led_0','nb_led_1','nb_led_2','nb_led_3','nb_led_4','nb_led_5',
+      'indice_tir','niveau_tir'
     ];
     const esc = (v) => {
       const s = (v==null ? '' : String(v));
@@ -591,7 +637,7 @@
   }
 
   function renderSummary(){
-    // table (editable si profMode)
+    // table (editable si profMode) — ajoute Indice & Niveau (non éditables)
     const rows = summaryData.map((d,i) => `
       <tr data-index="${i}">
         <td data-field="nom" ${profMode?'contenteditable="true"':''}>${d.nom}</td>
@@ -606,6 +652,8 @@
         <td data-field="nb_led_3" ${profMode?'contenteditable="true"':''}>${d.nb_led_3}</td>
         <td data-field="nb_led_4" ${profMode?'contenteditable="true"':''}>${d.nb_led_4}</td>
         <td data-field="nb_led_5" ${profMode?'contenteditable="true"':''}>${d.nb_led_5}</td>
+        <td>${d.indice_tir}</td>
+        <td>${d.niveau_tir}</td>
       </tr>
     `).join('');
     document.getElementById('resume').innerHTML = `
@@ -615,12 +663,13 @@
             <th>Nom</th><th>Prénom</th><th>Classe</th><th>Sexe</th>
             <th>Distance (m)</th><th>Vitesse (km/h)</th>
             <th>Nb LED 0</th><th>Nb LED 1</th><th>Nb LED 2</th><th>Nb LED 3</th><th>Nb LED 4</th><th>Nb LED 5</th>
+            <th>Indice tir</th><th>Niveau</th>
           </tr>
         </thead>
         <tbody id="resumeBody">${rows}</tbody>
       </table>`;
 
-    // QR (toujours à jour de summaryData)
+    // QR (toujours à jour de summaryData) — inclut indice & niveau
     const payload = JSON.stringify(summaryData);
     buildQR(payload);
 
@@ -646,7 +695,7 @@
     deact.disabled = !profMode;
     apply.disabled = !profMode;
     profHint.textContent = profMode
-      ? 'Mode Prof activé : cliquez dans une cellule pour corriger, puis “Mettre à jour QR/CSV”.'
+      ? 'Mode Prof activé : corrigez puis “Mettre à jour QR/CSV”. L\'indice est recalculé automatiquement.'
       : 'Saisir le code 57 pour corriger une valeur (distance, LED, etc.).';
   }
 
@@ -655,11 +704,16 @@
     const rows = Array.from(tbody.querySelectorAll('tr'));
     const next = rows.map(tr=>{
       function txt(field){ return (tr.querySelector(`[data-field="${field}"]`)?.textContent||'').trim(); }
-      // Nettoyage et validation
-      const sexeRaw = txt('sexe').toUpperCase();
+      const sexeRaw = (txt('sexe')||'').toUpperCase();
       const sexe = (sexeRaw==='F' || sexeRaw==='M') ? sexeRaw : 'F';
-      function num(field, def=0){ const v=Number(txt(field).replace(',', '.')); return Number.isFinite(v) ? v : def; }
+      function num(field, def=0){ const v=Number((txt(field)||'').replace(',', '.')); return Number.isFinite(v) ? v : def; }
       function int(field, def=0){ const v=parseInt(txt(field),10); return Number.isFinite(v)? Math.max(0,v) : def; }
+
+      const counts = {
+        0:int('nb_led_0'), 1:int('nb_led_1'), 2:int('nb_led_2'),
+        3:int('nb_led_3'), 4:int('nb_led_4'), 5:int('nb_led_5')
+      };
+      const ind = computeIndiceFromCounts(counts);
 
       return {
         nom: txt('nom'),
@@ -668,12 +722,10 @@
         sexe,
         distance: int('distance'),
         vitesse: Number(num('vitesse').toFixed(2)),
-        nb_led_0: int('nb_led_0'),
-        nb_led_1: int('nb_led_1'),
-        nb_led_2: int('nb_led_2'),
-        nb_led_3: int('nb_led_3'),
-        nb_led_4: int('nb_led_4'),
-        nb_led_5: int('nb_led_5'),
+        nb_led_0: counts[0], nb_led_1: counts[1], nb_led_2: counts[2],
+        nb_led_3: counts[3], nb_led_4: counts[4], nb_led_5: counts[5],
+        indice_tir: ind.indice,
+        niveau_tir: ind.niveau,
       };
     });
     return next;
@@ -697,16 +749,15 @@
     if(!profMode) return;
     const updated = parseEditsFromTable();
     summaryData = updated;
-    // régénère QR et rafraîchit la table (reste en mode prof)
     renderSummary();
     alert('Bilan mis à jour. QR et CSV régénérés.');
   };
 
-  // Aller au bilan (remplace l’ancienne génération inline)
+  // Aller au bilan
   goSummaryBtn.onclick=()=>{
     const out=[];
-    if(session.results.p1){ const r=session.results.p1; out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse, nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5 }); }
-    if(session.results.p2){ const r=session.results.p2; out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse, nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5 }); }
+    if(session.results.p1){ const r=session.results.p1; out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse, nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5, indice_tir:r.indice_tir, niveau_tir:r.niveau_tir }); }
+    if(session.results.p2){ const r=session.results.p2; out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse, nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5, indice_tir:r.indice_tir, niveau_tir:r.niveau_tir }); }
 
     summaryData = out; // stocke pour édition
     show('summary');
