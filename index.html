@@ -96,6 +96,12 @@
   }
   .end-card h3{margin-top:0}
   .end-note{color:var(--muted); margin-top:8px}
+
+  /* === Mode Prof (édition) === */
+  .prof-tools{max-width:720px;margin:12px auto}
+  .prof-row{display:flex; gap:8px; justify-content:center; align-items:center; flex-wrap:wrap}
+  .prof-row input{padding:10px 12px; border:2px solid #e5e7eb; border-radius:12px; font:inherit; width:160px}
+  .prof-on td[contenteditable="true"]{outline:2px dashed #0a58ff; background:#edf2ff}
 </style>
 </head>
 <body>
@@ -257,7 +263,6 @@
         </div>
         <div class="card">
           <h3>🎯 Tir — Nombre de LED allumées</h3>
-          <!-- Gros boutons 0–5 uniquement -->
           <div class="shot-grid">
             <button class="b-slate" data-quick="0">0</button>
             <button class="b-slate" data-quick="1">1</button>
@@ -266,7 +271,6 @@
             <button class="b-slate" data-quick="4">4</button>
             <button class="b-slate" data-quick="5">5</button>
           </div>
-          <!-- Cumuls NB LED sous les numéros -->
           <p class="muted" id="liveCounts" style="margin-top:10px"></p>
           <div style="overflow:auto;margin-top:8px">
             <table>
@@ -277,7 +281,7 @@
         </div>
       </div>
 
-      <!-- Ancienne carte fin : on la garde cachée, remplacée par l'overlay -->
+      <!-- Ancienne carte fin : conservée mais non utilisée -->
       <div class="card hidden" id="endCard" style="max-width:720px;margin:12px auto 0">
         <h3>⏱️ Temps écoulé — compléter la fraction de tour</h3>
         <div class="btns">
@@ -318,12 +322,22 @@
     <section class="card center">
       <h2>Bilan — QR compatible ScanProf</h2>
       <div id="qr" class="card" style="display:inline-block"></div>
-      <!-- Boutons d'action sous le QR -->
-      <div class="btns" style="margin:10px 0">
-        <button class="b-violet" id="exportCsv">⬇️ Export CSV</button>
+
+      <!-- Outils Prof (code 57) -->
+      <div class="card prof-tools">
+        <div class="prof-row">
+          <input id="profCode" type="password" inputmode="numeric" placeholder="Entrer code Prof (57)"/>
+          <button class="b-slate" id="activateProf">🔓 Activer mode Prof</button>
+          <button class="b-amber" id="deactivateProf" disabled>🔒 Désactiver</button>
+          <button class="b-violet" id="applyEdits" disabled>💾 Mettre à jour QR/CSV</button>
+          <button class="b-violet" id="exportCsv">⬇️ Export CSV</button>
+        </div>
+        <p class="muted" id="profHint" style="margin-top:8px"></p>
       </div>
-      <!-- Tableau récapitulatif lisible -->
+
+      <!-- Tableau récapitulatif lisible/éditable -->
       <div id="resume"></div>
+
       <div class="btns" style="margin-top:8px">
         <button class="b-slate" id="backToCourse">⬅ Retour course</button>
         <button class="b-green" id="backHome2">🏠 Accueil</button>
@@ -434,11 +448,10 @@
   }
 
   function showEnd(){
-    // Ancien panneau bas reste caché, on bascule sur overlay
     endCard.classList.add('hidden');
-    session.frac = session.frac || 0; // par défaut 0
+    session.frac = session.frac || 0;
     updateDistanceOutputOverlay();
-    courseCard.classList.add('lock'); // bloque la saisie en dessous
+    courseCard.classList.add('lock');
     endOverlay.classList.add('show');
     if(navigator.vibrate) navigator.vibrate(150);
   }
@@ -448,13 +461,12 @@
     courseCard.classList.remove('lock');
   }
 
-  // boutons fraction dans l'overlay
   document.querySelectorAll('[data-frac-overlay]').forEach(b=>{
     b.onclick=()=>{ if(session.finished) return; session.frac=+b.getAttribute('data-frac-overlay'); updateDistanceOutputOverlay(); };
   });
   document.getElementById('finishRunnerOverlay').onclick=()=> finalizeRunner();
 
-  // (carton bas conservé fonctionnel mais non utilisé)
+  // (panneau bas conservé mais non utilisé)
   endCard.querySelectorAll('[data-frac]').forEach(b=> b.onclick=()=>{ if(session.finished) return; session.frac=+b.getAttribute('data-frac'); updateDistanceOutput(); });
   qs('#finishRunner').onclick=()=> finalizeRunner();
 
@@ -476,7 +488,6 @@
   }
   function renderShots(){
     shotsTable.innerHTML='';
-    // ===== ORDRE INVERSE : dernier tir en premier =====
     [...session.shots].reverse().forEach(s=>{
       const tr=document.createElement('tr');
       tr.innerHTML=`<td>${s.n}</td><td>${s.leds}</td><td><button class="b-red">Retirer</button></td>`;
@@ -524,14 +535,14 @@
   function finalizeRunner(){
     const R=session[session.active];
     const meters=Math.round((session.laps+(session.frac||0))*session.tourM);
-    const vitesse=+(meters*60/(1000*session.dureeMin)).toFixed(2); // km/h (on conserve ton export existant)
+    const vitesse=+(meters*60/(1000*session.dureeMin)).toFixed(2); // km/h
     const counts=countShotsArray(session.shots.map(s=>s.leds));
     session.results[session.active]={ prenom:R.prenom, nom:R.nom, classe:R.classe, sexe:R.sexe,
       distance:meters, vitesse:vitesse,
       nb_led_0:counts[0], nb_led_1:counts[1], nb_led_2:counts[2], nb_led_3:counts[3], nb_led_4:counts[4], nb_led_5:counts[5]
     };
 
-    hideEnd(); // on retire l’overlay
+    hideEnd();
     document.getElementById('courseCard').classList.add('lock');
     setTimeout(()=> document.getElementById('courseCard').classList.remove('lock'), 300);
 
@@ -542,42 +553,63 @@
       return;
     }
 
-    // Les deux coureurs sont terminés -> on peut aller au bilan
     session.finished=true;
     document.getElementById('pickP1').disabled=true;
     document.getElementById('pickP2').disabled=true;
     toSummaryWrap.classList.remove('hidden');
   }
 
-  // ===== Bilan / QR =====
+  // ===== Bilan / QR + MODE PROF =====
   const backToCourseBtn=qs('#backToCourse'); const backHome2Btn=qs('#backHome2'); const goSummaryBtn=qs('#goSummary');
 
-  goSummaryBtn.onclick=()=>{
-    const out=[];
-    if(session.results.p1){ const r=session.results.p1; out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse, nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5 }); }
-    if(session.results.p2){ const r=session.results.p2; out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse, nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5 }); }
+  // Données affichées dans le bilan (persistées pour édition)
+  let summaryData = [];
+  let profMode = false;
 
-    const payload=JSON.stringify(out);
-    show('summary');
-
+  function buildQR(payload){
     const qrBox=document.getElementById('qr');
     qrBox.innerHTML='';
-    try{
-      new QRCode(qrBox,{ text:payload, width:256, height:256, correctLevel:QRCode.CorrectLevel.M });
-    }catch(e){
-      console.warn('QR non généré:', e);
-    }
+    try{ new QRCode(qrBox,{ text:payload, width:256, height:256, correctLevel:QRCode.CorrectLevel.M }); }
+    catch(e){ console.warn('QR non généré:', e); }
+  }
 
-    // Résumé lisible sous le QR (tableau)
-    const rows = out.map(d => `
-      <tr>
-        <td>${d.nom}</td><td>${d.prenom}</td><td>${d.classe}</td><td>${d.sexe}</td>
-        <td>${d.distance}</td><td>${d.vitesse}</td>
-        <td>${d.nb_led_0}</td><td>${d.nb_led_1}</td><td>${d.nb_led_2}</td><td>${d.nb_led_3}</td><td>${d.nb_led_4}</td><td>${d.nb_led_5}</td>
+  function toCSV(data) {
+    const headers = [
+      'nom','prenom','classe','sexe','distance','vitesse',
+      'nb_led_0','nb_led_1','nb_led_2','nb_led_3','nb_led_4','nb_led_5'
+    ];
+    const esc = (v) => {
+      const s = (v==null ? '' : String(v));
+      if (/[;\"\n]/.test(s)) return `"${s.replace(/\"/g,'""')}"`;
+      return s;
+    };
+    const lines = [
+      headers.join(';'),
+      ...data.map(d => headers.map(h => esc(d[h])).join(';'))
+    ];
+    return lines.join('\n');
+  }
+
+  function renderSummary(){
+    // table (editable si profMode)
+    const rows = summaryData.map((d,i) => `
+      <tr data-index="${i}">
+        <td data-field="nom" ${profMode?'contenteditable="true"':''}>${d.nom}</td>
+        <td data-field="prenom" ${profMode?'contenteditable="true"':''}>${d.prenom}</td>
+        <td data-field="classe" ${profMode?'contenteditable="true"':''}>${d.classe}</td>
+        <td data-field="sexe" ${profMode?'contenteditable="true"':''}>${d.sexe}</td>
+        <td data-field="distance" ${profMode?'contenteditable="true"':''}>${d.distance}</td>
+        <td data-field="vitesse" ${profMode?'contenteditable="true"':''}>${d.vitesse}</td>
+        <td data-field="nb_led_0" ${profMode?'contenteditable="true"':''}>${d.nb_led_0}</td>
+        <td data-field="nb_led_1" ${profMode?'contenteditable="true"':''}>${d.nb_led_1}</td>
+        <td data-field="nb_led_2" ${profMode?'contenteditable="true"':''}>${d.nb_led_2}</td>
+        <td data-field="nb_led_3" ${profMode?'contenteditable="true"':''}>${d.nb_led_3}</td>
+        <td data-field="nb_led_4" ${profMode?'contenteditable="true"':''}>${d.nb_led_4}</td>
+        <td data-field="nb_led_5" ${profMode?'contenteditable="true"':''}>${d.nb_led_5}</td>
       </tr>
     `).join('');
     document.getElementById('resume').innerHTML = `
-      <table>
+      <table id="summaryTable" ${profMode?'class="prof-on"':''}>
         <thead>
           <tr>
             <th>Nom</th><th>Prénom</th><th>Classe</th><th>Sexe</th>
@@ -585,40 +617,101 @@
             <th>Nb LED 0</th><th>Nb LED 1</th><th>Nb LED 2</th><th>Nb LED 3</th><th>Nb LED 4</th><th>Nb LED 5</th>
           </tr>
         </thead>
-        <tbody>${rows}</tbody>
+        <tbody id="resumeBody">${rows}</tbody>
       </table>`;
 
-    // === Export CSV (séparateur ;) ===
-    function toCSV(data) {
-      const headers = [
-        'nom','prenom','classe','sexe','distance','vitesse',
-        'nb_led_0','nb_led_1','nb_led_2','nb_led_3','nb_led_4','nb_led_5'
-      ];
-      const esc = (v) => {
-        const s = (v==null ? '' : String(v));
-        if (/[;\"\n]/.test(s)) return `"${s.replace(/\"/g,'""')}"`;
-        return s;
-      };
-      const lines = [
-        headers.join(';'),
-        ...data.map(d => headers.map(h => esc(d[h])).join(';'))
-      ];
-      return lines.join('\n');
-    }
+    // QR (toujours à jour de summaryData)
+    const payload = JSON.stringify(summaryData);
+    buildQR(payload);
+
+    // CSV bouton (utilise summaryData courant)
     const exportBtn = document.getElementById('exportCsv');
     exportBtn.onclick = () => {
-      const csv = toCSV(out);
+      const csv = toCSV(summaryData);
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       const fileDate = new Date().toISOString().slice(0,10);
-      a.href = url;
-      a.download = `LaserRun_${fileDate}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      a.href = url; a.download = `LaserRun_${fileDate}.csv`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
       URL.revokeObjectURL(url);
     };
+
+    // Boutons prof
+    const profHint = document.getElementById('profHint');
+    const act = document.getElementById('activateProf');
+    const deact = document.getElementById('deactivateProf');
+    const apply = document.getElementById('applyEdits');
+    act.disabled = profMode;
+    deact.disabled = !profMode;
+    apply.disabled = !profMode;
+    profHint.textContent = profMode
+      ? 'Mode Prof activé : cliquez dans une cellule pour corriger, puis “Mettre à jour QR/CSV”.'
+      : 'Saisir le code 57 pour corriger une valeur (distance, LED, etc.).';
+  }
+
+  function parseEditsFromTable(){
+    const tbody = document.getElementById('resumeBody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const next = rows.map(tr=>{
+      function txt(field){ return (tr.querySelector(`[data-field="${field}"]`)?.textContent||'').trim(); }
+      // Nettoyage et validation
+      const sexeRaw = txt('sexe').toUpperCase();
+      const sexe = (sexeRaw==='F' || sexeRaw==='M') ? sexeRaw : 'F';
+      function num(field, def=0){ const v=Number(txt(field).replace(',', '.')); return Number.isFinite(v) ? v : def; }
+      function int(field, def=0){ const v=parseInt(txt(field),10); return Number.isFinite(v)? Math.max(0,v) : def; }
+
+      return {
+        nom: txt('nom'),
+        prenom: txt('prenom'),
+        classe: txt('classe'),
+        sexe,
+        distance: int('distance'),
+        vitesse: Number(num('vitesse').toFixed(2)),
+        nb_led_0: int('nb_led_0'),
+        nb_led_1: int('nb_led_1'),
+        nb_led_2: int('nb_led_2'),
+        nb_led_3: int('nb_led_3'),
+        nb_led_4: int('nb_led_4'),
+        nb_led_5: int('nb_led_5'),
+      };
+    });
+    return next;
+  }
+
+  // Activation mode Prof
+  document.getElementById('activateProf').onclick = ()=>{
+    const code = (document.getElementById('profCode').value||'').trim();
+    if(code === '57'){
+      profMode = true;
+      renderSummary();
+    }else{
+      alert('Code incorrect.');
+    }
+  };
+  document.getElementById('deactivateProf').onclick = ()=>{
+    profMode = false;
+    renderSummary();
+  };
+  document.getElementById('applyEdits').onclick = ()=>{
+    if(!profMode) return;
+    const updated = parseEditsFromTable();
+    summaryData = updated;
+    // régénère QR et rafraîchit la table (reste en mode prof)
+    renderSummary();
+    alert('Bilan mis à jour. QR et CSV régénérés.');
+  };
+
+  // Aller au bilan (remplace l’ancienne génération inline)
+  goSummaryBtn.onclick=()=>{
+    const out=[];
+    if(session.results.p1){ const r=session.results.p1; out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse, nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5 }); }
+    if(session.results.p2){ const r=session.results.p2; out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse, nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5 }); }
+
+    summaryData = out; // stocke pour édition
+    show('summary');
+    profMode = false; // par défaut verrouillé
+    renderSummary();
   };
 
   backToCourseBtn.onclick=()=> show('course');
