@@ -1,79 +1,134 @@
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LaserRun</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="laser.css">
 </head>
 <body>
-  <main id="view-cover">
-    <h1>LaserRun</h1>
-    <button id="btnStart">▶️ Démarrer</button>
+  <!-- ===== Page de garde ===== -->
+  <main class="shell" id="view-cover">
+    <section class="card center">
+      <h1>LaserRun</h1>
+      <p class="muted">Application EPS — compatible ScanProf</p>
+      <div class="btns" style="margin-top:20px">
+        <button class="b-primary" id="btnStart">▶️ Démarrer</button>
+      </div>
+    </section>
   </main>
 
-  <main id="view-duo" class="hidden">
-    <h2>Saisie des informations</h2>
-    <label>Prénom <input id="prenom"></label>
-    <label>Nom <input id="nom"></label>
-    <label>Classe <input id="classe"></label>
-    <label>Sexe 
-      <select id="sexe">
-        <option value="">—</option>
-        <option>F</option>
-        <option>M</option>
-      </select>
-    </label>
-    <label>Durée (minutes)<input id="duree_min" type="number"></label>
-    <label>Longueur tour (m)<input id="tour_m" type="number"></label>
-    <button id="goCourse">Accéder à la course</button>
+  <!-- ===== Page Saisie ===== -->
+  <main class="shell hidden" id="view-duo">
+    <section class="card">
+      <h2>Saisie des informations</h2>
+      <div class="row">
+        <div class="panel panel1">
+          <h3>COUREUR</h3>
+          <label>Prénom</label>
+          <input id="prenom" autocomplete="off" required>
+          <label>Nom</label>
+          <input id="nom" autocomplete="off" required>
+          <label>Classe</label>
+          <input id="classe" autocomplete="off" required>
+        </div>
+        <div class="panel panel2">
+          <h3>PARAMÈTRES</h3>
+          <label>Durée (minutes)</label>
+          <input id="duree_min" type="number" inputmode="numeric" min="1" step="1" placeholder="ex. 20" required>
+          <label>Longueur d'un tour (m)</label>
+          <input id="tour_m" type="number" inputmode="numeric" min="10" step="1" placeholder="ex. 200" required>
+        </div>
+      </div>
+      <div class="btns" style="margin-top:10px">
+        <button class="b-green" id="goCourse" disabled>Accéder à la course</button>
+        <button class="b-slate" id="goHome">🏠 Accueil</button>
+      </div>
+    </section>
   </main>
 
-  <main id="view-course" class="hidden">
-    <h2 id="runnerTitle">Course — </h2>
-    <div id="clockGeneral">00:00.0</div>
-    <button id="btnStartAll">▶️ Lancer</button>
-    <button id="btnPauseAll" disabled>⏸️ Pause</button>
-    <button id="btnResetAll" disabled>↺ Réinit.</button>
+  <!-- ===== Page course ===== -->
+  <main class="shell hidden" id="view-course">
+    <section class="card center">
+      <h2 id="runnerTitle">Course — </h2>
 
-    <h3>Tours</h3>
-    <div id="laps">0</div>
-    <button id="lapPlus">+1 tour</button>
-    <button id="lapMinus">−1</button>
+      <!-- Chrono général -->
+      <div class="card clockCard">
+        <h3>⏱️ Chrono GÉNÉRAL</h3>
+        <div class="xl" id="clockGeneral">00:00.0</div>
+        <div class="btns">
+          <button class="b-primary" id="btnStartAll">▶️ Lancer</button>
+          <button class="b-amber" id="btnPauseAll" disabled>⏸️ Pause</button>
+          <button class="b-red" id="btnResetAll" disabled>↺ Réinit.</button>
+        </div>
+        <p class="muted">Durée cible : <strong id="target"></strong> min • 1 tour = <strong id="lapMeters">—</strong> m</p>
+      </div>
 
-    <h3>Tir</h3>
-    <div id="shootIndicator" class="shoot-indicator shoot-red"></div>
-    <button id="btnStartShoot" disabled>🎯 Démarrer tir</button>
-    <div id="ledBtns">
-      <button data-led="0" disabled>0 LED</button>
-      <button data-led="1" disabled>1 LED</button>
-      <button data-led="2" disabled>2 LED</button>
-      <button data-led="3" disabled>3 LED</button>
-      <button data-led="4" disabled>4 LED</button>
-      <button data-led="5" disabled>5 LED</button>
-    </div>
-    <table>
-      <thead><tr><th>#</th><th>LED</th><th>Temps tir (s)</th><th>Action</th></tr></thead>
-      <tbody id="shotsTable"></tbody>
-    </table>
+      <!-- Tours -->
+      <div class="row">
+        <div class="card">
+          <h3>🏁 Tours</h3>
+          <div class="big" id="laps">0</div>
+          <div class="btns">
+            <button class="b-green" id="lapPlus">+1 tour</button>
+            <button class="b-slate" id="lapMinus">−1</button>
+          </div>
+        </div>
 
-    <div id="endCard" class="hidden">
-      <button data-frac="0">0</button>
-      <button data-frac="0.25">+1/4</button>
-      <button data-frac="0.5">+1/2</button>
-      <button data-frac="0.75">+3/4</button>
-      <button id="finish">✅ Terminer & QR</button>
-      <p id="distanceOut">Distance: — m</p>
-    </div>
+        <!-- Tir -->
+        <div class="card">
+          <h3>🎯 Tir</h3>
+          <div id="shootIndicator" class="shoot-indicator shoot-red"></div>
+          <div class="btns">
+            <button class="b-violet" id="btnStartShoot" disabled>🎯 Démarrer tir</button>
+          </div>
+          <div class="btns" id="ledBtns">
+            <button class="b-slate" data-led="0" disabled>0 LED</button>
+            <button class="b-slate" data-led="1" disabled>1 LED</button>
+            <button class="b-slate" data-led="2" disabled>2 LED</button>
+            <button class="b-slate" data-led="3" disabled>3 LED</button>
+            <button class="b-slate" data-led="4" disabled>4 LED</button>
+            <button class="b-slate" data-led="5" disabled>5 LED</button>
+          </div>
+          <div style="overflow:auto;margin-top:8px">
+            <table>
+              <thead><tr><th>#</th><th>LED</th><th>Temps tir (s)</th><th>Action</th></tr></thead>
+              <tbody id="shotsTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fin de temps -->
+      <div class="card hidden" id="endCard">
+        <h3>⏳ Temps écoulé — compléter la fraction de tour</h3>
+        <div class="btns">
+          <button class="b-slate" data-frac="0">0</button>
+          <button class="b-slate" data-frac="0.25">+ 1/4</button>
+          <button class="b-slate" data-frac="0.5">+ 1/2</button>
+          <button class="b-slate" data-frac="0.75">+ 3/4</button>
+          <button class="b-green" id="finish">✅ Terminer & QR</button>
+        </div>
+        <p class="muted" id="distanceOut">Distance: — m</p>
+      </div>
+    </section>
   </main>
 
-  <main id="view-summary" class="hidden">
-    <h2>Bilan</h2>
-    <div id="qr"></div>
-    <pre id="qrText"></pre>
+  <!-- ===== Page bilan / QR ===== -->
+  <main class="shell hidden" id="view-summary">
+    <section class="card center">
+      <h2>Bilan</h2>
+      <div id="qr"></div>
+      <pre id="qrText"></pre>
+    </section>
   </main>
 
-  <footer>LaserRun - Équipe EPS Lycée Vauban - LUXEMBOURG - JB</footer>
+  <footer>
+    <div>LaserRun - Équipe EPS Lycée Vauban - LUXEMBOURG - JB</div>
+  </footer>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="laser.js"></script>
