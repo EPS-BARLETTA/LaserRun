@@ -8,375 +8,789 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-  :root{ --bg:#f4f7fb; --card:#ffffff; --ink:#111827; --muted:#6b7280; --primary:#0a58ff;
-    --green:#22c55e; --amber:#f59e0b; --red:#ef4444; --violet:#7c3aed; --slate:#334155; --ring:0 8px 40px rgba(2,6,23,.08); }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;display:flex;flex-direction:column;min-height:100vh;padding-bottom:56px}
-  footer{position:fixed;left:0;right:0;bottom:0;border-top:1px solid #e5e7eb;color:var(--muted);text-align:center;padding:12px 8px;background:#fff}
-  .shell{max-width:980px;margin:0 auto;padding:16px}
-  h1{font-size:clamp(28px,4vw,40px);margin:8px 0 4px;font-weight:800;text-align:center}
-  h2{font-size:clamp(22px,3.2vw,32px);margin:8px 0 12px;font-weight:800;text-align:center}
-  h3{margin:0 0 10px;font-size:18px;text-align:center}
-  p{margin:0 8px 8px;text-align:center}
-  .card{background:var(--card);border-radius:16px;box-shadow:var(--ring);padding:16px;margin:12px 0}
-  .hero{padding:36px 20px}
-  .btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
-  button{border:0;border-radius:18px;padding:16px 22px;font-weight:800;cursor:pointer;font-size:20px;min-width:56px}
-  .b-primary{background:var(--primary);color:#fff}
-  .b-green{background:var(--green);color:#fff}
-  .b-amber{background:var(--amber);color:#111}
-  .b-red{background:var(--red);color:#fff}
-  .b-violet{background:var(--violet);color:#fff}
-  .b-slate{background:var(--slate);color:#fff}
-  .row{display:grid;grid-template-columns:1fr;gap:16px}
-  .two-col{grid-template-columns:1fr 1fr}
-  .panel{border-radius:16px;padding:16px}
-  .panel1{background:#e8f1ff}
-  .panel2{background:#e9fbe8}
-  .muted{color:var(--muted)}
-  .hidden{display:none!important}
-  .center{text-align:center}
-  .big{font-size:48px;font-weight:900}
-  .xl{font-size:64px;font-weight:900}
-  .distance-line{margin:8px 0;font-size:18px;text-align:center}
-  .shoot-indicator{width:48px;height:48px;border-radius:50%;margin:0 auto 10px;box-shadow:0 0 0 4px rgba(0,0,0,.04) inset}
-  .shoot-red{background:var(--red)}
-  .shoot-green{background:var(--green)}
-  .pulse{animation:pulse 1.4s infinite}
-  @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
-  table{width:100%;border-collapse:collapse}
-  th,td{padding:12px;border-bottom:1px solid #e5e7eb;text-align:center;font-size:18px}
-  /* Inputs XL (page saisie — on NE MODIFIE PAS la structure, juste confort) */
-  label{display:block;font-weight:800;margin:10px 0 6px;text-align:left}
-  input,select{width:100%;padding:16px 18px;border:2px solid #e5e7eb;border-radius:16px;background:#fff;font:inherit;font-size:18px}
-  /* Accueil centré vertical */
-  #view-cover{min-height:calc(100vh - 56px);display:flex;align-items:center;justify-content:center}
-  .cover-stack{display:flex;flex-direction:column;gap:16px;align-items:center}
-  .substack{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
-  .tagline{font-size:16px;color:var(--muted)}
-  /* Modales pro */
-  .modal{position:fixed;inset:0;background:linear-gradient(180deg,rgba(2,6,23,.55),rgba(2,6,23,.35));display:flex;align-items:center;justify-content:center;z-index:50}
-  .modal-card{background:#fff;border-radius:20px;max-width:900px;width:92%;padding:0;overflow:hidden;box-shadow:0 12px 48px rgba(2,6,23,.25)}
-  .modal-head{display:flex;align-items:center;gap:12px;padding:16px 18px;color:#fff;font-weight:800}
-  .modal-head.help{background:linear-gradient(90deg,#0a58ff,#7c3aed)}
-  .modal-head.safe{background:linear-gradient(90deg,#22c55e,#0ea5e9)}
-  .modal-body{padding:18px}
-  .modal-body h4{margin:12px 0 6px}
-  .badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800;background:#eef2f7;color:#334155}
-  .help-list{margin:8px 0 12px;line-height:1.55}
-  .help-list li{margin:6px 0}
-  .led-summary{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:8px}
-  .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:#eef2f7;font-weight:800}
-  .pill.led{min-width:46px;text-align:center}
-  .huge{font-size:24px;padding:18px 26px;border-radius:22px}
-  @media (max-width:780px){.two-col{grid-template-columns:1fr}.big{font-size:44px}.xl{font-size:56px}}
+ :root{
+   --bg:#f4f7fb; --card:#ffffff; --ink:#111827; --muted:#6b7280; --primary:#0a58ff;
+   --green:#22c55e; --amber:#f59e0b; --red:#ef4444; --violet:#7c3aed; --slate:#334155;
+   --radius:16px; --ring:0 8px 40px rgba(2,6,23,.08);
+   --panel1:#e8f1ff; --panel2:#e9fbe8; --band:#eef2f7;
+ }
+ *{box-sizing:border-box}
+ /* === Structure page + footer fixé bas === */
+ body{
+   margin:0;background:var(--bg);color:var(--ink);
+   font:16px/1.4 Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+   min-height:100vh; display:flex; flex-direction:column; padding-bottom:56px;
+ }
+ footer{
+   position:fixed; left:0; right:0; bottom:0;
+   border-top:1px solid #e5e7eb; color:var(--muted);
+   text-align:center; padding:10px 0; background:#fff;
+ }
+
+ .shell{max-width:980px;margin:0 auto;padding:16px}
+ h1{font-size:clamp(22px,3.4vw,32px);margin:8px 0 4px;font-weight:800;text-align:center}
+ h2{font-size:clamp(20px,2.8vw,28px);margin:8px 0 12px;font-weight:800;text-align:center}
+ h3{margin:0 0 10px;font-size:18px;text-align:center}
+ p{margin:0 0 8px;text-align:center}
+ .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--ring);padding:16px;margin:12px 0}
+ .btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+ button{border:0;border-radius:16px;padding:14px 18px;font-weight:800;cursor:pointer;font-size:18px}
+ .b-primary{background:var(--primary);color:#fff}
+ .b-green{background:var(--green);color:#fff}
+ .b-amber{background:var(--amber);color:#111}
+ .b-red{background:var(--red);color:#fff}
+ .b-violet{background:var(--violet);color:#fff}
+ .b-slate{background:var(--slate);color:#fff}
+ .row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+ .panel{border-radius:16px;padding:16px}
+ .panel1{background:var(--panel1)}
+ .panel2{background:var(--panel2)}
+ .band{background:var(--band);border-radius:12px;padding:10px 12px;margin-top:16px;font-weight:700}
+ label{display:block;font-weight:800;margin:10px 0 6px}
+ input,select{width:100%;padding:14px 16px;border:2px solid #e5e7eb;border-radius:14px;background:#fff;font:inherit}
+ input[type=number]{appearance:textfield}
+ select{background:#fff}
+ .muted{color:var(--muted)}
+ .hidden{display:none!important}
+ .center{text-align:center}
+ .big{font-size:40px;font-weight:900}
+ .xl{font-size:60px;font-weight:900}
+ .pill{display:inline-block;padding:6px 12px;border-radius:999px;background:#eef2f7}
+ table{width:100%;border-collapse:collapse}
+ th,td{padding:12px;border-bottom:1px solid #e5e7eb;text-align:center;font-size:16px}
+ .lock *{pointer-events:none; opacity:.7}
+ .shot-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px}
+
+ /* === Accueil centré verticalement === */
+ #view-cover{min-height:calc(100vh - 56px); display:flex; align-items:center; justify-content:center;}
+ .cover-stack{display:flex; flex-direction:column; gap:16px; align-items:center;}
+ .substack{display:flex; gap:12px; flex-wrap:wrap; justify-content:center;}
+ .tagline{color:var(--muted)}
+
+ /* === Modales pro (Aide / Fiche sécurité / Indice) === */
+ .modal{position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:50;
+   background:linear-gradient(180deg,rgba(2,6,23,.55),rgba(2,6,23,.35));}
+ .modal-card{background:#fff; border-radius:20px; max-width:900px; width:92%; overflow:hidden; box-shadow:0 12px 48px rgba(2,6,23,.25)}
+ .modal-head{display:flex; align-items:center; gap:12px; padding:16px 18px; color:#fff; font-weight:800}
+ .modal-head.help{background:linear-gradient(90deg,#0a58ff,#7c3aed)}
+ .modal-head.safe{background:linear-gradient(90deg,#22c55e,#0ea5e9)}
+ .modal-head.indice{background:linear-gradient(90deg,#111827,#0a58ff)}
+ .modal-body{padding:18px}
+ .modal-body h4{margin:12px 0 6px}
+ .help-list{margin:8px 0 12px; line-height:1.55}
+ .help-list li{margin:6px 0}
+
+ /* === Gros bouton +1 tour (ergonomie iPad) === */
+ #lapPlus{font-size:22px; padding:18px 26px; border-radius:22px; min-width:180px}
+ #lapMinus{font-size:20px; padding:16px 22px; border-radius:20px}
+
+ /* === OVERLAY fin de course (obligatoire) === */
+ #endOverlay{
+   position:fixed; inset:0; display:none; z-index:60;
+   align-items:center; justify-content:center;
+   background:rgba(2,6,23,.55);
+ }
+ #endOverlay.show{display:flex;}
+ .end-card{
+   background:#fff; border-radius:20px; padding:20px; width:min(720px,92%);
+   box-shadow:0 12px 48px rgba(2,6,23,.25); text-align:center;
+ }
+ .end-card h3{margin-top:0}
+ .end-note{color:var(--muted); margin-top:8px}
+
+ /* === Mode Prof (édition) === */
+ .prof-tools{max-width:720px;margin:12px auto}
+ .prof-row{display:flex; gap:8px; justify-content:center; align-items:center; flex-wrap:wrap}
+ .prof-row input{padding:10px 12px; border:2px solid #e5e7eb; border-radius:12px; font:inherit; width:160px}
+ .prof-on td[contenteditable="true"]{outline:2px dashed #0a58ff; background:#edf2ff}
 </style>
 </head>
 <body>
-  <!-- ===== Page de garde (centrée) ===== -->
-  <main class="shell" id="view-cover">
-    <section class="card hero center">
-      <div class="cover-stack">
-        <div>
-          <h1>LaserRun</h1>
-          <p class="tagline">Application EPS — compatible ScanProf</p>
-        </div>
-        <div class="btns">
-          <button class="b-primary" id="btnStart">▶️ Démarrer</button>
-        </div>
-        <div class="substack">
-          <button class="b-slate" id="btnHelp">ℹ️ Aide</button>
-          <button class="b-amber" id="btnSafety">🛟 Fiche sécurité</button>
-        </div>
-      </div>
-    </section>
-  </main>
+ <!-- ===== Page de garde (centrée) ===== -->
+ <main class="shell" id="view-cover">
+   <section class="card center" style="padding:28px 20px">
+     <div class="cover-stack">
+       <div>
+         <h1>LaserRun</h1>
+         <p class="tagline">Application EPS — compatible ScanProf</p>
+       </div>
+       <!-- Démarrer (seul) -->
+       <div class="btns" style="margin-top:12px">
+         <button class="b-primary" id="btnStart">▶️ Démarrer</button>
+       </div>
+       <!-- Aide + Fiche sécurité en dessous -->
+       <div class="substack">
+         <button class="b-slate" id="btnHelp">ℹ️ Aide</button>
+         <button class="b-amber" id="btnSafety">🛟 Fiche sécurité</button>
+       </div>
+     </div>
+   </section>
+ </main>
 
-  <!-- ===== Modales Aide / Sécurité (esthétiques) ===== -->
-  <div class="modal hidden" id="modalHelp">
-    <div class="modal-card">
-      <div class="modal-head help"><span>ℹ️</span><span>Mode d'emploi — LaserRun</span></div>
-      <div class="modal-body">
-        <p class="muted">Guide rapide pour utiliser l'application en cours d'EPS.</p>
-        <ol class="help-list">
-          <li>Renseigner <strong>Prénom</strong>, <strong>Nom</strong>, <strong>Classe</strong>, <strong>Durée (min)</strong> et <strong>Longueur du tour (m)</strong>.</li>
-          <li>Accéder à la course et <strong>lancer le chrono général</strong>.</li>
-          <li>Compter les tours avec <strong>+1 / −1</strong> — la <strong>distance</strong> se met à jour automatiquement.</li>
-          <li>Au pas de tir : appuyer <strong>🎯 Démarrer tir</strong> (le feu passe <span class="badge">VERT</span>), puis <strong>0…5 LED</strong> pour enregistrer (feu <span class="badge">ROUGE</span>).</li>
-          <li>En fin de temps : choisir la <strong>fraction de tour</strong> et générer le <strong>QR</strong> pour ScanProf.</li>
-        </ol>
-        <div class="btns"><button class="b-slate" data-close>Fermer</button></div>
-      </div>
-    </div>
-  </div>
+ <!-- ===== Modale Aide ===== -->
+ <div class="modal hidden" id="modalHelp">
+   <div class="modal-card">
+     <div class="modal-head help"><span>ℹ️</span><span>Mode d'emploi — LaserRun</span></div>
+     <div class="modal-body">
+       <p class="muted">Guide rapide pour utiliser l’application en cours d’EPS.</p>
+       <ol class="help-list">
+         <li>Renseigner pour chaque coureur : <strong>Prénom</strong>, <strong>Nom</strong>, <strong>Classe</strong>, <strong>Sexe</strong>.</li>
+         <li>Définir les paramètres communs : <strong>Durée (min)</strong> et <strong>Longueur du tour (m)</strong>.</li>
+         <li>Dans la course : <strong>Start/Pause</strong> le chrono, <strong>+1 / −1</strong> pour les tours (distance en direct).</li>
+         <li>Au tir : saisir le <strong>nombre de LED allumées (0–5)</strong>. Les cumuls “Nb LED …” s’actualisent sous les boutons.</li>
+         <li>En fin de temps : compléter la <strong>fraction de tour</strong>, terminer chaque coureur, puis générer le <strong>QR</strong> (ScanProf).</li>
+       </ol>
+       <div class="btns"><button class="b-slate" data-close>Fermer</button></div>
+     </div>
+   </div>
+ </div>
 
-  <div class="modal hidden" id="modalSafety">
-    <div class="modal-card">
-      <div class="modal-head safe"><span>🛟</span><span>Fiche sécurité — LaserRun</span></div>
-      <div class="modal-body">
-        <h4>Avant l’activité</h4>
-        <ul class="help-list">
-          <li>Vérifier le tracé, la stabilité et le dégagement de la zone de tir.</li>
-          <li>Contrôler le matériel laser (fonctionnement, fixations).</li>
-          <li>Échauffement complet ; chaussures adaptées et lacées.</li>
-        </ul>
-        <h4>Pendant l’activité</h4>
-        <ul class="help-list">
-          <li>Calme au pas de tir ; attendre le signal ; respecter les consignes.</li>
-          <li>Gestion des flux : attention aux croisements course ↔ tir.</li>
-          <li>Signaler tout incident immédiatement à l’enseignant.</li>
-        </ul>
-        <h4>Après l’activité</h4>
-        <ul class="help-list">
-          <li>Retour au calme (marche, respiration) ; hydratation.</li>
-          <li>Rangement et vérification du matériel.</li>
-        </ul>
-        <div class="btns"><button class="b-slate" data-close>Fermer</button></div>
-      </div>
-    </div>
-  </div>
+ <!-- ===== Modale Fiche sécurité ===== -->
+ <div class="modal hidden" id="modalSafety">
+   <div class="modal-card">
+     <div class="modal-head safe"><span>🛟</span><span>Fiche sécurité — LaserRun</span></div>
+     <div class="modal-body">
+       <h4>Avant l’activité</h4>
+       <ul class="help-list">
+         <li>Vérifier le tracé, la stabilité et le dégagement de la zone de tir.</li>
+         <li>Contrôler le matériel laser (fonctionnement, fixations).</li>
+         <li>Échauffement complet ; chaussures adaptées et lacées.</li>
+       </ul>
+       <h4>Pendant l’activité</h4>
+       <ul class="help-list">
+         <li>Calme au pas de tir ; attendre le signal ; respecter les consignes.</li>
+         <li>Attention aux croisements course ↔ tir ; gestion des flux.</li>
+         <li>Signaler tout incident immédiatement à l’enseignant.</li>
+       </ul>
+       <h4>Après l’activité</h4>
+       <ul class="help-list">
+         <li>Retour au calme (marche, respiration), hydratation, rangement.</li>
+       </ul>
+       <div class="btns"><button class="b-slate" data-close>Fermer</button></div>
+     </div>
+   </div>
+ </div>
 
-  <!-- ===== Page Saisie (inchangée côté structure) ===== -->
-  <main class="shell hidden" id="view-duo">
-    <section class="card">
-      <h2>Saisie des informations</h2>
-      <div class="row two-col">
-        <div class="card panel panel1">
-          <h3>COUREUR</h3>
-          <label>Prénom</label>
-          <input id="prenom" autocomplete="off" required>
-          <label>Nom</label>
-          <input id="nom" autocomplete="off" required>
-          <label>Classe</label>
-          <input id="classe" autocomplete="off" required>
-        </div>
-        <div class="card panel panel2">
-          <h3>PARAMÈTRES</h3>
-          <label>Durée (minutes)</label>
-          <input id="duree_min" type="number" inputmode="numeric" min="1" step="1" placeholder="ex. 20" required>
-          <label>Longueur d'un tour (m)</label>
-          <input id="tour_m" type="number" inputmode="numeric" min="10" step="1" placeholder="ex. 200" required>
-        </div>
-      </div>
-      <div class="btns">
-        <button class="b-green" id="goCourse" disabled>Accéder à la course</button>
-        <button class="b-slate" id="goHome">🏠 Accueil</button>
-      </div>
-    </section>
-  </main>
+ <!-- ===== Page Saisie 2 élèves (inchangée) ===== -->
+ <main class="shell hidden" id="view-duo">
+   <section class="card">
+     <h2>Saisie des informations</h2>
+     <p class="muted">Identité des deux coureurs + paramètres de course communs.</p>
+     <div class="row">
+       <div class="panel panel1">
+         <h3>COUREUR 1</h3>
+         <label>Prénom</label>
+         <input id="p1_prenom" maxlength="60" autocomplete="off"/>
+         <label>Nom</label>
+         <input id="p1_nom" maxlength="60" autocomplete="off"/>
+         <label>Classe</label>
+         <input id="p1_classe" maxlength="60" autocomplete="off"/>
+         <label>Sexe</label>
+         <select id="p1_sexe">
+           <option value="">—</option>
+           <option>F</option>
+           <option>M</option>
+         </select>
+       </div>
+       <div class="panel panel2">
+         <h3>COUREUR 2</h3>
+         <label>Prénom</label>
+         <input id="p2_prenom" maxlength="60" autocomplete="off"/>
+         <label>Nom</label>
+         <input id="p2_nom" maxlength="60" autocomplete="off"/>
+         <label>Classe</label>
+         <input id="p2_classe" maxlength="60" autocomplete="off"/>
+         <label>Sexe</label>
+         <select id="p2_sexe">
+           <option value="">—</option>
+           <option>F</option>
+           <option>M</option>
+         </select>
+       </div>
+     </div>
 
-  <!-- ===== Page course ===== -->
-  <main class="shell hidden" id="view-course">
-    <section class="card center">
-      <h2 id="runnerTitle">Course — </h2>
+     <div class="band">Paramètres de course (communs)</div>
+     <div class="row">
+       <div>
+         <label>Durée (minutes)</label>
+         <input id="duree_min" type="number" inputmode="numeric" min="1" step="1" placeholder="ex. 20"/>
+       </div>
+       <div>
+         <label>Longueur d'un tour (m)</label>
+         <input id="tour_m" type="number" inputmode="numeric" min="10" step="1" placeholder="ex. 200"/>
+       </div>
+     </div>
 
-      <div class="card">
-        <h3>⏱️ Chrono GÉNÉRAL</h3>
-        <div class="xl" id="clockGeneral">00:00.0</div>
-        <div class="btns">
-          <button class="b-primary" id="btnStartAll">▶️ Lancer</button>
-          <button class="b-amber" id="btnPauseAll" disabled>⏸️ Pause</button>
-          <button class="b-red" id="btnResetAll" disabled>↺ Réinit.</button>
-        </div>
-        <p class="muted">Durée cible : <strong id="target">—</strong> min • 1 tour = <strong id="lapMeters">—</strong> m</p>
-      </div>
+     <div class="btns" style="margin-top:18px">
+       <button class="b-primary" id="goCourse" disabled>Accéder à la course</button>
+       <button class="b-slate" id="goHome">🏠 Accueil</button>
+     </div>
+   </section>
+ </main>
 
-      <div class="row two-col">
-        <div class="card">
-          <h3>🏁 Tours</h3>
-          <div class="big" id="laps">0</div>
-          <div class="distance-line">Distance : <strong id="distanceLive">0 m</strong></div>
-          <div class="btns">
-            <button class="b-green huge" id="lapPlus">+1 tour</button>
-            <button class="b-slate huge" id="lapMinus">−1</button>
-          </div>
-        </div>
+ <!-- ===== Page course : chrono + tours + tir ===== -->
+ <main class="shell hidden" id="view-course">
+   <section class="card center" id="courseCard">
+     <div class="btns" style="margin-bottom:8px">
+       <button class="b-slate" id="backToDuo">⬅ Retour saisie</button>
+       <span class="pill" id="courseMeta">—</span>
+     </div>
+     <h2 id="runnerTitle">Coureur — </h2>
+     <div class="btns" style="margin-bottom:6px">
+       <button class="b-green" id="pickP1">👟 Coureur 1</button>
+       <button class="b-green" id="pickP2">👟 Coureur 2</button>
+     </div>
 
-        <div class="card">
-          <h3>🎯 Tir</h3>
-          <div id="shootIndicator" class="shoot-indicator shoot-red"></div>
-          <div class="btns">
-            <button class="b-violet pulse" id="btnStartShoot" disabled>🎯 Démarrer tir</button>
-          </div>
-          <p class="muted">Valide 0 à 5 LED pour terminer le tir</p>
-          <div class="btns" id="ledBtns">
-            <button class="b-slate" data-led="0" disabled>0</button>
-            <button class="b-slate" data-led="1" disabled>1</button>
-            <button class="b-slate" data-led="2" disabled>2</button>
-            <button class="b-slate" data-led="3" disabled>3</button>
-            <button class="b-slate" data-led="4" disabled>4</button>
-            <button class="b-slate" data-led="5" disabled>5</button>
-          </div>
-          <!-- Résumé des LED cumulées -->
-          <div class="led-summary" id="ledSummary"></div>
-          <div style="overflow:auto;margin-top:8px">
-            <table>
-              <thead><tr><th>#</th><th>LED</th><th>Temps tir (s)</th><th>Action</th></tr></thead>
-              <tbody id="shotsTable"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+     <div class="card" style="max-width:720px;margin:0 auto 12px">
+       <div class="xl" id="clock">00:00.0</div>
+       <div class="btns" style="margin-top:8px">
+         <button class="b-primary" id="btnStartCourse">▶️ Start</button>
+         <button class="b-amber" id="btnPause" disabled>⏸️ Pause</button>
+         <button class="b-red" id="btnReset" disabled>↺ Réinit.</button>
+       </div>
+       <p class="muted">Durée cible : <strong id="target"></strong> min</p>
+     </div>
 
-      <div class="card hidden" id="endCard">
-        <h3>⏳ Temps écoulé — compléter la fraction de tour</h3>
-        <div class="btns">
-          <button class="b-slate" data-frac="0">0</button>
-          <button class="b-slate" data-frac="0.25">+ 1/4</button>
-          <button class="b-slate" data-frac="0.5">+ 1/2</button>
-          <button class="b-slate" data-frac="0.75">+ 3/4</button>
-          <button class="b-green" id="finish">✅ Terminer & QR</button>
-        </div>
-        <p class="muted" id="distanceOut">Distance: — m</p>
-      </div>
-    </section>
-  </main>
+     <div class="row" style="max-width:720px;margin:0 auto">
+       <div class="card">
+         <h3>🏁 Tours</h3>
+         <div class="big" id="laps">0</div>
+         <p class="muted">1 tour = <span id="lapMeters">—</span> m</p>
+         <p class="muted"><strong>Distance provisoire :</strong> <span id="liveDistance">0</span> m</p>
+         <div class="btns">
+           <button class="b-green" id="lapPlus">+1 tour</button>
+           <button class="b-slate" id="lapMinus">−1</button>
+         </div>
+       </div>
+       <div class="card">
+         <h3>🎯 Tir — Nombre de LED allumées</h3>
+         <!-- Gros boutons 0–5 uniquement -->
+         <div class="shot-grid">
+           <button class="b-slate" data-quick="0">0</button>
+           <button class="b-slate" data-quick="1">1</button>
+           <button class="b-slate" data-quick="2">2</button>
+           <button class="b-slate" data-quick="3">3</button>
+           <button class="b-slate" data-quick="4">4</button>
+           <button class="b-slate" data-quick="5">5</button>
+         </div>
+         <!-- Cumuls NB LED sous les numéros -->
+         <p class="muted" id="liveCounts" style="margin-top:10px"></p>
+         <div style="overflow:auto;margin-top:8px">
+           <table>
+             <thead><tr><th>#</th><th>LED allumées</th><th>Action</th></tr></thead>
+             <tbody id="shotsTable"></tbody>
+           </table>
+         </div>
+       </div>
+     </div>
 
-  <!-- ===== Bilan / QR ===== -->
-  <main class="shell hidden" id="view-summary">
-    <section class="card center">
-      <h2>Bilan</h2>
-      <div id="qr"></div>
-      <pre id="qrText"></pre>
-      <div class="btns">
-        <button class="b-slate" id="backHome">🏠 Accueil</button>
-      </div>
-    </section>
-  </main>
+     <div class="card hidden" id="endCard" style="max-width:720px;margin:12px auto 0">
+       <h3>⏱️ Temps écoulé — compléter la fraction de tour</h3>
+       <div class="btns">
+         <button class="b-slate" data-frac="0.25">+ 1/4 tour</button>
+         <button class="b-slate" data-frac="0.5">+ 1/2 tour</button>
+         <button class="b-slate" data-frac="0.75">+ 3/4 tour</button>
+         <button class="b-green" id="finishRunner">✅ Terminer la course</button>
+       </div>
+       <p class="muted" id="distanceOut">Distance: — m</p>
+     </div>
 
-  <footer>
-    <div>LaserRun - Équipe EPS Lycée Vauban - LUXEMBOURG - JB</div>
-  </footer>
+     <div class="btns hidden" id="toSummaryWrap" style="margin-top:12px">
+       <button class="b-primary" id="goSummary">📊 Aller au bilan</button>
+     </div>
+   </section>
+ </main>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script>
-  'use strict';
-  // ===== Navigation & modales =====
-  const V={cover:document.getElementById('view-cover'),duo:document.getElementById('view-duo'),course:document.getElementById('view-course'),summary:document.getElementById('view-summary')};
-  function show(name){Object.values(V).forEach(v=>v.classList.add('hidden'));V[name].classList.remove('hidden');window.scrollTo(0,0);}  
-  btnStart.onclick=()=>show('duo');
-  goHome.onclick=()=>show('cover');
-  backHome.onclick=()=>show('cover');
-  function openModal(id){document.getElementById(id).classList.remove('hidden');}
-  function closeModals(){document.querySelectorAll('.modal').forEach(m=>m.classList.add('hidden'));}
-  btnHelp.onclick=()=>openModal('modalHelp');
-  btnSafety.onclick=()=>openModal('modalSafety');
-  document.querySelectorAll('.modal [data-close]').forEach(b=>b.onclick=closeModals);
-  document.addEventListener('keydown',e=>{if(e.key==='Escape') closeModals();});
+ <!-- ===== OVERLAY Fin obligatoire ===== -->
+ <div id="endOverlay" aria-modal="true" role="dialog">
+   <div class="end-card">
+     <h3>⏳ Temps écoulé</h3>
+     <p class="muted">Compléter la fraction de tour si besoin, puis valider la course.</p>
+     <div class="btns" style="margin:10px 0 4px">
+       <button class="b-slate" data-frac-overlay="0">+ 0</button>
+       <button class="b-slate" data-frac-overlay="0.25">+ 1/4</button>
+       <button class="b-slate" data-frac-overlay="0.5">+ 1/2</button>
+       <button class="b-slate" data-frac-overlay="0.75">+ 3/4</button>
+     </div>
+     <p class="end-note" id="distanceOutOverlay">Distance: — m</p>
+     <div class="btns" style="margin-top:8px">
+       <button class="b-green" id="finishRunnerOverlay">✅ Terminer la course</button>
+     </div>
+   </div>
+ </div>
 
-  // ===== Validation simple =====
-  const REQ=['prenom','nom','classe','duree_min','tour_m'];
-  function val(id){return (document.getElementById(id).value||'').trim();}
-  function okNumber(v,min){const n=+v;return Number.isFinite(n)&&n>=min;}
-  function validateForm(){
-    let ok=true;REQ.forEach(id=>{const el=document.getElementById(id);let good=!!val(id);if(id==='duree_min') good=okNumber(val(id),1);if(id==='tour_m') good=okNumber(val(id),10);el.style.borderColor=good?'#e5e7eb':'#ef4444';ok=ok&&good;});
-    goCourse.disabled=!ok;return ok;
-  }
-  REQ.forEach(id=>['input','change'].forEach(ev=>document.getElementById(id).addEventListener(ev,validateForm)));
+ <!-- ===== Page Bilan / QR ===== -->
+ <main class="shell hidden" id="view-summary">
+   <section class="card center">
+     <h2>Bilan — QR compatible ScanProf</h2>
+     <div class="btns" style="margin:8px 0 4px">
+       <button class="b-slate" id="btnIndiceInfo">ℹ️ Indice tir</button>
+     </div>
+     <div id="qr" class="card" style="display:inline-block"></div>
 
-  // ===== État séance =====
-  const S={prenom:'',nom:'',classe:'',dureeMin:0,tourM:0,laps:0,frac:0,totalShootMs:0,shots:[],gTimer:null,shooting:false,shootStart:0};
-  function fmt(ms){const cs=Math.floor(ms/100);const m=Math.floor(cs/600),s=Math.floor((cs%600)/10),d=cs%10;return `${m<10?'0':''}${m}:${s<10?'0':''}${s}.${d}`;}
-  function sec(ms){return Math.round(ms/100)/10;}
-  function distMeters(){return Math.round((S.laps+S.frac)*S.tourM);}  
-  function updateDistanceLive(){distanceLive.textContent = distMeters() + ' m';}
-  function updateDistanceEnd(){distanceOut.textContent = 'Distance: ' + distMeters() + ' m ('+S.laps+' tours + '+S.frac+' tour)';}
-  function paintHeader(){runnerTitle.textContent=`Course — ${S.prenom} ${S.nom}`;target.textContent=S.dureeMin;lapMeters.textContent=S.tourM;}
+     <!-- Outils Prof (code 57) -->
+     <div class="card prof-tools">
+       <div class="prof-row">
+         <input id="profCode" type="password" inputmode="numeric" placeholder="Entrer code Prof (57)"/>
+         <button class="b-slate" id="activateProf">🔓 Activer mode Prof</button>
+         <button class="b-amber" id="deactivateProf" disabled>🔒 Désactiver</button>
+         <button class="b-violet" id="applyEdits" disabled>💾 Mettre à jour QR/CSV</button>
+         <button class="b-violet" id="exportCsv">⬇️ Export CSV</button>
+       </div>
+       <p class="muted" id="profHint" style="margin-top:8px"></p>
+     </div>
 
-  // ===== Entrée dans la course =====
-  goCourse.onclick=()=>{
-    if(!validateForm()){alert('Compléter tous les champs.');return;}
-    S.prenom=val('prenom');S.nom=val('nom');S.classe=val('classe');S.dureeMin=+val('duree_min');S.tourM=+val('tour_m');
-    S.laps=0;S.frac=0;S.totalShootMs=0;S.shots=[];S.gTimer=null;S.shooting=false;S.shootStart=0;laps.textContent='0';
-    shotsTable.innerHTML='';clockGeneral.textContent='00:00.0';
-    paintHeader(); updateDistanceLive();
-    btnStartAll.disabled=false; btnPauseAll.disabled=true; btnResetAll.disabled=true; btnStartShoot.disabled=true;
-    document.querySelectorAll('#ledBtns [data-led]').forEach(b=>b.disabled=true);
-    endCard.classList.add('hidden'); shootIndicator.className='shoot-indicator shoot-red';
-    renderLedSummary();
-    show('course');
-  };
+     <!-- Tableau récapitulatif lisible/éditable -->
+     <div id="resume"></div>
 
-  // ===== Chrono général simple =====
-  let gStart=0, gElapsed=0;
-  function tickGeneral(){const t=Date.now()-gStart+gElapsed;clockGeneral.textContent=fmt(t);const m=Math.floor(t/60000);if(m>=S.dureeMin){stopGeneral();showEnd();}}
-  function startGeneral(){if(S.gTimer) return;gStart=Date.now();S.gTimer=setInterval(tickGeneral,100);btnStartAll.disabled=true;btnPauseAll.disabled=false;btnResetAll.disabled=false;btnStartShoot.disabled=false;}
-  function pauseGeneral(){if(!S.gTimer) return;clearInterval(S.gTimer);S.gTimer=null;gElapsed+=Date.now()-gStart;btnStartAll.disabled=false;btnPauseAll.disabled=true;}
-  function stopGeneral(){if(S.gTimer){clearInterval(S.gTimer);S.gTimer=null;}gElapsed+=Date.now()-gStart;btnPauseAll.disabled=true;}
-  function resetGeneral(){stopGeneral();gElapsed=0;clockGeneral.textContent='00:00.0';btnResetAll.disabled=true;btnStartShoot.disabled=true;btnStartAll.disabled=false;}
-  btnStartAll.onclick=startGeneral; btnPauseAll.onclick=pauseGeneral; btnResetAll.onclick=resetGeneral;
+     <div class="btns" style="margin-top:8px">
+       <button class="b-slate" id="backToCourse">⬅ Retour course</button>
+       <button class="b-green" id="backHome2">🏠 Accueil</button>
+     </div>
+   </section>
+ </main>
 
-  // ===== Tir : chrono caché + feu + résumé LED + ordre inverse =====
-  function renderShots(){
-    const tb=shotsTable; tb.innerHTML='';
-    // ordre inverse : dernier en premier
-    [...S.shots].reverse().forEach(s=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${s.n}</td><td>${s.leds}</td><td>${sec(s.ms)}</td><td><button class="b-red">Retirer</button></td>`;
-      tr.querySelector('button').onclick=()=>{ S.totalShootMs-=s.ms; S.shots=S.shots.filter(x=>x.n!==s.n).map((x,i)=>({n:i+1,leds:x.leds,ms:x.ms})); renderShots(); renderLedSummary(); };
-      tb.appendChild(tr);
-    });
-  }
-  function renderLedSummary(){
-    const c=[0,0,0,0,0,0]; S.shots.forEach(s=> c[s.leds]++ );
-    ledSummary.innerHTML='';
-    c.forEach((v,i)=>{ const span=document.createElement('span'); span.className='pill led'; span.textContent=`${i} : ${v}`; ledSummary.appendChild(span); });
-  }
-  function startShoot(){ if(S.shooting) return; S.shooting=true; S.shootStart=Date.now();
-    document.querySelectorAll('#ledBtns [data-led]').forEach(b=>b.disabled=false);
-    btnStartShoot.disabled=true; shootIndicator.className='shoot-indicator shoot-green'; btnStartShoot.classList.remove('pulse');
-  }
-  function validateShoot(leds){ if(!S.shooting) return; const ms=Date.now()-S.shootStart; S.totalShootMs+=ms; S.shots.push({n:S.shots.length+1, leds, ms}); renderShots(); renderLedSummary(); S.shooting=false; S.shootStart=0; document.querySelectorAll('#ledBtns [data-led]').forEach(b=>b.disabled=true); btnStartShoot.disabled=false; shootIndicator.className='shoot-indicator shoot-red'; btnStartShoot.classList.add('pulse'); }
-  btnStartShoot.onclick=startShoot;
-  document.querySelectorAll('#ledBtns [data-led]').forEach(b=> b.addEventListener('click',()=> validateShoot(+b.dataset.led)));
+ <!-- ===== Modale Indice Tir ===== -->
+ <div class="modal hidden" id="modalIndice">
+   <div class="modal-card">
+     <div class="modal-head indice"><span>ℹ️</span><span>Indice de performance au tir</span></div>
+     <div class="modal-body">
+       <p><strong>Comment c’est calculé ?</strong></p>
+       <p>Indice = moyenne des LED allumées (sur 100) <em>+ bonus</em> pour chaque tir parfait (5/5).</p>
+       <ul class="help-list">
+         <li>Plus tu allumes de LED en <strong>moyenne</strong>, plus l’indice est haut.</li>
+         <li>Les <strong>5/5</strong> donnent un petit bonus. La <strong>régularité</strong> reste la clé.</li>
+       </ul>
+       <p><strong>Ce que ça veut dire :</strong></p>
+       <ul class="help-list">
+         <li><b>80 et +</b> : excellent niveau de précision ✅</li>
+         <li><b>60–79</b> : bon niveau 👍</li>
+         <li><b>40–59</b> : en progrès 🟨</li>
+         <li><b>moins de 40</b> : à travailler 🔴</li>
+       </ul>
+       <div class="btns"><button class="b-slate" data-close>Fermer</button></div>
+     </div>
+   </div>
+ </div>
 
-  // ===== Tours & fin =====
-  lapPlus.onclick=()=>{S.laps++;laps.textContent=S.laps;updateDistanceLive();};
-  lapMinus.onclick=()=>{S.laps=Math.max(0,S.laps-1);laps.textContent=S.laps;updateDistanceLive();};
-  function showEnd(){endCard.classList.remove('hidden');updateDistanceEnd();}
-  document.querySelectorAll('#endCard [data-frac]').forEach(b=> b.addEventListener('click',()=>{S.frac=+b.dataset.frac;updateDistanceEnd();}));
+ <footer>
+   <div>LaserRun - Équipe EPS Lycée Vauban - LUXEMBOURG - JB</div>
+ </footer>
 
-  // ===== QR (ajout indice_perf NUMÉRIQUE) =====
-  function ledCounts(){const c=[0,0,0,0,0,0];S.shots.forEach(s=>{c[s.leds]++;});return c;}
+ <!-- QRCode lib (CDN léger) -->
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-  // Nouvelle fonction : indice de perf numérique (sans emoji)
-  function computeIndicePerf(counts){
-    const T = counts.reduce((a,b)=>a+b,0);
-    if(!T) return 0;
-    const totalLed = counts[0]*0 + counts[1]*1 + counts[2]*2 + counts[3]*3 + counts[4]*4 + counts[5]*5;
-    const base = (totalLed / (5*T)) * 100;     // 0..100
-    const bonus = 0.10 * (counts[5]/T) * 100;  // +0..10
-    return +(base + bonus).toFixed(2);
-  }
+ <script>
+ 'use strict';
+ // ===== helpers / navigation =====
+ function qs(sel){ return document.querySelector(sel); }
+ const V = { cover: qs('#view-cover'), duo: qs('#view-duo'), course: qs('#view-course'), summary: qs('#view-summary') };
+ function show(name){ Object.values(V).forEach(v=>v.classList.add('hidden')); V[name].classList.remove('hidden'); window.scrollTo(0,0); }
+ qs('#btnStart').onclick = ()=> show('duo');
 
-  finish.onclick=()=>{
-    const dist=Math.round((S.laps+S.frac)*S.tourM);
-    const c=ledCounts();
-    const indice = computeIndicePerf(c); // ← indice numérique pour le QR
+ // Modales Aide & Sécurité & Indice (pro)
+ function openModal(id){ document.getElementById(id).classList.remove('hidden'); }
+ function closeModals(){ document.querySelectorAll('.modal').forEach(m=>m.classList.add('hidden')); }
+ document.getElementById('btnHelp').onclick = ()=> openModal('modalHelp');
+ document.getElementById('btnSafety').onclick = ()=> openModal('modalSafety');
+ document.getElementById('btnIndiceInfo').onclick = ()=> openModal('modalIndice');
+ document.querySelectorAll('.modal [data-close]').forEach(b=> b.onclick = closeModals);
+ document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModals(); });
 
-    // QR : données chiffrées + indice_perf (pas d'emoji)
-    const payload=[{
-      nom:S.nom,
-      prenom:S.prenom,
-      classe:S.classe,
-      distance:dist,
-      tps_pas_de_tir:Math.round(S.totalShootMs/100)/10,
-      nb_led_0:c[0], nb_led_1:c[1], nb_led_2:c[2],
-      nb_led_3:c[3], nb_led_4:c[4], nb_led_5:c[5],
-      indice_perf: indice
-    }];
+ // protèger Accueil / Retour si course en cours
+ function confirmLeaveIfNeeded(){
+   if(!session.finished && (session.laps>0 || session.shots.length>0 || elapsed>0)){
+     return confirm('Quitter la course ? Les données non terminées pourraient être perdues.');
+   }
+   return true;
+ }
+ qs('#goHome').onclick = ()=> { if(confirmLeaveIfNeeded()) show('cover'); };
+ qs('#backToDuo').onclick = ()=> { if(confirmLeaveIfNeeded()) show('duo'); };
 
-    const text=JSON.stringify(payload);
-    show('summary');
-    qrText.textContent=text;
-    const qrHost=document.getElementById('qr');
-    qrHost.innerHTML='';
-    if (typeof QRCode === 'undefined') {
-      qrHost.textContent = 'QR non disponible (lib manquante).';
-    } else {
-      new QRCode(qrHost,{text:text,width:256,height:256});
-    }
-  };
-  </script>
+ // ===== Validation (présence obligatoire) =====
+ function clean(s){ return (s||'').replace(/\s+/g,' ').trim(); }
+ function hasValue(id){ return clean(document.getElementById(id).value).length>0; }
+ function okNumber(v,min){ const n=+v; return Number.isFinite(n)&&n>=min; }
+ function val(id){ return clean(document.getElementById(id).value); }
+
+ function validate(){
+   const fields=['p1_prenom','p1_nom','p1_classe','p1_sexe','p2_prenom','p2_nom','p2_classe','p2_sexe'];
+   let ok=true;
+   fields.forEach(id=>{
+     const el=document.getElementById(id);
+     const good=hasValue(id);
+     el.style.borderColor = good?'#e5e7eb':'#ef4444';
+     ok = ok && good;
+   });
+   const okDur=okNumber(val('duree_min'),1);
+   const okTour=okNumber(val('tour_m'),10);
+   document.getElementById('duree_min').style.borderColor = okDur?'#e5e7eb':'#ef4444';
+   document.getElementById('tour_m').style.borderColor = okTour?'#e5e7eb':'#ef4444';
+   ok = ok && okDur && okTour;
+   document.getElementById('goCourse').disabled = !ok;
+   return ok;
+ }
+ ['p1_prenom','p1_nom','p1_classe','p1_sexe','p2_prenom','p2_nom','p2_classe','p2_sexe','duree_min','tour_m']
+   .forEach(id=>{ const el=document.getElementById(id); el.addEventListener('input',validate); el.addEventListener('change',validate); });
+
+ const session={ p1:null, p2:null, tourM:0, dureeMin:0, active:'p1',
+   laps:0, frac:0, shots:[], results:{p1:null,p2:null}, finished:false };
+
+ // Accès course
+ qs('#goCourse').onclick = ()=>{
+   if(!validate()) { alert('Complétez tous les champs (obligatoires) et vérifiez les nombres.'); return; }
+   session.p1={ prenom:val('p1_prenom'), nom:val('p1_nom'), classe:val('p1_classe'), sexe:val('p1_sexe') };
+   session.p2={ prenom:val('p2_prenom'), nom:val('p2_nom'), classe:val('p2_classe'), sexe:val('p2_sexe') };
+   session.dureeMin=+val('duree_min'); session.tourM=+val('tour_m');
+   session.active='p1'; resetRunnerState(); paintCourseHeader(); show('course');
+ };
+
+ // ===== Course =====
+ const clockEl=qs('#clock'), lapsEl=qs('#laps'), lapMetersEl=qs('#lapMeters'), targetEl=qs('#target');
+ const shotsTable=qs('#shotsTable'), runnerTitle=qs('#runnerTitle'), courseMeta=qs('#courseMeta');
+ const endCard=qs('#endCard'), distanceOut=qs('#distanceOut'), courseCard=qs('#courseCard');
+ const toSummaryWrap=qs('#toSummaryWrap');
+ const liveDistanceEl=qs('#liveDistance');
+
+ qs('#pickP1').onclick=()=> switchRunner('p1');
+ qs('#pickP2').onclick=()=> switchRunner('p2');
+ qs('#lapPlus').onclick=()=>{ if(session.finished) return; session.laps++; renderLaps(); };
+ qs('#lapMinus').onclick=()=>{ if(session.finished) return; session.laps=Math.max(0,session.laps-1); renderLaps(); };
+
+ document.querySelectorAll('[data-quick]').forEach(btn=>{
+   btn.onclick=()=>{ if(session.finished) return; const v=+btn.getAttribute('data-quick'); addShot(v); };
+ });
+
+ let t0=0, elapsed=0, timer=null, running=false;
+ function start(){ if(session.finished||running) return; running=true; t0=Date.now()-elapsed; timer=setInterval(tick,100); qs('#btnStartCourse').disabled=true; qs('#btnPause').disabled=false; qs('#btnReset').disabled=false; }
+ function pause(){ if(!running) return; running=false; clearInterval(timer); qs('#btnStartCourse').disabled=false; qs('#btnPause').disabled=true; }
+ function reset(){ pause(); elapsed=0; document.getElementById('clock').textContent='00:00.0'; qs('#btnReset').disabled=true; session.laps=0; session.shots=[]; session.frac=0; renderLaps(); renderShots(); hideEnd(); }
+ function tick(){ elapsed=Date.now()-t0; const cs=Math.floor(elapsed/100); const m=Math.floor(cs/600), s=Math.floor((cs%600)/10), d=cs%10; document.getElementById('clock').textContent=`${m<10?'0':''}${m}:${s<10?'0':''}${s}.${d}`; if(m>=session.dureeMin){ pause(); showEnd(); } }
+ qs('#btnStartCourse').onclick=start; qs('#btnPause').onclick=pause; qs('#btnReset').onclick=reset;
+
+ // === Overlay fin obligatoire ===
+ const endOverlay = document.getElementById('endOverlay');
+ const distanceOutOverlay = document.getElementById('distanceOutOverlay');
+ function updateDistanceOutputOverlay(){
+   const meters=Math.round((session.laps+(session.frac||0))*session.tourM);
+   distanceOutOverlay.textContent = `Distance: ${meters} m (${session.laps} tours + ${session.frac||0} tour)`;
+ }
+
+ function showEnd(){
+   endCard.classList.add('hidden');
+   session.frac = session.frac || 0;
+   updateDistanceOutputOverlay();
+   courseCard.classList.add('lock');
+   endOverlay.classList.add('show');
+   if(navigator.vibrate) navigator.vibrate(150);
+ }
+ function hideEnd(){
+   endCard.classList.add('hidden');
+   endOverlay.classList.remove('show');
+   courseCard.classList.remove('lock');
+ }
+
+ document.querySelectorAll('[data-frac-overlay]').forEach(b=>{
+   b.onclick=()=>{ if(session.finished) return; session.frac=+b.getAttribute('data-frac-overlay'); updateDistanceOutputOverlay(); };
+ });
+ document.getElementById('finishRunnerOverlay').onclick=()=> finalizeRunner();
+
+ // (panneau bas conservé mais non utilisé)
+ endCard.querySelectorAll('[data-frac]').forEach(b=> b.onclick=()=>{ if(session.finished) return; session.frac=+b.getAttribute('data-frac'); updateDistanceOutput(); });
+ qs('#finishRunner').onclick=()=> finalizeRunner();
+
+ function updateDistanceOutput(){
+   const meters=Math.round((session.laps+(session.frac||0))*session.tourM);
+   distanceOut.textContent=`Distance: ${meters} m (${session.laps} tours + ${session.frac||0} tour)`;
+ }
+ function renderLaps(){
+   document.getElementById('laps').textContent=session.laps;
+   liveDistanceEl.textContent = Math.round((session.laps+(session.frac||0))*session.tourM);
+   updateDistanceOutput();
+   updateDistanceOutputOverlay();
+ }
+
+ function addShot(leds){
+   const n=session.shots.length+1;
+   session.shots.push({n,leds});
+   renderShots();
+ }
+ function renderShots(){
+   shotsTable.innerHTML='';
+   // ORDRE INVERSE : dernier tir en premier
+   [...session.shots].reverse().forEach(s=>{
+     const tr=document.createElement('tr');
+     tr.innerHTML=`<td>${s.n}</td><td>${s.leds}</td><td><button class="b-red">Retirer</button></td>`;
+     tr.querySelector('button').onclick=()=>{ if(session.finished) return; session.shots=session.shots.filter(x=>x.n!==s.n).map((x,i)=>({n:i+1,leds:x.leds})); renderShots(); };
+     shotsTable.append(tr);
+   });
+   renderCounts();
+ }
+ function renderCounts(){
+   const c={0:0,1:0,2:0,3:0,4:0,5:0};
+   session.shots.forEach(s=>{ if(c.hasOwnProperty(s.leds)) c[s.leds]++; });
+   qs('#liveCounts').innerHTML =
+     `<span class="pill">Nb LED 5 : <b>${c[5]}</b></span>
+      <span class="pill">Nb LED 4 : <b>${c[4]}</b></span>
+      <span class="pill">Nb LED 3 : <b>${c[3]}</b></span>
+      <span class="pill">Nb LED 2 : <b>${c[2]}</b></span>
+      <span class="pill">Nb LED 1 : <b>${c[1]}</b></span>
+      <span class="pill">Nb LED 0 : <b>${c[0]}</b></span>`;
+ }
+
+ function switchRunner(which){
+   if(session.finished) return;
+   saveTemp();
+   session.active=which;
+   reset();
+   resetRunnerState();
+   paintCourseHeader();
+   loadTemp();
+ }
+ function resetRunnerState(){ session.laps=0; session.shots=[]; session.frac=0; renderLaps(); renderShots(); hideEnd(); }
+ function paintCourseHeader(){
+   const R=session[session.active];
+   document.getElementById('runnerTitle').textContent=`Coureur — ${R.prenom} ${R.nom}`;
+   document.getElementById('courseMeta').textContent=`${R.classe} • ${R.sexe}`;
+   document.getElementById('lapMeters').textContent=session.tourM;
+   document.getElementById('target').textContent=session.dureeMin;
+ }
+
+ const temp={ p1:{laps:0,frac:0,shots:[]}, p2:{laps:0,frac:0,shots:[]} };
+ function saveTemp(){ temp[session.active]={ laps:session.laps, frac:session.frac, shots:JSON.parse(JSON.stringify(session.shots)) }; }
+ function loadTemp(){ const t=temp[session.active]; session.laps=t.laps; session.frac=t.frac; session.shots=JSON.parse(JSON.stringify(t.shots)); renderLaps(); renderShots(); hideEnd(); }
+
+ function countShotsArray(arr){ const c={0:0,1:0,2:0,3:0,4:0,5:0}; arr.forEach(v=>{ if(c.hasOwnProperty(v)) c[v]++; }); return c; }
+
+ // ===== Indice Tir (base + bonus perfection b=0.10) =====
+ function computeIndiceFromCounts(counts){
+   const T = counts[0]+counts[1]+counts[2]+counts[3]+counts[4]+counts[5];
+   if(!T) return {indice:0, niveau:'—'};
+   const totalLed = 0*counts[0] + 1*counts[1] + 2*counts[2] + 3*counts[3] + 4*counts[4] + 5*counts[5];
+   const base = (totalLed / (5*T)) * 100; // 0..100
+   const b = 0.10; // bonus 10%
+   const bonus = b * (counts[5]/T) * 100; // 0..10
+   const indice = +(base + bonus).toFixed(2);
+   let niveau = 'à travailler 🔴';
+   if(indice>=80) niveau='excellent ✅'; else if(indice>=60) niveau='bon 👍'; else if(indice>=40) niveau='en progrès 🟨';
+   return {indice, niveau};
+ }
+
+ // === NOUVEAU : payload QR allégé (sans emoji), ajoute indice_perf numérique ===
+ function buildQrData(dataRows){
+   return dataRows.map(d => ({
+     nom: d.nom,
+     prenom: d.prenom,
+     classe: d.classe,
+     sexe: d.sexe,
+     distance: d.distance,
+     vitesse: d.vitesse,
+     nb_led_0: d.nb_led_0,
+     nb_led_1: d.nb_led_1,
+     nb_led_2: d.nb_led_2,
+     nb_led_3: d.nb_led_3,
+     nb_led_4: d.nb_led_4,
+     nb_led_5: d.nb_led_5,
+     indice_perf: d.indice_tir // numérique, sans emoji
+   }));
+ }
+
+ function finalizeRunner(){
+   const R=session[session.active];
+   const meters=Math.round((session.laps+(session.frac||0))*session.tourM);
+   const vitesse=+(meters*60/(1000*session.dureeMin)).toFixed(2); // km/h
+   const counts=countShotsArray(session.shots.map(s=>s.leds));
+   const ind = computeIndiceFromCounts(counts);
+   session.results[session.active]={ prenom:R.prenom, nom:R.nom, classe:R.classe, sexe:R.sexe,
+     distance:meters, vitesse:vitesse,
+     nb_led_0:counts[0], nb_led_1:counts[1], nb_led_2:counts[2], nb_led_3:counts[3], nb_led_4:counts[4], nb_led_5:counts[5],
+     indice_tir: ind.indice, niveau_tir: ind.niveau
+   };
+
+   hideEnd();
+   document.getElementById('courseCard').classList.add('lock');
+   setTimeout(()=> document.getElementById('courseCard').classList.remove('lock'), 300);
+
+   const other=session.active==='p1'?'p2':'p1';
+   if(!session.results[other]){
+     alert('Course du coureur terminée.\nPassez au second coureur.');
+     switchRunner(other);
+     return;
+   }
+
+   session.finished=true;
+   document.getElementById('pickP1').disabled=true;
+   document.getElementById('pickP2').disabled=true;
+   toSummaryWrap.classList.remove('hidden');
+ }
+
+ // ===== Bilan / QR + MODE PROF =====
+ const backToCourseBtn=qs('#backToCourse'); const backHome2Btn=qs('#backHome2'); const goSummaryBtn=qs('#goSummary');
+
+ // Données affichées dans le bilan (persistées pour édition)
+ let summaryData = [];
+ let profMode = false;
+
+ function buildQR(payload){
+   const qrBox=document.getElementById('qr');
+   qrBox.innerHTML='';
+   try{ new QRCode(qrBox,{ text:payload, width:256, height:256, correctLevel:QRCode.CorrectLevel.M }); }
+   catch(e){ console.warn('QR non généré:', e); }
+ }
+
+ function toCSV(data) {
+   const headers = [
+     'nom','prenom','classe','sexe','distance','vitesse',
+     'nb_led_0','nb_led_1','nb_led_2','nb_led_3','nb_led_4','nb_led_5',
+     'indice_tir','niveau_tir'
+   ];
+   const esc = (v) => {
+     const s = (v==null ? '' : String(v));
+     if (/[;\"\n]/.test(s)) return `"${s.replace(/\"/g,'""')}"`;
+     return s;
+   };
+   const lines = [
+     headers.join(';'),
+     ...data.map(d => headers.map(h => esc(d[h])).join(';'))
+   ];
+   return lines.join('\n');
+ }
+
+ function renderSummary(){
+   // table (editable si profMode) — Indice & Niveau affichés (non éditables)
+   const rows = summaryData.map((d,i) => `
+     <tr data-index="${i}">
+       <td data-field="nom" ${profMode?'contenteditable="true"':''}>${d.nom}</td>
+       <td data-field="prenom" ${profMode?'contenteditable="true"':''}>${d.prenom}</td>
+       <td data-field="classe" ${profMode?'contenteditable="true"':''}>${d.classe}</td>
+       <td data-field="sexe" ${profMode?'contenteditable="true"':''}>${d.sexe}</td>
+       <td data-field="distance" ${profMode?'contenteditable="true"':''}>${d.distance}</td>
+       <td data-field="vitesse" ${profMode?'contenteditable="true"':''}>${d.vitesse}</td>
+       <td data-field="nb_led_0" ${profMode?'contenteditable="true"':''}>${d.nb_led_0}</td>
+       <td data-field="nb_led_1" ${profMode?'contenteditable="true"':''}>${d.nb_led_1}</td>
+       <td data-field="nb_led_2" ${profMode?'contenteditable="true"':''}>${d.nb_led_2}</td>
+       <td data-field="nb_led_3" ${profMode?'contenteditable="true"':''}>${d.nb_led_3}</td>
+       <td data-field="nb_led_4" ${profMode?'contenteditable="true"':''}>${d.nb_led_4}</td>
+       <td data-field="nb_led_5" ${profMode?'contenteditable="true"':''}>${d.nb_led_5}</td>
+       <td>${d.indice_tir}</td>
+       <td>${d.niveau_tir}</td>
+     </tr>
+   `).join('');
+   document.getElementById('resume').innerHTML = `
+     <table id="summaryTable" ${profMode?'class="prof-on"':''}>
+       <thead>
+         <tr>
+           <th>Nom</th><th>Prénom</th><th>Classe</th><th>Sexe</th>
+           <th>Distance (m)</th><th>Vitesse (km/h)</th>
+           <th>Nb LED 0</th><th>Nb LED 1</th><th>Nb LED 2</th><th>Nb LED 3</th><th>Nb LED 4</th><th>Nb LED 5</th>
+           <th>Indice tir</th><th>Niveau</th>
+         </tr>
+       </thead>
+       <tbody id="resumeBody">${rows}</tbody>
+     </table>`;
+
+   // === QR (payload allégé) : historique + indice_perf (numérique, sans emoji)
+   const payloadQR = JSON.stringify(buildQrData(summaryData));
+   buildQR(payloadQR);
+
+   // CSV bouton (utilise summaryData courant)
+   const exportBtn = document.getElementById('exportCsv');
+   exportBtn.onclick = () => {
+     const csv = toCSV(summaryData);
+     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+     const url = URL.createObjectURL(blob);
+     const a = document.createElement('a');
+     const fileDate = new Date().toISOString().slice(0,10);
+     a.href = url; a.download = `LaserRun_${fileDate}.csv`;
+     document.body.appendChild(a); a.click(); document.body.removeChild(a);
+     URL.revokeObjectURL(url);
+   };
+
+   // Boutons prof
+   const profHint = document.getElementById('profHint');
+   const act = document.getElementById('activateProf');
+   const deact = document.getElementById('deactivateProf');
+   const apply = document.getElementById('applyEdits');
+   act.disabled = profMode;
+   deact.disabled = !profMode;
+   apply.disabled = !profMode;
+   profHint.textContent = profMode
+     ? 'Mode Prof activé : corrigez puis “Mettre à jour QR/CSV”. L\'indice est recalculé automatiquement.'
+     : 'Saisir le code 57 pour corriger une valeur (distance, LED, etc.).';
+ }
+
+ function parseEditsFromTable(){
+   const tbody = document.getElementById('resumeBody');
+   const rows = Array.from(tbody.querySelectorAll('tr'));
+   const next = rows.map(tr=>{
+     function txt(field){ return (tr.querySelector(`[data-field="${field}"]`)?.textContent||'').trim(); }
+     const sexeRaw = (txt('sexe')||'').toUpperCase();
+     const sexe = (sexeRaw==='F' || sexeRaw==='M') ? sexeRaw : 'F';
+     function num(field, def=0){ const v=Number((txt(field)||'').replace(',', '.')); return Number.isFinite(v) ? v : def; }
+     function int(field, def=0){ const v=parseInt(txt(field),10); return Number.isFinite(v)? Math.max(0,v) : def; }
+
+     const counts = {
+       0:int('nb_led_0'), 1:int('nb_led_1'), 2:int('nb_led_2'),
+       3:int('nb_led_3'), 4:int('nb_led_4'), 5:int('nb_led_5')
+     };
+     const ind = computeIndiceFromCounts(counts);
+
+     return {
+       nom: txt('nom'),
+       prenom: txt('prenom'),
+       classe: txt('classe'),
+       sexe,
+       distance: int('distance'),
+       vitesse: Number(num('vitesse').toFixed(2)),
+       nb_led_0: counts[0], nb_led_1: counts[1], nb_led_2: counts[2],
+       nb_led_3: counts[3], nb_led_4: counts[4], nb_led_5: counts[5],
+       indice_tir: ind.indice,
+       niveau_tir: ind.niveau,
+     };
+   });
+   return next;
+ }
+
+ // Activation mode Prof
+ document.getElementById('activateProf').onclick = ()=>{
+   const code = (document.getElementById('profCode').value||'').trim();
+   if(code === '57'){
+     profMode = true;
+     renderSummary();
+   }else{
+     alert('Code incorrect.');
+   }
+ };
+ document.getElementById('deactivateProf').onclick = ()=>{
+   profMode = false;
+   renderSummary();
+ };
+ document.getElementById('applyEdits').onclick = ()=>{
+   if(!profMode) return;
+   const updated = parseEditsFromTable();
+   summaryData = updated;
+   renderSummary();
+   alert('Bilan mis à jour. QR et CSV régénérés.');
+ };
+
+ // Aller au bilan
+ goSummaryBtn.onclick=()=>{
+   const out=[];
+   if(session.results.p1){ const r=session.results.p1; out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse, nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5, indice_tir:r.indice_tir, niveau_tir:r.niveau_tir }); }
+   if(session.results.p2){ const r=session.results.p2; out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse, nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5, indice_tir:r.indice_tir, niveau_tir:r.niveau_tir }); }
+
+   summaryData = out; // stocke pour édition
+   show('summary');
+   profMode = false; // par défaut verrouillé
+   renderSummary();
+ };
+
+ backToCourseBtn.onclick=()=> show('course');
+ backHome2Btn.onclick=()=> { if(confirmLeaveIfNeeded()) show('cover'); };
+
+ // ===== Initialisation =====
+ validate();
+ (function(){ console.assert(!!V.cover && !!V.duo && !!V.course && !!V.summary,'vues ok'); })();
+ </script>
 </body>
 </html>
