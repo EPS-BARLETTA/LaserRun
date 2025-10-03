@@ -15,8 +15,18 @@
     --panel1:#e8f1ff; --panel2:#e9fbe8; --band:#eef2f7;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
-  footer{border-top:1px solid #e5e7eb;color:var(--muted);text-align:center;padding:10px 0}
+  /* === Structure page + footer fixé bas === */
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.4 Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+    min-height:100vh; display:flex; flex-direction:column; padding-bottom:56px;
+  }
+  footer{
+    position:fixed; left:0; right:0; bottom:0;
+    border-top:1px solid #e5e7eb; color:var(--muted);
+    text-align:center; padding:10px 0; background:#fff;
+  }
+
   .shell{max-width:980px;margin:0 auto;padding:16px}
   h1{font-size:clamp(22px,3.4vw,32px);margin:8px 0 4px;font-weight:800;text-align:center}
   h2{font-size:clamp(20px,2.8vw,28px);margin:8px 0 12px;font-weight:800;text-align:center}
@@ -50,22 +60,97 @@
   th,td{padding:12px;border-bottom:1px solid #e5e7eb;text-align:center;font-size:16px}
   .lock *{pointer-events:none; opacity:.7}
   .shot-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px}
+
+  /* === Accueil centré verticalement === */
+  #view-cover{min-height:calc(100vh - 56px); display:flex; align-items:center; justify-content:center;}
+  .cover-stack{display:flex; flex-direction:column; gap:16px; align-items:center;}
+  .substack{display:flex; gap:12px; flex-wrap:wrap; justify-content:center;}
+  .tagline{color:var(--muted)}
+
+  /* === Modales pro (Aide / Fiche sécurité) === */
+  .modal{position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:50;
+    background:linear-gradient(180deg,rgba(2,6,23,.55),rgba(2,6,23,.35));}
+  .modal-card{background:#fff; border-radius:20px; max-width:900px; width:92%; overflow:hidden; box-shadow:0 12px 48px rgba(2,6,23,.25)}
+  .modal-head{display:flex; align-items:center; gap:12px; padding:16px 18px; color:#fff; font-weight:800}
+  .modal-head.help{background:linear-gradient(90deg,#0a58ff,#7c3aed)}
+  .modal-head.safe{background:linear-gradient(90deg,#22c55e,#0ea5e9)}
+  .modal-body{padding:18px}
+  .modal-body h4{margin:12px 0 6px}
+  .help-list{margin:8px 0 12px; line-height:1.55}
+  .help-list li{margin:6px 0}
+
+  /* === Gros bouton +1 tour (ergonomie iPad) === */
+  #lapPlus{font-size:22px; padding:18px 26px; border-radius:22px; min-width:180px}
+  #lapMinus{font-size:20px; padding:16px 22px; border-radius:20px}
 </style>
 </head>
 <body>
-  <!-- ===== Page de garde ===== -->
+  <!-- ===== Page de garde (centrée) ===== -->
   <main class="shell" id="view-cover">
-    <section class="card center">
-      <h1>LaserRun</h1>
-      <p class="muted">Application EPS — compatible ScanProf</p>
-      <div class="btns" style="margin-top:20px">
-        <button class="b-primary" id="btnStart">▶️ Démarrer</button>
-        <button class="b-slate" id="btnHelp">❓ Aide</button>
+    <section class="card center" style="padding:28px 20px">
+      <div class="cover-stack">
+        <div>
+          <h1>LaserRun</h1>
+          <p class="tagline">Application EPS — compatible ScanProf</p>
+        </div>
+        <!-- Démarrer (seul) -->
+        <div class="btns" style="margin-top:12px">
+          <button class="b-primary" id="btnStart">▶️ Démarrer</button>
+        </div>
+        <!-- Aide + Fiche sécurité en dessous -->
+        <div class="substack">
+          <button class="b-slate" id="btnHelp">ℹ️ Aide</button>
+          <button class="b-amber" id="btnSafety">🛟 Fiche sécurité</button>
+        </div>
       </div>
     </section>
   </main>
 
-  <!-- ===== Page Saisie 2 élèves ===== -->
+  <!-- ===== Modale Aide ===== -->
+  <div class="modal hidden" id="modalHelp">
+    <div class="modal-card">
+      <div class="modal-head help"><span>ℹ️</span><span>Mode d'emploi — LaserRun</span></div>
+      <div class="modal-body">
+        <p class="muted">Guide rapide pour utiliser l’application en cours d’EPS.</p>
+        <ol class="help-list">
+          <li>Renseigner pour chaque coureur : <strong>Prénom</strong>, <strong>Nom</strong>, <strong>Classe</strong>, <strong>Sexe</strong>.</li>
+          <li>Définir les paramètres communs : <strong>Durée (min)</strong> et <strong>Longueur du tour (m)</strong>.</li>
+          <li>Dans la course : <strong>Start/Pause</strong> le chrono, <strong>+1 / −1</strong> pour les tours (distance en direct).</li>
+          <li>Au tir : saisir le <strong>nombre de LED allumées (0–5)</strong>. Les cumuls “Nb LED …” s’actualisent sous les boutons.</li>
+          <li>En fin de temps : compléter la <strong>fraction de tour</strong>, terminer chaque coureur, puis générer le <strong>QR</strong> (ScanProf).</li>
+        </ol>
+        <div class="btns"><button class="b-slate" data-close>Fermer</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Modale Fiche sécurité ===== -->
+  <div class="modal hidden" id="modalSafety">
+    <div class="modal-card">
+      <div class="modal-head safe"><span>🛟</span><span>Fiche sécurité — LaserRun</span></div>
+      <div class="modal-body">
+        <h4>Avant l’activité</h4>
+        <ul class="help-list">
+          <li>Vérifier le tracé, la stabilité et le dégagement de la zone de tir.</li>
+          <li>Contrôler le matériel laser (fonctionnement, fixations).</li>
+          <li>Échauffement complet ; chaussures adaptées et lacées.</li>
+        </ul>
+        <h4>Pendant l’activité</h4>
+        <ul class="help-list">
+          <li>Calme au pas de tir ; attendre le signal ; respecter les consignes.</li>
+          <li>Attention aux croisements course ↔ tir ; gestion des flux.</li>
+          <li>Signaler tout incident immédiatement à l’enseignant.</li>
+        </ul>
+        <h4>Après l’activité</h4>
+        <ul class="help-list">
+          <li>Retour au calme (marche, respiration), hydratation, rangement.</li>
+        </ul>
+        <div class="btns"><button class="b-slate" data-close>Fermer</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Page Saisie 2 élèves (inchangée) ===== -->
   <main class="shell hidden" id="view-duo">
     <section class="card">
       <h2>Saisie des informations</h2>
@@ -167,13 +252,14 @@
             <button class="b-slate" data-quick="4">4</button>
             <button class="b-slate" data-quick="5">5</button>
           </div>
+          <!-- Cumuls NB LED sous les numéros -->
+          <p class="muted" id="liveCounts" style="margin-top:10px"></p>
           <div style="overflow:auto;margin-top:8px">
             <table>
               <thead><tr><th>#</th><th>LED allumées</th><th>Action</th></tr></thead>
               <tbody id="shotsTable"></tbody>
             </table>
           </div>
-          <p class="muted" id="liveCounts" style="margin-top:8px"></p>
         </div>
       </div>
 
@@ -223,7 +309,14 @@
   const V = { cover: qs('#view-cover'), duo: qs('#view-duo'), course: qs('#view-course'), summary: qs('#view-summary') };
   function show(name){ Object.values(V).forEach(v=>v.classList.add('hidden')); V[name].classList.remove('hidden'); window.scrollTo(0,0); }
   qs('#btnStart').onclick = ()=> show('duo');
-  qs('#btnHelp').onclick = ()=> alert('1) Démarrer → saisir les 2 élèves.\\n2) Course : Start, +1 tour, Tir (boutons 0–5), fraction de tour.\\n3) Fin : QR JSON (ScanProf).');
+
+  // Modales Aide & Sécurité (pro)
+  function openModal(id){ document.getElementById(id).classList.remove('hidden'); }
+  function closeModals(){ document.querySelectorAll('.modal').forEach(m=>m.classList.add('hidden')); }
+  document.getElementById('btnHelp').onclick = ()=> openModal('modalHelp');
+  document.getElementById('btnSafety').onclick = ()=> openModal('modalSafety');
+  document.querySelectorAll('.modal [data-close]').forEach(b=> b.onclick = closeModals);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModals(); });
 
   // protèger Accueil / Retour si course en cours
   function confirmLeaveIfNeeded(){
@@ -236,7 +329,7 @@
   qs('#backToDuo').onclick = ()=> { if(confirmLeaveIfNeeded()) show('duo'); };
 
   // ===== Validation (présence obligatoire) =====
-  function clean(s){ return (s||'').replace(/\\s+/g,' ').trim(); }
+  function clean(s){ return (s||'').replace(/\s+/g,' ').trim(); }
   function hasValue(id){ return clean(document.getElementById(id).value).length>0; }
   function okNumber(v,min){ const n=+v; return Number.isFinite(n)&&n>=min; }
   function val(id){ return clean(document.getElementById(id).value); }
@@ -296,24 +389,10 @@
   function tick(){ elapsed=Date.now()-t0; const cs=Math.floor(elapsed/100); const m=Math.floor(cs/600), s=Math.floor((cs%600)/10), d=cs%10; document.getElementById('clock').textContent=`${m<10?'0':''}${m}:${s<10?'0':''}${s}.${d}`; if(m>=session.dureeMin){ pause(); showEnd(); } }
   qs('#btnStartCourse').onclick=start; qs('#btnPause').onclick=pause; qs('#btnReset').onclick=reset;
 
-  // beep (WebAudio)
-  function beep(freq=880, dur=250){
-    try{
-      const ctx=new (window.AudioContext||window.webkitAudioContext)();
-      const o=ctx.createOscillator(); const g=ctx.createGain();
-      o.type='sine'; o.frequency.value=freq; o.connect(g); g.connect(ctx.destination);
-      g.gain.setValueAtTime(0.001, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime+0.02);
-      o.start();
-      setTimeout(()=>{ g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.05); o.stop(ctx.currentTime+0.07); ctx.close(); }, dur);
-    }catch(e){}
-  }
-
   function showEnd(){
     endCard.classList.remove('hidden');
     updateDistanceOutput();
     if(navigator.vibrate) navigator.vibrate(150);
-    beep();
   }
   function hideEnd(){ endCard.classList.add('hidden'); }
 
@@ -337,7 +416,8 @@
   }
   function renderShots(){
     shotsTable.innerHTML='';
-    session.shots.forEach(s=>{
+    // ===== ORDRE INVERSE : dernier tir en premier =====
+    [...session.shots].reverse().forEach(s=>{
       const tr=document.createElement('tr');
       tr.innerHTML=`<td>${s.n}</td><td>${s.leds}</td><td><button class="b-red">Retirer</button></td>`;
       tr.querySelector('button').onclick=()=>{ if(session.finished) return; session.shots=session.shots.filter(x=>x.n!==s.n).map((x,i)=>({n:i+1,leds:x.leds})); renderShots(); };
@@ -384,19 +464,18 @@
   function finalizeRunner(){
     const R=session[session.active];
     const meters=Math.round((session.laps+(session.frac||0))*session.tourM);
-    const vitesse=+(meters*60/(1000*session.dureeMin)).toFixed(2); // km/h
+    const vitesse=+(meters*60/(1000*session.dureeMin)).toFixed(2); // km/h (on conserve ton export existant)
     const counts=countShotsArray(session.shots.map(s=>s.leds));
     session.results[session.active]={ prenom:R.prenom, nom:R.nom, classe:R.classe, sexe:R.sexe,
       distance:meters, vitesse:vitesse,
       nb_led_0:counts[0], nb_led_1:counts[1], nb_led_2:counts[2], nb_led_3:counts[3], nb_led_4:counts[4], nb_led_5:counts[5]
     };
 
-    // verrouille les contrôles pour ce coureur
     document.getElementById('courseCard').classList.add('lock');
     setTimeout(()=> document.getElementById('courseCard').classList.remove('lock'), 300);
 
     const other=session.active==='p1'?'p2':'p1';
-    if(!session.results[other]){ alert('Course du coureur terminée.\\nPassez au second coureur.'); switchRunner(other); return; }
+    if(!session.results[other]){ alert('Course du coureur terminée.\nPassez au second coureur.'); switchRunner(other); return; }
 
     session.finished=true;
     document.getElementById('pickP1').disabled=true;
