@@ -284,9 +284,12 @@
   <main class="shell hidden" id="view-summary">
     <section class="card center">
       <h2>Bilan — QR compatible ScanProf</h2>
-      <p class="muted">Format : tableau JSON d'objets {nom, prenom, classe, sexe, distance, vitesse, <strong>nb_led_0..nb_led_5</strong>}</p>
       <div id="qr" class="card" style="display:inline-block"></div>
-      <p class="muted" id="qrText" style="word-break:break-all"></p>
+      <!-- Boutons d'action sous le QR -->
+      <div class="btns" style="margin:10px 0">
+        <button class="b-violet" id="exportCsv">⬇️ Export CSV</button>
+      </div>
+      <!-- Tableau récapitulatif lisible -->
       <div id="resume"></div>
       <div class="btns" style="margin-top:8px">
         <button class="b-slate" id="backToCourse">⬅ Retour course</button>
@@ -496,10 +499,13 @@
 
     const qrBox=document.getElementById('qr');
     qrBox.innerHTML='';
-    try{ new QRCode(qrBox,{ text:payload, width:256, height:256, correctLevel:QRCode.CorrectLevel.M }); document.getElementById('qrText').textContent=payload; }
-    catch(e){ document.getElementById('qrText').textContent='QR indisponible — contenu: '+payload; }
+    try{
+      new QRCode(qrBox,{ text:payload, width:256, height:256, correctLevel:QRCode.CorrectLevel.M });
+    }catch(e){
+      console.warn('QR non généré:', e);
+    }
 
-    // Résumé lisible sous le QR
+    // Résumé lisible sous le QR (tableau)
     const rows = out.map(d => `
       <tr>
         <td>${d.nom}</td><td>${d.prenom}</td><td>${d.classe}</td><td>${d.sexe}</td>
@@ -518,6 +524,38 @@
         </thead>
         <tbody>${rows}</tbody>
       </table>`;
+
+    // === Export CSV (séparateur ;) ===
+    function toCSV(data) {
+      const headers = [
+        'nom','prenom','classe','sexe','distance','vitesse',
+        'nb_led_0','nb_led_1','nb_led_2','nb_led_3','nb_led_4','nb_led_5'
+      ];
+      const esc = (v) => {
+        const s = (v==null ? '' : String(v));
+        if (/[;\"\n]/.test(s)) return `"${s.replace(/\"/g,'""')}"`;
+        return s;
+      };
+      const lines = [
+        headers.join(';'),
+        ...data.map(d => headers.map(h => esc(d[h])).join(';'))
+      ];
+      return lines.join('\n');
+    }
+    const exportBtn = document.getElementById('exportCsv');
+    exportBtn.onclick = () => {
+      const csv = toCSV(out);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const fileDate = new Date().toISOString().slice(0,10);
+      a.href = url;
+      a.download = `LaserRun_${fileDate}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
   };
 
   backToCourseBtn.onclick=()=> show('course');
