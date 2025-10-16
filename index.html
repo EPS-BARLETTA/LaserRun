@@ -377,7 +377,9 @@
    <div>LaserRun - Équipe EPS Lycée Vauban - LUXEMBOURG - JB</div>
  </footer>
 
- <!-- QRCode lib (CDN léger) -->
+ <!-- ★ Pako pour compression SP1 -->
+ <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+ <!-- QRCode lib -->
  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
  <script>
@@ -397,7 +399,6 @@
  document.querySelectorAll('.modal [data-close]').forEach(b=> b.onclick = closeModals);
  document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModals(); });
 
- // protèger Accueil / Retour si course en cours
  function confirmLeaveIfNeeded(){
    if(!session.finished && (session.laps>0 || session.shots.length>0 || elapsed>0)){
      return confirm('Quitter la course ? Les données non terminées pourraient être perdues.');
@@ -463,7 +464,7 @@
 
  let t0=0, elapsed=0, timer=null, running=false;
  function start(){ if(session.finished||running) return; running=true; t0=Date.now()-elapsed; timer=setInterval(tick,100); qs('#btnStartCourse').disabled=true; qs('#btnPause').disabled=false; qs('#btnReset').disabled=false; }
- function pause(){ if(!running) return; running=false; clearInterval(timer); qs('#btnStartCourse').disabled=false; qs('#btnPause').disabled=true; }
+ function pause(){ if(!running) return; clearInterval(timer); running=false; qs('#btnStartCourse').disabled=false; qs('#btnPause').disabled=true; }
  function reset(){ pause(); elapsed=0; document.getElementById('clock').textContent='00:00.0'; qs('#btnReset').disabled=true; session.laps=0; session.shots=[]; session.frac=0; renderLaps(); renderShots(); hideEnd(); }
  function tick(){ elapsed=Date.now()-t0; const cs=Math.floor(elapsed/100); const m=Math.floor(cs/600), s=Math.floor((cs%600)/10), d=cs%10; document.getElementById('clock').textContent=`${m<10?'0':''}${m}:${s<10?'0':''}${s}.${d}`; if(m>=session.dureeMin){ pause(); showEnd(); } }
  qs('#btnStartCourse').onclick=start; qs('#btnPause').onclick=pause; qs('#btnReset').onclick=reset;
@@ -495,7 +496,6 @@
  });
  document.getElementById('finishRunnerOverlay').onclick=()=> finalizeRunner();
 
- // (panneau bas conservé mais non utilisé)
  endCard.querySelectorAll('[data-frac]').forEach(b=> b.onclick=()=>{ if(session.finished) return; session.frac=+b.getAttribute('data-frac'); updateDistanceOutput(); });
  qs('#finishRunner').onclick=()=> finalizeRunner();
 
@@ -517,7 +517,6 @@
  }
  function renderShots(){
    shotsTable.innerHTML='';
-   // ORDRE INVERSE : dernier tir en premier
    [...session.shots].reverse().forEach(s=>{
      const tr=document.createElement('tr');
      tr.innerHTML=`<td>${s.n}</td><td>${s.leds}</td><td><button class="b-red">Retirer</button></td>`;
@@ -562,43 +561,24 @@
 
  function countShotsArray(arr){ const c={0:0,1:0,2:0,3:0,4:0,5:0}; arr.forEach(v=>{ if(c.hasOwnProperty(v)) c[v]++; }); return c; }
 
- // ===== Indice Tir (base + bonus perfection b=0.10) =====
  function computeIndiceFromCounts(counts){
    const T = counts[0]+counts[1]+counts[2]+counts[3]+counts[4]+counts[5];
    if(!T) return {indice:0, niveau:'—'};
    const totalLed = 0*counts[0] + 1*counts[1] + 2*counts[2] + 3*counts[3] + 4*counts[4] + 5*counts[5];
-   const base = (totalLed / (5*T)) * 100; // 0..100
-   const b = 0.10; // bonus 10%
-   const bonus = b * (counts[5]/T) * 100; // 0..10
+   const base = (totalLed / (5*T)) * 100;
+   const b = 0.10;
+   const bonus = b * (counts[5]/T) * 100;
    const indice = +(base + bonus).toFixed(2);
    let niveau = 'à travailler 🔴';
    if(indice>=80) niveau='excellent ✅'; else if(indice>=60) niveau='bon 👍'; else if(indice>=40) niveau='en progrès 🟨';
    return {indice, niveau};
  }
 
- // === NOUVEAU : payload QR allégé (sans emoji), ajoute indice_perf numérique ===
- function buildQrData(dataRows){
-   return dataRows.map(d => ({
-     nom: d.nom,
-     prenom: d.prenom,
-     classe: d.classe,
-     sexe: d.sexe,
-     distance: d.distance,
-     vitesse: d.vitesse,
-     nb_led_0: d.nb_led_0,
-     nb_led_1: d.nb_led_1,
-     nb_led_2: d.nb_led_2,
-     nb_led_3: d.nb_led_3,
-     nb_led_4: d.nb_led_4,
-     nb_led_5: d.nb_led_5,
-     indice_perf: d.indice_tir // numérique, sans emoji
-   }));
- }
-
+ // ===== Résultats finaux par coureur
  function finalizeRunner(){
    const R=session[session.active];
    const meters=Math.round((session.laps+(session.frac||0))*session.tourM);
-   const vitesse=+(meters*60/(1000*session.dureeMin)).toFixed(2); // km/h
+   const vitesse=+(meters*60/(1000*session.dureeMin)).toFixed(2);
    const counts=countShotsArray(session.shots.map(s=>s.leds));
    const ind = computeIndiceFromCounts(counts);
    session.results[session.active]={ prenom:R.prenom, nom:R.nom, classe:R.classe, sexe:R.sexe,
@@ -627,17 +607,41 @@
  // ===== Bilan / QR + MODE PROF =====
  const backToCourseBtn=qs('#backToCourse'); const backHome2Btn=qs('#backHome2'); const goSummaryBtn=qs('#goSummary');
 
- // Données affichées dans le bilan (persistées pour édition)
  let summaryData = [];
  let profMode = false;
 
- function buildQR(payload){
+ // ★ Encodage SP1 (compact)
+ function sp1Encode(obj){
+   const json = JSON.stringify(obj||{});
+   const bytes = pako.deflate(json);
+   let bin = ""; for (let i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
+   return "SP1:" + btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+ }
+
+ function buildQRText(text){
    const qrBox=document.getElementById('qr');
    qrBox.innerHTML='';
-   try{ new QRCode(qrBox,{ text:payload, width:256, height:256, correctLevel:QRCode.CorrectLevel.M }); }
+   try{ new QRCode(qrBox,{ text, width:256, height:256, correctLevel:QRCode.CorrectLevel.M }); }
    catch(e){ console.warn('QR non généré:', e); }
  }
 
+ // ★ Lignes EXACTES pour ScanProf (Nom, Prenom, Classe, Distance, 0..5 LED)
+ function buildQrRows(dataRows){
+   return dataRows.map(d => ({
+     "Nom": (d.nom||"").toUpperCase(),
+     "Prenom": d.prenom||"",
+     "Classe": d.classe||"",
+     "Distance": Number(d.distance)||0,
+     "0 LED": Number(d.nb_led_0)||0,
+     "1 LED": Number(d.nb_led_1)||0,
+     "2 LED": Number(d.nb_led_2)||0,
+     "3 LED": Number(d.nb_led_3)||0,
+     "4 LED": Number(d.nb_led_4)||0,
+     "5 LED": Number(d.nb_led_5)||0
+   }));
+ }
+
+ // CSV export (inchangé)
  function toCSV(data) {
    const headers = [
      'nom','prenom','classe','sexe','distance','vitesse',
@@ -657,7 +661,6 @@
  }
 
  function renderSummary(){
-   // table (editable si profMode) — Indice & Niveau affichés (non éditables)
    const rows = summaryData.map((d,i) => `
      <tr data-index="${i}">
        <td data-field="nom" ${profMode?'contenteditable="true"':''}>${d.nom}</td>
@@ -689,13 +692,17 @@
        <tbody id="resumeBody">${rows}</tbody>
      </table>`;
 
-   // === QR (payload allégé) : historique + indice_perf (numérique, sans emoji)
-   const payloadQR = JSON.stringify(buildQrData(summaryData));
-   buildQR(payloadQR);
+   // ★ QR SP1 avec colonnes demandées
+   const payload = {
+     app: "LaserRun",
+     ts: Math.floor(Date.now()/1000),
+     eleves: buildQrRows(summaryData)
+   };
+   const qrText = sp1Encode(payload);
+   buildQRText(qrText);
 
-   // CSV bouton (utilise summaryData courant)
-   const exportBtn = document.getElementById('exportCsv');
-   exportBtn.onclick = () => {
+   // Export CSV
+   document.getElementById('exportCsv').onclick = () => {
      const csv = toCSV(summaryData);
      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
      const url = URL.createObjectURL(blob);
@@ -751,7 +758,6 @@
    return next;
  }
 
- // Activation mode Prof
  document.getElementById('activateProf').onclick = ()=>{
    const code = (document.getElementById('profCode').value||'').trim();
    if(code === '57'){
@@ -774,14 +780,15 @@
  };
 
  // Aller au bilan
+ const backToCourseBtn=qs('#backToCourse'); const backHome2Btn=qs('#backHome2'); const goSummaryBtn=qs('#goSummary');
  goSummaryBtn.onclick=()=>{
    const out=[];
    if(session.results.p1){ const r=session.results.p1; out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse, nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5, indice_tir:r.indice_tir, niveau_tir:r.niveau_tir }); }
    if(session.results.p2){ const r=session.results.p2; out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse, nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5, indice_tir:r.indice_tir, niveau_tir:r.niveau_tir }); }
 
-   summaryData = out; // stocke pour édition
+   summaryData = out;
    show('summary');
-   profMode = false; // par défaut verrouillé
+   profMode = false;
    renderSummary();
  };
 
