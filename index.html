@@ -12,44 +12,37 @@
    --bg:#f4f7fb; --card:#ffffff; --ink:#111827; --muted:#6b7280; --primary:#0a58ff;
    --green:#22c55e; --amber:#f59e0b; --red:#ef4444; --violet:#7c3aed; --slate:#334155;
    --radius:16px; --ring:0 8px 40px rgba(2,6,23,.08);
-   --panel1:#e8f1ff; --panel2:#e9fbe8; --band:#eef2f7;
  }
  *{box-sizing:border-box}
- body{
-   margin:0;background:var(--bg);color:var(--ink);
+ body{ margin:0;background:var(--bg);color:var(--ink);
    font:16px/1.4 Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-   min-height:100vh; display:flex; flex-direction:column; padding-bottom:56px;
- }
- footer{
-   position:fixed; left:0; right:0; bottom:0;
-   border-top:1px solid #e5e7eb; color:var(--muted);
-   text-align:center; padding:10px 0; background:#fff;
- }
+   min-height:100vh; display:flex; flex-direction:column; padding-bottom:56px; }
+ footer{ position:fixed; left:0; right:0; bottom:0; border-top:1px solid #e5e7eb;
+   color:var(--muted); text-align:center; padding:10px 0; background:#fff; }
 
  .shell{max-width:980px;margin:0 auto;padding:16px}
  h1{font-size:clamp(22px,3.4vw,32px);margin:8px 0 4px;font-weight:800;text-align:center}
  h2{font-size:clamp(20px,2.8vw,28px);margin:8px 0 12px;font-weight:800;text-align:center}
  h3{margin:0 0 10px;font-size:18px;text-align:center}
  p{margin:0 0 8px;text-align:center}
- .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--ring);padding:16px;margin:12px 0}
+ .card{background:#ffffff;border-radius:16px;box-shadow:0 8px 40px rgba(2,6,23,.08);padding:16px;margin:12px 0}
  .btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
  button{border:0;border-radius:16px;padding:14px 18px;font-weight:800;cursor:pointer;font-size:18px}
- .b-primary{background:var(--primary);color:#fff}
- .b-green{background:var(--green);color:#fff}
- .b-amber{background:var(--amber);color:#111}
- .b-red{background:var(--red);color:#fff}
- .b-violet{background:var(--violet);color:#fff}
- .b-slate{background:var(--slate);color:#fff}
+ .b-primary{background:#0a58ff;color:#fff}
+ .b-green{background:#22c55e;color:#fff}
+ .b-amber{background:#f59e0b;color:#111}
+ .b-red{background:#ef4444;color:#fff}
+ .b-violet{background:#7c3aed;color:#fff}
+ .b-slate{background:#334155;color:#fff}
  .row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
  .panel{border-radius:16px;padding:16px}
- .panel1{background:var(--panel1)}
- .panel2{background:var(--panel2)}
- .band{background:var(--band);border-radius:12px;padding:10px 12px;margin-top:16px;font-weight:700}
+ .panel1{background:#e8f1ff}
+ .panel2{background:#e9fbe8}
+ .band{background:#eef2f7;border-radius:12px;padding:10px 12px;margin-top:16px;font-weight:700}
  label{display:block;font-weight:800;margin:10px 0 6px}
  input,select{width:100%;padding:14px 16px;border:2px solid #e5e7eb;border-radius:14px;background:#fff;font:inherit}
  input[type=number]{appearance:textfield}
- select{background:#fff}
- .muted{color:var(--muted)}
+ .muted{color:#6b7280}
  .hidden{display:none!important}
  .center{text-align:center}
  .big{font-size:40px;font-weight:900}
@@ -63,7 +56,7 @@
  #view-cover{min-height:calc(100vh - 56px); display:flex; align-items:center; justify-content:center;}
  .cover-stack{display:flex; flex-direction:column; gap:16px; align-items:center;}
  .substack{display:flex; gap:12px; flex-wrap:wrap; justify-content:center;}
- .tagline{color:var(--muted)}
+ .tagline{color:#6b7280}
 
  .modal{position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:50;
    background:linear-gradient(180deg,rgba(2,6,23,.55),rgba(2,6,23,.35));}
@@ -150,25 +143,17 @@
      <div class="row">
        <div class="panel panel1">
          <h3>COUREUR 1</h3>
-         <label>Prénom</label>
-         <input id="p1_prenom" maxlength="60" autocomplete="off"/>
-         <label>Nom</label>
-         <input id="p1_nom" maxlength="60" autocomplete="off"/>
-         <label>Classe</label>
-         <input id="p1_classe" maxlength="60" autocomplete="off"/>
-         <label>Sexe</label>
-         <select id="p1_sexe"><option value="">—</option><option>F</option><option>M</option></select>
+         <label>Prénom</label><input id="p1_prenom" maxlength="60" autocomplete="off"/>
+         <label>Nom</label><input id="p1_nom" maxlength="60" autocomplete="off"/>
+         <label>Classe</label><input id="p1_classe" maxlength="60" autocomplete="off"/>
+         <label>Sexe</label><select id="p1_sexe"><option value="">—</option><option>F</option><option>M</option></select>
        </div>
        <div class="panel panel2">
          <h3>COUREUR 2</h3>
-         <label>Prénom</label>
-         <input id="p2_prenom" maxlength="60" autocomplete="off"/>
-         <label>Nom</label>
-         <input id="p2_nom" maxlength="60" autocomplete="off"/>
-         <label>Classe</label>
-         <input id="p2_classe" maxlength="60" autocomplete="off"/>
-         <label>Sexe</label>
-         <select id="p2_sexe"><option value="">—</option><option>F</option><option>M</option></select>
+         <label>Prénom</label><input id="p2_prenom" maxlength="60" autocomplete="off"/>
+         <label>Nom</label><input id="p2_nom" maxlength="60" autocomplete="off"/>
+         <label>Classe</label><input id="p2_classe" maxlength="60" autocomplete="off"/>
+         <label>Sexe</label><select id="p2_sexe"><option value="">—</option><option>F</option><option>M</option></select>
        </div>
      </div>
 
@@ -323,8 +308,7 @@
 
  <footer><div>LaserRun - Équipe EPS Lycée Vauban - LUXEMBOURG - JB</div></footer>
 
- <!-- libs -->
- <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+ <!-- libs (uniquement qrcodejs, pas de compression) -->
  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
  <script>
@@ -496,16 +480,12 @@
  const backToCourseBtn=qs('#backToCourse'), backHome2Btn=qs('#backHome2'), goSummaryBtn=qs('#goSummary');
  let summaryData = [], profMode = false;
 
- const sp1Encode = obj => {
-   const json = JSON.stringify(obj||{});
-   const bytes = pako.deflate(json);
-   let bin = ""; for (let i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
-   return "SP1:" + btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
- };
  function buildQR(containerText){
    const box=document.getElementById('qr'); box.innerHTML='';
    new QRCode(box,{ text:containerText, width:256, height:256, correctLevel:QRCode.CorrectLevel.M });
  }
+
+ // Lignes EXACTES pour ScanProf
  function buildQrRows(dataRows){
    return dataRows.map(d => ({
      "Nom": (d.nom||"").toUpperCase(),
@@ -520,12 +500,14 @@
      "5 LED": Number(d.nb_led_5)||0
    }));
  }
+
  function toCSV(data){
    const headers=['nom','prenom','classe','sexe','distance','vitesse','nb_led_0','nb_led_1','nb_led_2','nb_led_3','nb_led_4','nb_led_5','indice_tir','niveau_tir'];
    const esc = s => { s = (s==null?'':String(s)); return /[;\"\n]/.test(s) ? `"${s.replace(/\"/g,'""')}"` : s; };
    const lines=[ headers.join(';'), ...data.map(d=>headers.map(h=>esc(d[h])).join(';')) ];
    return lines.join('\n');
  }
+
  function renderSummary(){
    const rows = summaryData.map((d,i) => `
      <tr data-index="${i}">
@@ -558,8 +540,10 @@
        <tbody id="resumeBody">${rows}</tbody>
      </table>`;
 
-   const payload = { app:"LaserRun", ts:Math.floor(Date.now()/1000), eleves: buildQrRows(summaryData) };
-   buildQR( sp1Encode(payload) );
+   // 🔴 ICI : QR = TABLEAU JSON BRUT (compatible ScanProf)
+   const rowsArray = buildQrRows(summaryData);         // [ {...}, {...} ]
+   const qrText    = JSON.stringify(rowsArray);        // pas de compression, pas d'emoji
+   buildQR(qrText);
 
    document.getElementById('exportCsv').onclick = () => {
      const csv = toCSV(summaryData);
@@ -580,6 +564,7 @@
      ? 'Mode Prof activé : corrigez puis “Mettre à jour QR/CSV”.'
      : 'Saisir le code 57 pour corriger une valeur.';
  }
+
  function parseEditsFromTable(){
    const tbody = document.getElementById('resumeBody');
    const rows = Array.from(tbody.querySelectorAll('tr'));
@@ -599,6 +584,7 @@
      };
    });
  }
+
  document.getElementById('activateProf').onclick = ()=>{
    const code = (document.getElementById('profCode').value||'').trim();
    if(code==='57'){ profMode=true; renderSummary(); } else { alert('Code incorrect.'); }
@@ -611,11 +597,19 @@
    alert('Bilan mis à jour. QR et CSV régénérés.');
  };
 
- // Aller au bilan (USE EXISTING CONSTS — no re-declare)
+ // Aller au bilan
  goSummaryBtn.onclick=()=>{
    const out=[];
-   if(session.results.p1){ const r=session.results.p1; out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse, nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5, indice_tir:r.indice_tir, niveau_tir:r.niveau_tir }); }
-   if(session.results.p2){ const r=session.results.p2; out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse, nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5, indice_tir:r.indice_tir, niveau_tir:r.niveau_tir }); }
+   if(session.results.p1){ const r=session.results.p1;
+     out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse,
+       nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5,
+       indice_tir:r.indice_tir, niveau_tir:r.niveau_tir });
+   }
+   if(session.results.p2){ const r=session.results.p2;
+     out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse,
+       nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5,
+       indice_tir:r.indice_tir, niveau_tir:r.niveau_tir });
+   }
    summaryData = out; show('summary'); profMode=false; renderSummary();
  };
  backToCourseBtn.onclick=()=> show('course');
