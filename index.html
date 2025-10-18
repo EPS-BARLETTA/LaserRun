@@ -9,9 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
  :root{
-   --bg:#f4f7fb; --card:#ffffff; --ink:#111827; --muted:#6b7280; --primary:#0a58ff;
-   --green:#22c55e; --amber:#f59e0b; --red:#ef4444; --violet:#7c3aed; --slate:#334155;
-   --radius:16px; --ring:0 8px 40px rgba(2,6,23,.08);
+   --bg:#f4f7fb; --card:#ffffff; --ink:#111827; --muted:#6b7280;
+   --primary:#0a58ff; --green:#22c55e; --amber:#f59e0b; --red:#ef4444; --violet:#7c3aed; --slate:#334155;
  }
  *{box-sizing:border-box}
  body{ margin:0;background:var(--bg);color:var(--ink);
@@ -58,6 +57,15 @@
  .substack{display:flex; gap:12px; flex-wrap:wrap; justify-content:center;}
  .tagline{color:#6b7280}
 
+ /* Overlay fin obligatoire */
+ #endOverlay{ position:fixed; inset:0; display:none; z-index:60; align-items:center; justify-content:center; background:rgba(2,6,23,.55); }
+ #endOverlay.show{display:flex;}
+ .end-card{ background:#fff; border-radius:20px; padding:20px; width:min(720px,92%);
+   box-shadow:0 12px 48px rgba(2,6,23,.25); text-align:center; }
+ .end-card h3{margin-top:0}
+ .end-note{color:var(--muted); margin-top:8px}
+
+ /* Modales */
  .modal{position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:50;
    background:linear-gradient(180deg,rgba(2,6,23,.55),rgba(2,6,23,.35));}
  .modal-card{background:#fff; border-radius:20px; max-width:900px; width:92%; overflow:hidden; box-shadow:0 12px 48px rgba(2,6,23,.25)}
@@ -100,9 +108,9 @@
        <ol class="help-list">
          <li>Renseigner pour chaque coureur : <strong>Prénom</strong>, <strong>Nom</strong>, <strong>Classe</strong>, <strong>Sexe</strong>.</li>
          <li>Définir les paramètres communs : <strong>Durée (min)</strong> et <strong>Longueur du tour (m)</strong>.</li>
-         <li>Dans la course : <strong>Start/Pause</strong> le chrono, <strong>+1 / −1</strong> pour les tours (distance en direct).</li>
-         <li>Au tir : saisir le <strong>nombre de LED allumées (0–5)</strong>. Les cumuls s’actualisent sous les boutons.</li>
-         <li>En fin de temps : compléter la <strong>fraction de tour</strong>, terminer chaque coureur, puis générer le <strong>QR</strong>.</li>
+         <li>Dans la course : <strong>Start/Pause</strong> le chrono, <strong>+1 / −1</strong> pour les tours.</li>
+         <li>Au tir : saisir le <strong>nombre de LED allumées (0–5)</strong> ; les cumuls “Nb LED …” se mettent à jour.</li>
+         <li>À la fin : compléter la <strong>fraction de tour</strong> dans l’overlay, puis <strong>Terminer</strong> et générer le QR.</li>
        </ol>
        <div class="btns"><button class="b-slate" data-close>Fermer</button></div>
      </div>
@@ -116,15 +124,11 @@
      <div class="modal-body">
        <h4>Avant l’activité</h4>
        <ul class="help-list">
-         <li>Vérifier le tracé, la stabilité et le dégagement de la zone de tir.</li>
-         <li>Contrôler le matériel laser (fonctionnement, fixations).</li>
-         <li>Échauffement complet ; chaussures adaptées et lacées.</li>
+         <li>Vérifier le tracé et la zone de tir ; contrôler le matériel.</li>
        </ul>
        <h4>Pendant l’activité</h4>
        <ul class="help-list">
-         <li>Calme au pas de tir ; attendre le signal ; respecter les consignes.</li>
-         <li>Attention aux croisements course ↔ tir ; gestion des flux.</li>
-         <li>Signaler tout incident immédiatement à l’enseignant.</li>
+         <li>Calme au pas de tir ; respecter les consignes ; attention aux croisements.</li>
        </ul>
        <h4>Après l’activité</h4>
        <ul class="help-list">
@@ -135,7 +139,7 @@
    </div>
  </div>
 
- <!-- ===== VUES ===== -->
+ <!-- ===== VUE SAISIE ===== -->
  <main class="shell hidden" id="view-duo">
    <section class="card">
      <h2>Saisie des informations</h2>
@@ -176,6 +180,7 @@
    </section>
  </main>
 
+ <!-- ===== VUE COURSE ===== -->
  <main class="shell hidden" id="view-course">
    <section class="card center" id="courseCard">
      <div class="btns" style="margin-bottom:8px">
@@ -209,6 +214,7 @@
            <button class="b-slate" id="lapMinus">−1</button>
          </div>
        </div>
+
        <div class="card">
          <h3>🎯 Tir — Nombre de LED allumées</h3>
          <div class="shot-grid">
@@ -220,7 +226,14 @@
            <button class="b-slate" data-quick="5">5</button>
          </div>
          <p class="muted" id="liveCounts" style="margin-top:10px"></p>
-         <div style="overflow:auto;margin-top:8px">
+
+         <!-- Bouton pour afficher/masquer le détail -->
+         <div class="btns" style="margin-top:8px">
+           <button class="b-slate" id="toggleShots">Afficher les détails des tirs</button>
+         </div>
+
+         <!-- Détail des tirs (caché par défaut) -->
+         <div id="shotsDetail" class="hidden" style="overflow:auto;margin-top:8px">
            <table>
              <thead><tr><th>#</th><th>LED allumées</th><th>Action</th></tr></thead>
              <tbody id="shotsTable"></tbody>
@@ -229,16 +242,8 @@
        </div>
      </div>
 
-     <div class="card hidden" id="endCard" style="max-width:720px;margin:12px auto 0">
-       <h3>⏱️ Temps écoulé — compléter la fraction de tour</h3>
-       <div class="btns">
-         <button class="b-slate" data-frac="0.25">+ 1/4 tour</button>
-         <button class="b-slate" data-frac="0.5">+ 1/2 tour</button>
-         <button class="b-slate" data-frac="0.75">+ 3/4 tour</button>
-         <button class="b-green" id="finishRunner">✅ Terminer la course</button>
-       </div>
-       <p class="muted" id="distanceOut">Distance: — m</p>
-     </div>
+     <!-- Le panneau fin-bas est conservé mais neutralisé (jamais montré) -->
+     <div class="card hidden" id="endCard" style="max-width:720px;margin:12px auto 0"></div>
 
      <div class="btns hidden" id="toSummaryWrap" style="margin-top:12px">
        <button class="b-primary" id="goSummary">📊 Aller au bilan</button>
@@ -246,6 +251,7 @@
    </section>
  </main>
 
+ <!-- ===== OVERLAY Fin obligatoire ===== -->
  <div id="endOverlay" aria-modal="true" role="dialog">
    <div class="end-card">
      <h3>⏳ Temps écoulé</h3>
@@ -263,6 +269,7 @@
    </div>
  </div>
 
+ <!-- ===== VUE BILAN / QR ===== -->
  <main class="shell hidden" id="view-summary">
    <section class="card center">
      <h2>Bilan — QR compatible ScanProf</h2>
@@ -291,15 +298,14 @@
    </section>
  </main>
 
+ <!-- Modale Indice -->
  <div class="modal hidden" id="modalIndice">
    <div class="modal-card">
      <div class="modal-head indice"><span>ℹ️</span><span>Indice de performance au tir</span></div>
      <div class="modal-body">
-       <p><strong>Comment c’est calculé ?</strong></p>
-       <p>Indice = moyenne des LED allumées (sur 100) + bonus pour chaque tir parfait (5/5).</p>
+       <p><strong>Indice =</strong> moyenne des LED (sur 100) + bonus pour chaque 5/5.</p>
        <ul class="help-list">
-         <li>Plus tu allumes de LED en <strong>moyenne</strong>, plus l’indice est haut.</li>
-         <li>Les <strong>5/5</strong> donnent un bonus ; la régularité reste la clé.</li>
+         <li><b>80+</b> excellent, <b>60–79</b> bon, <b>40–59</b> en progrès.</li>
        </ul>
        <div class="btns"><button class="b-slate" data-close>Fermer</button></div>
      </div>
@@ -308,7 +314,7 @@
 
  <footer><div>LaserRun - Équipe EPS Lycée Vauban - LUXEMBOURG - JB</div></footer>
 
- <!-- libs (uniquement qrcodejs, pas de compression) -->
+ <!-- libs -->
  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
  <script>
@@ -390,15 +396,17 @@
  function tick(){ elapsed=Date.now()-t0; const cs=Math.floor(elapsed/100); const m=Math.floor(cs/600), s=Math.floor((cs%600)/10), d=cs%10; document.getElementById('clock').textContent=`${m<10?'0':''}${m}:${s<10?'0':''}${s}.${d}`; if(m>=session.dureeMin){ pause(); showEnd(); } }
  qs('#btnStartCourse').onclick=start; qs('#btnPause').onclick=pause; qs('#btnReset').onclick=reset;
 
+ // Overlay fin — seule voie pour fractionner la fin
  const endOverlay = document.getElementById('endOverlay'); const distanceOutOverlay = document.getElementById('distanceOutOverlay');
  function updateDistanceOutput(){ const meters=Math.round((session.laps+(session.frac||0))*session.tourM); distanceOut.textContent=`Distance: ${meters} m (${session.laps} tours + ${session.frac||0} tour)`; }
  function updateDistanceOutputOverlay(){ const meters=Math.round((session.laps+(session.frac||0))*session.tourM); distanceOutOverlay.textContent = `Distance: ${meters} m (${session.laps} tours + ${session.frac||0} tour)`; }
  function showEnd(){ endCard.classList.add('hidden'); session.frac = session.frac || 0; updateDistanceOutputOverlay(); courseCard.classList.add('lock'); endOverlay.classList.add('show'); if(navigator.vibrate) navigator.vibrate(150); }
  function hideEnd(){ endCard.classList.add('hidden'); endOverlay.classList.remove('show'); courseCard.classList.remove('lock'); }
+
  document.querySelectorAll('[data-frac-overlay]').forEach(b=>{ b.onclick=()=>{ if(session.finished) return; session.frac=+b.getAttribute('data-frac-overlay'); updateDistanceOutputOverlay(); }; });
  document.getElementById('finishRunnerOverlay').onclick=()=> finalizeRunner();
- endCard.querySelectorAll('[data-frac]').forEach(b=> b.onclick=()=>{ if(session.finished) return; session.frac=+b.getAttribute('data-frac'); updateDistanceOutput(); });
- qs('#finishRunner').onclick=()=> finalizeRunner();
+
+ // (panneau bas neutralisé : pas d’écouteurs de fraction/terminer ici)
 
  function renderLaps(){ lapsEl.textContent=session.laps; liveDistanceEl.textContent = Math.round((session.laps+(session.frac||0))*session.tourM); updateDistanceOutput(); updateDistanceOutputOverlay(); }
  function addShot(leds){ const n=session.shots.length+1; session.shots.push({n,leds}); renderShots(); }
@@ -407,10 +415,9 @@
    [...session.shots].reverse().forEach(s=>{
      const tr=document.createElement('tr');
      tr.innerHTML=`<td>${s.n}</td><td>${s.leds}</td><td><button class="b-red">Retirer</button></td>`;
-     tr.querySelector('button').onclick=()=>{ if(session.finished) return; session.shots=session.shots.filter(x=>x.n!==s.n).map((x,i)=>({n:i+1,leds:x.leds})); renderShots(); };
+     tr.querySelector('button').onclick=()=>{ if(session.finished) return; session.shots=session.shots.filter(x=>x.n!==s.n).map((x,i)=>({n:i+1,leds:x.leds})); renderShots(); renderCounts(); };
      shotsTable.append(tr);
    });
-   renderCounts();
  }
  function renderCounts(){
    const c={0:0,1:0,2:0,3:0,4:0,5:0};
@@ -423,6 +430,15 @@
       <span class="pill">Nb LED 1 : <b>${c[1]}</b></span>
       <span class="pill">Nb LED 0 : <b>${c[0]}</b></span>`;
  }
+ // bouton afficher/masquer le détail des tirs
+ const shotsDetail = ()=> document.getElementById('shotsDetail');
+ document.getElementById('toggleShots').onclick = ()=>{
+   const box = shotsDetail();
+   const willShow = box.classList.contains('hidden');
+   box.classList.toggle('hidden');
+   document.getElementById('toggleShots').textContent = willShow ? 'Masquer les détails des tirs' : 'Afficher les détails des tirs';
+   if (willShow) renderShots(); // rafraîchir quand on ouvre
+ };
 
  function switchRunner(which){
    if(session.finished) return;
@@ -432,6 +448,7 @@
    resetRunnerState();
    paintCourseHeader();
    loadTemp();
+   renderCounts();
  }
  function resetRunnerState(){ session.laps=0; session.shots=[]; session.frac=0; renderLaps(); renderShots(); hideEnd(); }
  function paintCourseHeader(){
@@ -471,21 +488,29 @@
 
    hideEnd();
    courseCard.classList.add('lock'); setTimeout(()=> courseCard.classList.remove('lock'), 300);
+
    const other=session.active==='p1'?'p2':'p1';
-   if(!session.results[other]){ alert('Course du coureur terminée.\nPassez au second coureur.'); switchRunner(other); return; }
-   session.finished=true; qs('#pickP1').disabled=true; qs('#pickP2').disabled=true; toSummaryWrap.classList.remove('hidden');
+   if(!session.results[other]){
+     alert('Course du coureur terminée.\nPassez au second coureur.');
+     switchRunner(other);
+     return;
+   }
+   session.finished=true;
+   qs('#pickP1').disabled=true; qs('#pickP2').disabled=true;
+   toSummaryWrap.classList.remove('hidden');
+   renderCounts();
  }
 
  // ===== bilan / QR =====
  const backToCourseBtn=qs('#backToCourse'), backHome2Btn=qs('#backHome2'), goSummaryBtn=qs('#goSummary');
  let summaryData = [], profMode = false;
 
- function buildQR(containerText){
+ function buildQR(text){
    const box=document.getElementById('qr'); box.innerHTML='';
-   new QRCode(box,{ text:containerText, width:256, height:256, correctLevel:QRCode.CorrectLevel.M });
+   new QRCode(box,{ text, width:256, height:256, correctLevel:QRCode.CorrectLevel.M });
  }
 
- // Lignes EXACTES pour ScanProf
+ // Ordre EXIGÉ : Nom, Prenom, Classe, Distance, 0..5 LED, Indice tir
  function buildQrRows(dataRows){
    return dataRows.map(d => ({
      "Nom": (d.nom||"").toUpperCase(),
@@ -497,7 +522,8 @@
      "2 LED": Number(d.nb_led_2)||0,
      "3 LED": Number(d.nb_led_3)||0,
      "4 LED": Number(d.nb_led_4)||0,
-     "5 LED": Number(d.nb_led_5)||0
+     "5 LED": Number(d.nb_led_5)||0,
+     "Indice tir": Number(d.indice_tir)||0
    }));
  }
 
@@ -540,11 +566,11 @@
        <tbody id="resumeBody">${rows}</tbody>
      </table>`;
 
-   // 🔴 ICI : QR = TABLEAU JSON BRUT (compatible ScanProf)
-   const rowsArray = buildQrRows(summaryData);         // [ {...}, {...} ]
-   const qrText    = JSON.stringify(rowsArray);        // pas de compression, pas d'emoji
-   buildQR(qrText);
+   // QR = TABLEAU JSON BRUT des 2 élèves (ordre demandé)
+   const rowsArray = buildQrRows(summaryData);   // [ {...}, {...} ]
+   buildQR(JSON.stringify(rowsArray));
 
+   // Export CSV
    document.getElementById('exportCsv').onclick = () => {
      const csv = toCSV(summaryData);
      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -585,6 +611,9 @@
    });
  }
 
+ // Modale indice
+ document.getElementById('btnIndiceInfo').onclick = ()=> openModal('modalIndice');
+
  document.getElementById('activateProf').onclick = ()=>{
    const code = (document.getElementById('profCode').value||'').trim();
    if(code==='57'){ profMode=true; renderSummary(); } else { alert('Code incorrect.'); }
@@ -610,8 +639,10 @@
        nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5,
        indice_tir:r.indice_tir, niveau_tir:r.niveau_tir });
    }
-   summaryData = out; show('summary'); profMode=false; renderSummary();
+   summaryData = out;             // <= 1 ou 2 élèves selon ce qui a été terminé
+   show('summary'); profMode=false; renderSummary();
  };
+
  backToCourseBtn.onclick=()=> show('course');
  backHome2Btn.onclick=()=> { if(confirmLeaveIfNeeded()) show('cover'); };
 
