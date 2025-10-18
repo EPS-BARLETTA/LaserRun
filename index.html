@@ -319,33 +319,23 @@
 
  <script>
  'use strict';
-
  document.addEventListener('DOMContentLoaded', () => {
-   // ===== utils & nav =====
+
+   // Helper sûr: attache un handler uniquement si l'élément existe
+   const on = (id, evt, fn) => { const el = document.getElementById(id); if (el) el.addEventListener(evt, fn, false); };
+
    const qs = sel => document.querySelector(sel);
    const V = { cover: qs('#view-cover'), duo: qs('#view-duo'), course: qs('#view-course'), summary: qs('#view-summary') };
    const show = name => { Object.values(V).forEach(v=>v.classList.add('hidden')); V[name].classList.remove('hidden'); window.scrollTo(0,0); };
 
    // Modales
-   function openModal(id){ document.getElementById(id).classList.remove('hidden'); }
-   function closeModals(){ document.querySelectorAll('.modal').forEach(m=>m.classList.add('hidden')); }
-   qs('#btnHelp').onclick = () => openModal('modalHelp');
-   qs('#btnSafety').onclick = () => openModal('modalSafety');
-   document.getElementById('btnIndiceInfo').onclick = ()=> openModal('modalIndice');
-   document.querySelectorAll('.modal [data-close]').forEach(b=> b.onclick = closeModals);
+   const openModal = id => { const el=document.getElementById(id); if(el) el.classList.remove('hidden'); };
+   const closeModals = () => document.querySelectorAll('.modal').forEach(m=>m.classList.add('hidden'));
+   on('btnHelp','click', ()=> openModal('modalHelp'));
+   on('btnSafety','click', ()=> openModal('modalSafety'));
+   on('btnIndiceInfo','click', ()=> openModal('modalIndice'));
+   document.querySelectorAll('.modal [data-close]').forEach(b=> b.addEventListener('click', closeModals));
    document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModals(); });
-
-   // Cover → Duo
-   qs('#btnStart').onclick = () => { show('duo'); validate(); };
-
-   // Sécurité retour
-   function confirmLeaveIfNeeded(){
-     if(!session.finished && (session.laps>0 || session.shots.length>0 || elapsed>0)){
-       return confirm('Quitter la course ? Les données non terminées pourraient être perdues.');
-     }
-     return true;
-   }
-   qs('#goHome').onclick = ()=> { if(confirmLeaveIfNeeded()) show('cover'); };
 
    // ===== validation =====
    const clean = s => (s||'').replace(/\s+/g,' ').trim();
@@ -364,21 +354,25 @@
      fields.forEach(id=>{
        const el=document.getElementById(id);
        const good=hasValue(id);
-       el.style.borderColor = good?'#e5e7eb':'#ef4444';
+       if (el) el.style.borderColor = good?'#e5e7eb':'#ef4444';
        ok = ok && good;
      });
      const okDur=okNumber(val('duree_min'),1);
      const okTour=okNumber(val('tour_m'),10);
-     document.getElementById('duree_min').style.borderColor = okDur?'#e5e7eb':'#ef4444';
-     document.getElementById('tour_m').style.borderColor = okTour?'#e5e7eb':'#ef4444';
+     const dureeEl=document.getElementById('duree_min');
+     const tourEl=document.getElementById('tour_m');
+     if (dureeEl) dureeEl.style.borderColor = okDur?'#e5e7eb':'#ef4444';
+     if (tourEl) tourEl.style.borderColor = okTour?'#e5e7eb':'#ef4444';
      ok = ok && okDur && okTour;
-     document.getElementById('goCourse').disabled = !ok;
+     const go = document.getElementById('goCourse');
+     if (go) go.disabled = !ok;
      return ok;
    }
 
    ['p1_prenom','p1_nom','p1_classe','p1_sexe','p2_prenom','p2_nom','p2_classe','p2_sexe','duree_min','tour_m']
      .forEach(id=>{
        const el=document.getElementById(id);
+       if(!el) return;
        el.addEventListener('input',validate);
        el.addEventListener('change',validate);
        el.addEventListener('blur',validate);
@@ -387,51 +381,90 @@
    // ===== session / état =====
    const session={ p1:null, p2:null, tourM:0, dureeMin:0, active:'p1', laps:0, frac:0, shots:[], results:{p1:null,p2:null}, finished:false };
 
+   // Page de garde → Saisie
+   on('btnStart','click', ()=> { show('duo'); validate(); });
+
+   // Sécurité retour
+   function confirmLeaveIfNeeded(){
+     if(!session.finished && (session.laps>0 || session.shots.length>0 || elapsed>0)){
+       return confirm('Quitter la course ? Les données non terminées pourraient être perdues.');
+     }
+     return true;
+   }
+   on('goHome','click', ()=> { if(confirmLeaveIfNeeded()) show('cover'); });
+
    // Aller à la course
-   qs('#goCourse').onclick = ()=>{
+   on('goCourse','click', ()=>{
      if(!validate()) { alert('Complétez tous les champs + chiffres.'); return; }
      session.p1={ prenom:val('p1_prenom'), nom:val('p1_nom'), classe:val('p1_classe'), sexe:val('p1_sexe') };
      session.p2={ prenom:val('p2_prenom'), nom:val('p2_nom'), classe:val('p2_classe'), sexe:val('p2_sexe') };
      session.dureeMin=+val('duree_min'); session.tourM=+val('tour_m');
      session.active='p1'; resetRunnerState(); paintCourseHeader(); show('course');
-   };
+   });
 
    // ===== course =====
    const lapsEl=qs('#laps'), lapMetersEl=qs('#lapMeters'), targetEl=qs('#target');
    const shotsTable=qs('#shotsTable'), runnerTitle=qs('#runnerTitle'), courseMeta=qs('#courseMeta');
    const endCard=qs('#endCard'), distanceOut=qs('#distanceOut'), courseCard=qs('#courseCard');
    const toSummaryWrap=qs('#toSummaryWrap'); const liveDistanceEl=qs('#liveDistance');
-   qs('#backToDuo').onclick = ()=> { if(confirmLeaveIfNeeded()) show('duo'); };
 
-   qs('#pickP1').onclick=()=> switchRunner('p1');
-   qs('#pickP2').onclick=()=> switchRunner('p2');
-   qs('#lapPlus').onclick=()=>{ if(session.finished) return; session.laps++; renderLaps(); };
-   qs('#lapMinus').onclick=()=>{ if(session.finished) return; session.laps=Math.max(0,session.laps-1); renderLaps(); };
+   on('backToDuo','click', ()=> { if(confirmLeaveIfNeeded()) show('duo'); });
+   on('pickP1','click', ()=> switchRunner('p1'));
+   on('pickP2','click', ()=> switchRunner('p2'));
+   on('lapPlus','click', ()=>{ if(session.finished) return; session.laps++; renderLaps(); });
+   on('lapMinus','click', ()=>{ if(session.finished) return; session.laps=Math.max(0,session.laps-1); renderLaps(); });
 
    document.querySelectorAll('[data-quick]').forEach(btn=>{
-     btn.onclick=()=>{ if(session.finished) return; const v=+btn.getAttribute('data-quick'); addShot(v); };
+     btn.addEventListener('click', ()=>{ if(session.finished) return; const v=+btn.getAttribute('data-quick'); addShot(v); });
    });
 
    let t0=0, elapsed=0, timer=null, running=false;
-   function start(){ if(session.finished||running) return; running=true; t0=Date.now()-elapsed; timer=setInterval(tick,100); qs('#btnStartCourse').disabled=true; qs('#btnPause').disabled=false; qs('#btnReset').disabled=false; }
-   function pause(){ if(!running) return; clearInterval(timer); running=false; qs('#btnStartCourse').disabled=false; qs('#btnPause').disabled=true; }
-   function reset(){ pause(); elapsed=0; document.getElementById('clock').textContent='00:00.0'; qs('#btnReset').disabled=true; session.laps=0; session.shots=[]; session.frac=0; renderLaps(); renderShots(); hideEnd(); }
-   function tick(){ elapsed=Date.now()-t0; const cs=Math.floor(elapsed/100); const m=Math.floor(cs/600), s=Math.floor((cs%600)/10), d=cs%10; document.getElementById('clock').textContent=`${m<10?'0':''}${m}:${s<10?'0':''}${s}.${d}`; if(m>=session.dureeMin){ pause(); showEnd(); } }
-   qs('#btnStartCourse').onclick=start; qs('#btnPause').onclick=pause; qs('#btnReset').onclick=reset;
+   function start(){ if(session.finished||running) return; running=true; t0=Date.now()-elapsed; timer=setInterval(tick,100);
+     const bsc=document.getElementById('btnStartCourse'), bp=document.getElementById('btnPause'), br=document.getElementById('btnReset');
+     if(bsc) bsc.disabled=true; if(bp) bp.disabled=false; if(br) br.disabled=false;
+   }
+   function pause(){ if(!running) return; clearInterval(timer); running=false;
+     const bsc=document.getElementById('btnStartCourse'), bp=document.getElementById('btnPause');
+     if(bsc) bsc.disabled=false; if(bp) bp.disabled=true;
+   }
+   function reset(){ pause(); elapsed=0; const clk=document.getElementById('clock'); if(clk) clk.textContent='00:00.0';
+     const br=document.getElementById('btnReset'); if(br) br.disabled=true;
+     session.laps=0; session.shots=[]; session.frac=0; renderLaps(); renderShots(); hideEnd();
+   }
+   function tick(){ elapsed=Date.now()-t0; const cs=Math.floor(elapsed/100); const m=Math.floor(cs/600), s=Math.floor((cs%600)/10), d=cs%10;
+     const clk=document.getElementById('clock'); if(clk) clk.textContent=`${m<10?'0':''}${m}:${s<10?'0':''}${s}.${d}`;
+     if(m>=session.dureeMin){ pause(); showEnd(); } }
+   on('btnStartCourse','click', start);
+   on('btnPause','click', pause);
+   on('btnReset','click', reset);
 
    // Overlay fin — seule voie pour fractionner la fin
    const endOverlay = document.getElementById('endOverlay'); const distanceOutOverlay = document.getElementById('distanceOutOverlay');
-   function updateDistanceOutput(){ const meters=Math.round((session.laps+(session.frac||0))*session.tourM); distanceOut.textContent=`Distance: ${meters} m (${session.laps} tours + ${session.frac||0} tour)`; }
-   function updateDistanceOutputOverlay(){ const meters=Math.round((session.laps+(session.frac||0))*session.tourM); distanceOutOverlay.textContent = `Distance: ${meters} m (${session.laps} tours + ${session.frac||0} tour)`; }
-   function showEnd(){ endCard.classList.add('hidden'); session.frac = session.frac || 0; updateDistanceOutputOverlay(); courseCard.classList.add('lock'); endOverlay.classList.add('show'); if(navigator.vibrate) navigator.vibrate(150); }
-   function hideEnd(){ endCard.classList.add('hidden'); endOverlay.classList.remove('show'); courseCard.classList.remove('lock'); }
+   function updateDistanceOutput(){
+     const meters=Math.round((session.laps+(session.frac||0))*session.tourM);
+     if(distanceOut) distanceOut.textContent=`Distance: ${meters} m (${session.laps} tours + ${session.frac||0} tour)`;
+   }
+   function updateDistanceOutputOverlay(){
+     const meters=Math.round((session.laps+(session.frac||0))*session.tourM);
+     if(distanceOutOverlay) distanceOutOverlay.textContent = `Distance: ${meters} m (${session.laps} tours + ${session.frac||0} tour)`;
+   }
+   function showEnd(){ if(endCard) endCard.classList.add('hidden'); session.frac = session.frac || 0; updateDistanceOutputOverlay();
+     if(courseCard) courseCard.classList.add('lock'); if(endOverlay) endOverlay.classList.add('show'); if(navigator.vibrate) navigator.vibrate(150); }
+   function hideEnd(){ if(endCard) endCard.classList.add('hidden'); if(endOverlay) endOverlay.classList.remove('show'); if(courseCard) courseCard.classList.remove('lock'); }
 
-   document.querySelectorAll('[data-frac-overlay]').forEach(b=>{ b.onclick=()=>{ if(session.finished) return; session.frac=+b.getAttribute('data-frac-overlay'); updateDistanceOutputOverlay(); }; });
-   document.getElementById('finishRunnerOverlay').onclick=()=> finalizeRunner();
+   document.querySelectorAll('[data-frac-overlay]').forEach(b=>{
+     b.addEventListener('click', ()=>{ if(session.finished) return; session.frac=+b.getAttribute('data-frac-overlay'); updateDistanceOutputOverlay(); });
+   });
+   on('finishRunnerOverlay','click', ()=> finalizeRunner());
 
-   function renderLaps(){ lapsEl.textContent=session.laps; liveDistanceEl.textContent = Math.round((session.laps+(session.frac||0))*session.tourM); updateDistanceOutput(); updateDistanceOutputOverlay(); }
+   function renderLaps(){
+     if(lapsEl) lapsEl.textContent=session.laps;
+     if(liveDistanceEl) liveDistanceEl.textContent = Math.round((session.laps+(session.frac||0))*session.tourM);
+     updateDistanceOutput(); updateDistanceOutputOverlay();
+   }
    function addShot(leds){ const n=session.shots.length+1; session.shots.push({n,leds}); renderShots(); renderCounts(); }
    function renderShots(){
+     if(!shotsTable) return;
      shotsTable.innerHTML='';
      [...session.shots].reverse().forEach(s=>{
        const tr=document.createElement('tr');
@@ -443,7 +476,8 @@
    function renderCounts(){
      const c={0:0,1:0,2:0,3:0,4:0,5:0};
      session.shots.forEach(s=>{ if(c.hasOwnProperty(s.leds)) c[s.leds]++; });
-     qs('#liveCounts').innerHTML =
+     const liveCounts=document.getElementById('liveCounts');
+     if(liveCounts) liveCounts.innerHTML =
        `<span class="pill">Nb LED 5 : <b>${c[5]}</b></span>
         <span class="pill">Nb LED 4 : <b>${c[4]}</b></span>
         <span class="pill">Nb LED 3 : <b>${c[3]}</b></span>
@@ -451,14 +485,15 @@
         <span class="pill">Nb LED 1 : <b>${c[1]}</b></span>
         <span class="pill">Nb LED 0 : <b>${c[0]}</b></span>`;
    }
-   // bouton afficher/masquer le détail des tirs
    const shotsDetailBox = document.getElementById('shotsDetail');
-   document.getElementById('toggleShots').onclick = ()=>{
+   on('toggleShots','click', ()=>{
+     if(!shotsDetailBox) return;
      const willShow = shotsDetailBox.classList.contains('hidden');
      shotsDetailBox.classList.toggle('hidden');
-     document.getElementById('toggleShots').textContent = willShow ? 'Masquer les détails des tirs' : 'Afficher les détails des tirs';
-     if (willShow) renderShots(); // rafraîchir quand on ouvre
-   };
+     const btn = document.getElementById('toggleShots');
+     if(btn) btn.textContent = willShow ? 'Masquer les détails des tirs' : 'Afficher les détails des tirs';
+     if (willShow) renderShots();
+   });
 
    function switchRunner(which){
      if(session.finished) return;
@@ -473,9 +508,9 @@
    function resetRunnerState(){ session.laps=0; session.shots=[]; session.frac=0; renderLaps(); renderShots(); hideEnd(); }
    function paintCourseHeader(){
      const R=session[session.active];
-     document.getElementById('runnerTitle').textContent=`Coureur — ${R.prenom} ${R.nom}`;
-     courseMeta.textContent=`${R.classe} • ${R.sexe}`;
-     lapMetersEl.textContent=session.tourM; targetEl.textContent=session.dureeMin;
+     const rt=document.getElementById('runnerTitle'); if(rt) rt.textContent=`Coureur — ${R.prenom} ${R.nom}`;
+     const cm=document.getElementById('courseMeta');  if(cm) cm.textContent=`${R.classe} • ${R.sexe}`;
+     if(lapMetersEl) lapMetersEl.textContent=session.tourM; if(targetEl) targetEl.textContent=session.dureeMin;
    }
    const temp={ p1:{laps:0,frac:0,shots:[]}, p2:{laps:0,frac:0,shots:[]} };
    function saveTemp(){ temp[session.active]={ laps:session.laps, frac:session.frac, shots:JSON.parse(JSON.stringify(session.shots)) }; }
@@ -507,7 +542,7 @@
      };
 
      hideEnd();
-     courseCard.classList.add('lock'); setTimeout(()=> courseCard.classList.remove('lock'), 300);
+     if(courseCard) { courseCard.classList.add('lock'); setTimeout(()=> courseCard.classList.remove('lock'), 300); }
 
      const other=session.active==='p1'?'p2':'p1';
      if(!session.results[other]){
@@ -516,21 +551,21 @@
        return;
      }
      session.finished=true;
-     qs('#pickP1').disabled=true; qs('#pickP2').disabled=true;
-     toSummaryWrap.classList.remove('hidden');
+     const p1=document.getElementById('pickP1'); const p2=document.getElementById('pickP2');
+     if(p1) p1.disabled=true; if(p2) p2.disabled=true;
+     if(toSummaryWrap) toSummaryWrap.classList.remove('hidden');
      renderCounts();
    }
 
    // ===== bilan / QR =====
-   const backToCourseBtn=qs('#backToCourse'), backHome2Btn=qs('#backHome2'), goSummaryBtn=qs('#goSummary');
    let summaryData = [], profMode = false;
 
    function buildQR(text){
-     const box=document.getElementById('qr'); box.innerHTML='';
+     const box=document.getElementById('qr'); if(!box) return;
+     box.innerHTML='';
      new QRCode(box,{ text, width:256, height:256, correctLevel:QRCode.CorrectLevel.M });
    }
 
-   // Ordre EXACT : Nom, Prenom, Classe, Distance, 0..5 LED, Indice tir
    function buildQrRows(dataRows){
      return dataRows.map(d => ({
        "Nom": (d.nom||"").toUpperCase(),
@@ -573,7 +608,8 @@
          <td>${d.niveau_tir}</td>
        </tr>
      `).join('');
-     document.getElementById('resume').innerHTML = `
+     const resume=document.getElementById('resume');
+     if(resume) resume.innerHTML = `
        <table id="summaryTable" ${profMode?'class="prof-on"':''}>
          <thead>
            <tr>
@@ -586,12 +622,10 @@
          <tbody id="resumeBody">${rows}</tbody>
        </table>`;
 
-     // QR = TABLEAU JSON BRUT (tous les élèves terminés)
      const rowsArray = buildQrRows(summaryData);
      buildQR(JSON.stringify(rowsArray));
 
-     // Export CSV
-     document.getElementById('exportCsv').onclick = () => {
+     on('exportCsv','click', () => {
        const csv = toCSV(summaryData);
        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
        const url = URL.createObjectURL(blob);
@@ -599,20 +633,23 @@
        a.download = `LaserRun_${new Date().toISOString().slice(0,10)}.csv`;
        document.body.appendChild(a); a.click(); document.body.removeChild(a);
        URL.revokeObjectURL(url);
-     };
+     });
 
      const act = document.getElementById('activateProf');
      const deact = document.getElementById('deactivateProf');
      const apply = document.getElementById('applyEdits');
      const profHint = document.getElementById('profHint');
-     act.disabled = profMode; deact.disabled = !profMode; apply.disabled = !profMode;
-     profHint.textContent = profMode
+     if (act) act.disabled = profMode;
+     if (deact) deact.disabled = !profMode;
+     if (apply) apply.disabled = !profMode;
+     if (profHint) profHint.textContent = profMode
        ? 'Mode Prof activé : corrigez puis “Mettre à jour QR/CSV”.'
        : 'Saisir le code 57 pour corriger une valeur.';
    }
 
    function parseEditsFromTable(){
      const tbody = document.getElementById('resumeBody');
+     if(!tbody) return [];
      const rows = Array.from(tbody.querySelectorAll('tr'));
      return rows.map(tr=>{
        const txt = f => (tr.querySelector(`[data-field="${f}"]`)?.textContent||'').trim();
@@ -631,22 +668,21 @@
      });
    }
 
-   // Modale indice (déjà branchée plus haut)
-   document.getElementById('activateProf').onclick = ()=>{
+   on('btnIndiceInfo','click', ()=> openModal('modalIndice'));
+   on('activateProf','click', ()=>{
      const code = (document.getElementById('profCode').value||'').trim();
      if(code==='57'){ profMode=true; renderSummary(); } else { alert('Code incorrect.'); }
-   };
-   document.getElementById('deactivateProf').onclick = ()=>{ profMode=false; renderSummary(); };
-   document.getElementById('applyEdits').onclick = ()=>{
+   });
+   on('deactivateProf','click', ()=>{ profMode=false; renderSummary(); });
+   on('applyEdits','click', ()=>{
      if(!profMode) return;
      summaryData = parseEditsFromTable();
      renderSummary();
      alert('Bilan mis à jour. QR et CSV régénérés.');
-   };
+   });
 
    // Aller au bilan
-   const backToCourseBtn=qs('#backToCourse'), backHome2Btn=qs('#backHome2'), goSummaryBtn=qs('#goSummary');
-   goSummaryBtn.onclick=()=>{
+   on('goSummary','click', ()=>{
      const out=[];
      if(session.results.p1){ const r=session.results.p1;
        out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse,
@@ -658,15 +694,14 @@
          nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5,
          indice_tir:r.indice_tir, niveau_tir:r.niveau_tir });
      }
-     summaryData = out;             // 1 ou 2 élèves selon ce qui a été terminé
+     summaryData = out;
      show('summary'); profMode=false; renderSummary();
-   };
-   backToCourseBtn.onclick=()=> show('course');
-   backHome2Btn.onclick=()=> { if(confirmLeaveIfNeeded()) show('cover'); };
+   });
+   on('backToCourse','click', ()=> show('course'));
+   on('backHome2','click', ()=> { if(confirmLeaveIfNeeded()) show('cover'); });
 
    // init
    validate();
-   console.assert(!!V.cover && !!V.duo && !!V.course && !!V.summary,'vues ok');
  });
  </script>
 </body>
