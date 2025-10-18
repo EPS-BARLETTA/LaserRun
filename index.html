@@ -242,7 +242,7 @@
        </div>
      </div>
 
-     <!-- Le panneau fin-bas est conservé mais neutralisé (jamais montré) -->
+     <!-- Panneau fin-bas neutralisé (jamais montré) -->
      <div class="card hidden" id="endCard" style="max-width:720px;margin:12px auto 0"></div>
 
      <div class="btns hidden" id="toSummaryWrap" style="margin-top:12px">
@@ -319,336 +319,355 @@
 
  <script>
  'use strict';
- // ===== utils & nav =====
- const qs = sel => document.querySelector(sel);
- const V = { cover: qs('#view-cover'), duo: qs('#view-duo'), course: qs('#view-course'), summary: qs('#view-summary') };
- const show = name => { Object.values(V).forEach(v=>v.classList.add('hidden')); V[name].classList.remove('hidden'); window.scrollTo(0,0); };
- qs('#btnStart').onclick = () => show('duo');
- const openModal = id => document.getElementById(id).classList.remove('hidden');
- const closeModals = () => document.querySelectorAll('.modal').forEach(m=>m.classList.add('hidden'));
- qs('#btnHelp').onclick = () => openModal('modalHelp');
- qs('#btnSafety').onclick = () => openModal('modalSafety');
- document.querySelectorAll('.modal [data-close]').forEach(b=> b.onclick = closeModals);
- document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModals(); });
 
- function confirmLeaveIfNeeded(){
-   if(!session.finished && (session.laps>0 || session.shots.length>0 || elapsed>0)){
-     return confirm('Quitter la course ? Les données non terminées pourraient être perdues.');
+ document.addEventListener('DOMContentLoaded', () => {
+   // ===== utils & nav =====
+   const qs = sel => document.querySelector(sel);
+   const V = { cover: qs('#view-cover'), duo: qs('#view-duo'), course: qs('#view-course'), summary: qs('#view-summary') };
+   const show = name => { Object.values(V).forEach(v=>v.classList.add('hidden')); V[name].classList.remove('hidden'); window.scrollTo(0,0); };
+
+   // Modales
+   function openModal(id){ document.getElementById(id).classList.remove('hidden'); }
+   function closeModals(){ document.querySelectorAll('.modal').forEach(m=>m.classList.add('hidden')); }
+   qs('#btnHelp').onclick = () => openModal('modalHelp');
+   qs('#btnSafety').onclick = () => openModal('modalSafety');
+   document.getElementById('btnIndiceInfo').onclick = ()=> openModal('modalIndice');
+   document.querySelectorAll('.modal [data-close]').forEach(b=> b.onclick = closeModals);
+   document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModals(); });
+
+   // Cover → Duo
+   qs('#btnStart').onclick = () => { show('duo'); validate(); };
+
+   // Sécurité retour
+   function confirmLeaveIfNeeded(){
+     if(!session.finished && (session.laps>0 || session.shots.length>0 || elapsed>0)){
+       return confirm('Quitter la course ? Les données non terminées pourraient être perdues.');
+     }
+     return true;
    }
-   return true;
- }
- qs('#goHome').onclick = ()=> { if(confirmLeaveIfNeeded()) show('cover'); };
+   qs('#goHome').onclick = ()=> { if(confirmLeaveIfNeeded()) show('cover'); };
 
- // ===== validation =====
- const clean = s => (s||'').replace(/\s+/g,' ').trim();
- const hasValue = id => clean(document.getElementById(id).value).length>0;
- const okNumber = (v,min) => { const n=+v; return Number.isFinite(n) && n>=min; };
- const val = id => clean(document.getElementById(id).value);
+   // ===== validation =====
+   const clean = s => (s||'').replace(/\s+/g,' ').trim();
+   function hasValue(id){
+     const el = document.getElementById(id);
+     if(!el) return false;
+     if(el.tagName === 'SELECT') return (el.value !== '');
+     return clean(el.value).length > 0;
+   }
+   const okNumber = (v,min) => { const n=+v; return Number.isFinite(n) && n>=min; };
+   const val = id => clean(document.getElementById(id).value);
 
- function validate(){
-   const fields=['p1_prenom','p1_nom','p1_classe','p1_sexe','p2_prenom','p2_nom','p2_classe','p2_sexe'];
-   let ok=true;
-   fields.forEach(id=>{
-     const el=document.getElementById(id);
-     const good=hasValue(id);
-     el.style.borderColor = good?'#e5e7eb':'#ef4444';
-     ok = ok && good;
-   });
-   const okDur=okNumber(val('duree_min'),1);
-   const okTour=okNumber(val('tour_m'),10);
-   document.getElementById('duree_min').style.borderColor = okDur?'#e5e7eb':'#ef4444';
-   document.getElementById('tour_m').style.borderColor = okTour?'#e5e7eb':'#ef4444';
-   ok = ok && okDur && okTour;
-   document.getElementById('goCourse').disabled = !ok;
-   return ok;
- }
- ['p1_prenom','p1_nom','p1_classe','p1_sexe','p2_prenom','p2_nom','p2_classe','p2_sexe','duree_min','tour_m']
-   .forEach(id=>{ const el=document.getElementById(id); el.addEventListener('input',validate); el.addEventListener('change',validate); });
+   function validate(){
+     const fields=['p1_prenom','p1_nom','p1_classe','p1_sexe','p2_prenom','p2_nom','p2_classe','p2_sexe'];
+     let ok=true;
+     fields.forEach(id=>{
+       const el=document.getElementById(id);
+       const good=hasValue(id);
+       el.style.borderColor = good?'#e5e7eb':'#ef4444';
+       ok = ok && good;
+     });
+     const okDur=okNumber(val('duree_min'),1);
+     const okTour=okNumber(val('tour_m'),10);
+     document.getElementById('duree_min').style.borderColor = okDur?'#e5e7eb':'#ef4444';
+     document.getElementById('tour_m').style.borderColor = okTour?'#e5e7eb':'#ef4444';
+     ok = ok && okDur && okTour;
+     document.getElementById('goCourse').disabled = !ok;
+     return ok;
+   }
 
- const session={ p1:null, p2:null, tourM:0, dureeMin:0, active:'p1', laps:0, frac:0, shots:[], results:{p1:null,p2:null}, finished:false };
+   ['p1_prenom','p1_nom','p1_classe','p1_sexe','p2_prenom','p2_nom','p2_classe','p2_sexe','duree_min','tour_m']
+     .forEach(id=>{
+       const el=document.getElementById(id);
+       el.addEventListener('input',validate);
+       el.addEventListener('change',validate);
+       el.addEventListener('blur',validate);
+     });
 
- qs('#goCourse').onclick = ()=>{
-   if(!validate()) { alert('Complétez tous les champs + chiffres.'); return; }
-   session.p1={ prenom:val('p1_prenom'), nom:val('p1_nom'), classe:val('p1_classe'), sexe:val('p1_sexe') };
-   session.p2={ prenom:val('p2_prenom'), nom:val('p2_nom'), classe:val('p2_classe'), sexe:val('p2_sexe') };
-   session.dureeMin=+val('duree_min'); session.tourM=+val('tour_m');
-   session.active='p1'; resetRunnerState(); paintCourseHeader(); show('course');
- };
+   // ===== session / état =====
+   const session={ p1:null, p2:null, tourM:0, dureeMin:0, active:'p1', laps:0, frac:0, shots:[], results:{p1:null,p2:null}, finished:false };
 
- // ===== course =====
- const lapsEl=qs('#laps'), lapMetersEl=qs('#lapMeters'), targetEl=qs('#target');
- const shotsTable=qs('#shotsTable'), runnerTitle=qs('#runnerTitle'), courseMeta=qs('#courseMeta');
- const endCard=qs('#endCard'), distanceOut=qs('#distanceOut'), courseCard=qs('#courseCard');
- const toSummaryWrap=qs('#toSummaryWrap'); const liveDistanceEl=qs('#liveDistance');
- qs('#backToDuo').onclick = ()=> { if(confirmLeaveIfNeeded()) show('duo'); };
- qs('#pickP1').onclick=()=> switchRunner('p1');
- qs('#pickP2').onclick=()=> switchRunner('p2');
- qs('#lapPlus').onclick=()=>{ if(session.finished) return; session.laps++; renderLaps(); };
- qs('#lapMinus').onclick=()=>{ if(session.finished) return; session.laps=Math.max(0,session.laps-1); renderLaps(); };
- document.querySelectorAll('[data-quick]').forEach(btn=>{
-   btn.onclick=()=>{ if(session.finished) return; const v=+btn.getAttribute('data-quick'); addShot(v); };
- });
-
- let t0=0, elapsed=0, timer=null, running=false;
- function start(){ if(session.finished||running) return; running=true; t0=Date.now()-elapsed; timer=setInterval(tick,100); qs('#btnStartCourse').disabled=true; qs('#btnPause').disabled=false; qs('#btnReset').disabled=false; }
- function pause(){ if(!running) return; clearInterval(timer); running=false; qs('#btnStartCourse').disabled=false; qs('#btnPause').disabled=true; }
- function reset(){ pause(); elapsed=0; document.getElementById('clock').textContent='00:00.0'; qs('#btnReset').disabled=true; session.laps=0; session.shots=[]; session.frac=0; renderLaps(); renderShots(); hideEnd(); }
- function tick(){ elapsed=Date.now()-t0; const cs=Math.floor(elapsed/100); const m=Math.floor(cs/600), s=Math.floor((cs%600)/10), d=cs%10; document.getElementById('clock').textContent=`${m<10?'0':''}${m}:${s<10?'0':''}${s}.${d}`; if(m>=session.dureeMin){ pause(); showEnd(); } }
- qs('#btnStartCourse').onclick=start; qs('#btnPause').onclick=pause; qs('#btnReset').onclick=reset;
-
- // Overlay fin — seule voie pour fractionner la fin
- const endOverlay = document.getElementById('endOverlay'); const distanceOutOverlay = document.getElementById('distanceOutOverlay');
- function updateDistanceOutput(){ const meters=Math.round((session.laps+(session.frac||0))*session.tourM); distanceOut.textContent=`Distance: ${meters} m (${session.laps} tours + ${session.frac||0} tour)`; }
- function updateDistanceOutputOverlay(){ const meters=Math.round((session.laps+(session.frac||0))*session.tourM); distanceOutOverlay.textContent = `Distance: ${meters} m (${session.laps} tours + ${session.frac||0} tour)`; }
- function showEnd(){ endCard.classList.add('hidden'); session.frac = session.frac || 0; updateDistanceOutputOverlay(); courseCard.classList.add('lock'); endOverlay.classList.add('show'); if(navigator.vibrate) navigator.vibrate(150); }
- function hideEnd(){ endCard.classList.add('hidden'); endOverlay.classList.remove('show'); courseCard.classList.remove('lock'); }
-
- document.querySelectorAll('[data-frac-overlay]').forEach(b=>{ b.onclick=()=>{ if(session.finished) return; session.frac=+b.getAttribute('data-frac-overlay'); updateDistanceOutputOverlay(); }; });
- document.getElementById('finishRunnerOverlay').onclick=()=> finalizeRunner();
-
- // (panneau bas neutralisé : pas d’écouteurs de fraction/terminer ici)
-
- function renderLaps(){ lapsEl.textContent=session.laps; liveDistanceEl.textContent = Math.round((session.laps+(session.frac||0))*session.tourM); updateDistanceOutput(); updateDistanceOutputOverlay(); }
- function addShot(leds){ const n=session.shots.length+1; session.shots.push({n,leds}); renderShots(); }
- function renderShots(){
-   shotsTable.innerHTML='';
-   [...session.shots].reverse().forEach(s=>{
-     const tr=document.createElement('tr');
-     tr.innerHTML=`<td>${s.n}</td><td>${s.leds}</td><td><button class="b-red">Retirer</button></td>`;
-     tr.querySelector('button').onclick=()=>{ if(session.finished) return; session.shots=session.shots.filter(x=>x.n!==s.n).map((x,i)=>({n:i+1,leds:x.leds})); renderShots(); renderCounts(); };
-     shotsTable.append(tr);
-   });
- }
- function renderCounts(){
-   const c={0:0,1:0,2:0,3:0,4:0,5:0};
-   session.shots.forEach(s=>{ if(c.hasOwnProperty(s.leds)) c[s.leds]++; });
-   qs('#liveCounts').innerHTML =
-     `<span class="pill">Nb LED 5 : <b>${c[5]}</b></span>
-      <span class="pill">Nb LED 4 : <b>${c[4]}</b></span>
-      <span class="pill">Nb LED 3 : <b>${c[3]}</b></span>
-      <span class="pill">Nb LED 2 : <b>${c[2]}</b></span>
-      <span class="pill">Nb LED 1 : <b>${c[1]}</b></span>
-      <span class="pill">Nb LED 0 : <b>${c[0]}</b></span>`;
- }
- // bouton afficher/masquer le détail des tirs
- const shotsDetail = ()=> document.getElementById('shotsDetail');
- document.getElementById('toggleShots').onclick = ()=>{
-   const box = shotsDetail();
-   const willShow = box.classList.contains('hidden');
-   box.classList.toggle('hidden');
-   document.getElementById('toggleShots').textContent = willShow ? 'Masquer les détails des tirs' : 'Afficher les détails des tirs';
-   if (willShow) renderShots(); // rafraîchir quand on ouvre
- };
-
- function switchRunner(which){
-   if(session.finished) return;
-   saveTemp();
-   session.active=which;
-   reset();
-   resetRunnerState();
-   paintCourseHeader();
-   loadTemp();
-   renderCounts();
- }
- function resetRunnerState(){ session.laps=0; session.shots=[]; session.frac=0; renderLaps(); renderShots(); hideEnd(); }
- function paintCourseHeader(){
-   const R=session[session.active];
-   document.getElementById('runnerTitle').textContent=`Coureur — ${R.prenom} ${R.nom}`;
-   courseMeta.textContent=`${R.classe} • ${R.sexe}`;
-   lapMetersEl.textContent=session.tourM; targetEl.textContent=session.dureeMin;
- }
- const temp={ p1:{laps:0,frac:0,shots:[]}, p2:{laps:0,frac:0,shots:[]} };
- function saveTemp(){ temp[session.active]={ laps:session.laps, frac:session.frac, shots:JSON.parse(JSON.stringify(session.shots)) }; }
- function loadTemp(){ const t=temp[session.active]; session.laps=t.laps; session.frac=t.frac; session.shots=JSON.parse(JSON.stringify(t.shots)); renderLaps(); renderShots(); hideEnd(); }
- const countShotsArray = arr => { const c={0:0,1:0,2:0,3:0,4:0,5:0}; arr.forEach(v=>{ if(c.hasOwnProperty(v)) c[v]++; }); return c; };
-
- function computeIndiceFromCounts(counts){
-   const T = counts[0]+counts[1]+counts[2]+counts[3]+counts[4]+counts[5];
-   if(!T) return {indice:0, niveau:'—'};
-   const totalLed = 0*counts[0] + 1*counts[1] + 2*counts[2] + 3*counts[3] + 4*counts[4] + 5*counts[5];
-   const base = (totalLed / (5*T)) * 100;
-   const bonus = 0.10 * (counts[5]/T) * 100;
-   const indice = +(base + bonus).toFixed(2);
-   let niveau = 'à travailler 🔴';
-   if(indice>=80) niveau='excellent ✅'; else if(indice>=60) niveau='bon 👍'; else if(indice>=40) niveau='en progrès 🟨';
-   return {indice, niveau};
- }
-
- function finalizeRunner(){
-   const R=session[session.active];
-   const meters=Math.round((session.laps+(session.frac||0))*session.tourM);
-   const vitesse=+(meters*60/(1000*session.dureeMin)).toFixed(2);
-   const counts=countShotsArray(session.shots.map(s=>s.leds));
-   const ind = computeIndiceFromCounts(counts);
-   session.results[session.active]={ prenom:R.prenom, nom:R.nom, classe:R.classe, sexe:R.sexe,
-     distance:meters, vitesse:vitesse,
-     nb_led_0:counts[0], nb_led_1:counts[1], nb_led_2:counts[2], nb_led_3:counts[3], nb_led_4:counts[4], nb_led_5:counts[5],
-     indice_tir: ind.indice, niveau_tir: ind.niveau
+   // Aller à la course
+   qs('#goCourse').onclick = ()=>{
+     if(!validate()) { alert('Complétez tous les champs + chiffres.'); return; }
+     session.p1={ prenom:val('p1_prenom'), nom:val('p1_nom'), classe:val('p1_classe'), sexe:val('p1_sexe') };
+     session.p2={ prenom:val('p2_prenom'), nom:val('p2_nom'), classe:val('p2_classe'), sexe:val('p2_sexe') };
+     session.dureeMin=+val('duree_min'); session.tourM=+val('tour_m');
+     session.active='p1'; resetRunnerState(); paintCourseHeader(); show('course');
    };
 
-   hideEnd();
-   courseCard.classList.add('lock'); setTimeout(()=> courseCard.classList.remove('lock'), 300);
+   // ===== course =====
+   const lapsEl=qs('#laps'), lapMetersEl=qs('#lapMeters'), targetEl=qs('#target');
+   const shotsTable=qs('#shotsTable'), runnerTitle=qs('#runnerTitle'), courseMeta=qs('#courseMeta');
+   const endCard=qs('#endCard'), distanceOut=qs('#distanceOut'), courseCard=qs('#courseCard');
+   const toSummaryWrap=qs('#toSummaryWrap'); const liveDistanceEl=qs('#liveDistance');
+   qs('#backToDuo').onclick = ()=> { if(confirmLeaveIfNeeded()) show('duo'); };
 
-   const other=session.active==='p1'?'p2':'p1';
-   if(!session.results[other]){
-     alert('Course du coureur terminée.\nPassez au second coureur.');
-     switchRunner(other);
-     return;
+   qs('#pickP1').onclick=()=> switchRunner('p1');
+   qs('#pickP2').onclick=()=> switchRunner('p2');
+   qs('#lapPlus').onclick=()=>{ if(session.finished) return; session.laps++; renderLaps(); };
+   qs('#lapMinus').onclick=()=>{ if(session.finished) return; session.laps=Math.max(0,session.laps-1); renderLaps(); };
+
+   document.querySelectorAll('[data-quick]').forEach(btn=>{
+     btn.onclick=()=>{ if(session.finished) return; const v=+btn.getAttribute('data-quick'); addShot(v); };
+   });
+
+   let t0=0, elapsed=0, timer=null, running=false;
+   function start(){ if(session.finished||running) return; running=true; t0=Date.now()-elapsed; timer=setInterval(tick,100); qs('#btnStartCourse').disabled=true; qs('#btnPause').disabled=false; qs('#btnReset').disabled=false; }
+   function pause(){ if(!running) return; clearInterval(timer); running=false; qs('#btnStartCourse').disabled=false; qs('#btnPause').disabled=true; }
+   function reset(){ pause(); elapsed=0; document.getElementById('clock').textContent='00:00.0'; qs('#btnReset').disabled=true; session.laps=0; session.shots=[]; session.frac=0; renderLaps(); renderShots(); hideEnd(); }
+   function tick(){ elapsed=Date.now()-t0; const cs=Math.floor(elapsed/100); const m=Math.floor(cs/600), s=Math.floor((cs%600)/10), d=cs%10; document.getElementById('clock').textContent=`${m<10?'0':''}${m}:${s<10?'0':''}${s}.${d}`; if(m>=session.dureeMin){ pause(); showEnd(); } }
+   qs('#btnStartCourse').onclick=start; qs('#btnPause').onclick=pause; qs('#btnReset').onclick=reset;
+
+   // Overlay fin — seule voie pour fractionner la fin
+   const endOverlay = document.getElementById('endOverlay'); const distanceOutOverlay = document.getElementById('distanceOutOverlay');
+   function updateDistanceOutput(){ const meters=Math.round((session.laps+(session.frac||0))*session.tourM); distanceOut.textContent=`Distance: ${meters} m (${session.laps} tours + ${session.frac||0} tour)`; }
+   function updateDistanceOutputOverlay(){ const meters=Math.round((session.laps+(session.frac||0))*session.tourM); distanceOutOverlay.textContent = `Distance: ${meters} m (${session.laps} tours + ${session.frac||0} tour)`; }
+   function showEnd(){ endCard.classList.add('hidden'); session.frac = session.frac || 0; updateDistanceOutputOverlay(); courseCard.classList.add('lock'); endOverlay.classList.add('show'); if(navigator.vibrate) navigator.vibrate(150); }
+   function hideEnd(){ endCard.classList.add('hidden'); endOverlay.classList.remove('show'); courseCard.classList.remove('lock'); }
+
+   document.querySelectorAll('[data-frac-overlay]').forEach(b=>{ b.onclick=()=>{ if(session.finished) return; session.frac=+b.getAttribute('data-frac-overlay'); updateDistanceOutputOverlay(); }; });
+   document.getElementById('finishRunnerOverlay').onclick=()=> finalizeRunner();
+
+   function renderLaps(){ lapsEl.textContent=session.laps; liveDistanceEl.textContent = Math.round((session.laps+(session.frac||0))*session.tourM); updateDistanceOutput(); updateDistanceOutputOverlay(); }
+   function addShot(leds){ const n=session.shots.length+1; session.shots.push({n,leds}); renderShots(); renderCounts(); }
+   function renderShots(){
+     shotsTable.innerHTML='';
+     [...session.shots].reverse().forEach(s=>{
+       const tr=document.createElement('tr');
+       tr.innerHTML=`<td>${s.n}</td><td>${s.leds}</td><td><button class="b-red">Retirer</button></td>`;
+       tr.querySelector('button').onclick=()=>{ if(session.finished) return; session.shots=session.shots.filter(x=>x.n!==s.n).map((x,i)=>({n:i+1,leds:x.leds})); renderShots(); renderCounts(); };
+       shotsTable.append(tr);
+     });
    }
-   session.finished=true;
-   qs('#pickP1').disabled=true; qs('#pickP2').disabled=true;
-   toSummaryWrap.classList.remove('hidden');
-   renderCounts();
- }
-
- // ===== bilan / QR =====
- const backToCourseBtn=qs('#backToCourse'), backHome2Btn=qs('#backHome2'), goSummaryBtn=qs('#goSummary');
- let summaryData = [], profMode = false;
-
- function buildQR(text){
-   const box=document.getElementById('qr'); box.innerHTML='';
-   new QRCode(box,{ text, width:256, height:256, correctLevel:QRCode.CorrectLevel.M });
- }
-
- // Ordre EXIGÉ : Nom, Prenom, Classe, Distance, 0..5 LED, Indice tir
- function buildQrRows(dataRows){
-   return dataRows.map(d => ({
-     "Nom": (d.nom||"").toUpperCase(),
-     "Prenom": d.prenom||"",
-     "Classe": d.classe||"",
-     "Distance": Number(d.distance)||0,
-     "0 LED": Number(d.nb_led_0)||0,
-     "1 LED": Number(d.nb_led_1)||0,
-     "2 LED": Number(d.nb_led_2)||0,
-     "3 LED": Number(d.nb_led_3)||0,
-     "4 LED": Number(d.nb_led_4)||0,
-     "5 LED": Number(d.nb_led_5)||0,
-     "Indice tir": Number(d.indice_tir)||0
-   }));
- }
-
- function toCSV(data){
-   const headers=['nom','prenom','classe','sexe','distance','vitesse','nb_led_0','nb_led_1','nb_led_2','nb_led_3','nb_led_4','nb_led_5','indice_tir','niveau_tir'];
-   const esc = s => { s = (s==null?'':String(s)); return /[;\"\n]/.test(s) ? `"${s.replace(/\"/g,'""')}"` : s; };
-   const lines=[ headers.join(';'), ...data.map(d=>headers.map(h=>esc(d[h])).join(';')) ];
-   return lines.join('\n');
- }
-
- function renderSummary(){
-   const rows = summaryData.map((d,i) => `
-     <tr data-index="${i}">
-       <td data-field="nom" ${profMode?'contenteditable="true"':''}>${d.nom}</td>
-       <td data-field="prenom" ${profMode?'contenteditable="true"':''}>${d.prenom}</td>
-       <td data-field="classe" ${profMode?'contenteditable="true"':''}>${d.classe}</td>
-       <td data-field="sexe" ${profMode?'contenteditable="true"':''}>${d.sexe}</td>
-       <td data-field="distance" ${profMode?'contenteditable="true"':''}>${d.distance}</td>
-       <td data-field="vitesse" ${profMode?'contenteditable="true"':''}>${d.vitesse}</td>
-       <td data-field="nb_led_0" ${profMode?'contenteditable="true"':''}>${d.nb_led_0}</td>
-       <td data-field="nb_led_1" ${profMode?'contenteditable="true"':''}>${d.nb_led_1}</td>
-       <td data-field="nb_led_2" ${profMode?'contenteditable="true"':''}>${d.nb_led_2}</td>
-       <td data-field="nb_led_3" ${profMode?'contenteditable="true"':''}>${d.nb_led_3}</td>
-       <td data-field="nb_led_4" ${profMode?'contenteditable="true"':''}>${d.nb_led_4}</td>
-       <td data-field="nb_led_5" ${profMode?'contenteditable="true"':''}>${d.nb_led_5}</td>
-       <td>${d.indice_tir}</td>
-       <td>${d.niveau_tir}</td>
-     </tr>
-   `).join('');
-   document.getElementById('resume').innerHTML = `
-     <table id="summaryTable" ${profMode?'class="prof-on"':''}>
-       <thead>
-         <tr>
-           <th>Nom</th><th>Prénom</th><th>Classe</th><th>Sexe</th>
-           <th>Distance (m)</th><th>Vitesse (km/h)</th>
-           <th>Nb LED 0</th><th>Nb LED 1</th><th>Nb LED 2</th><th>Nb LED 3</th><th>Nb LED 4</th><th>Nb LED 5</th>
-           <th>Indice tir</th><th>Niveau</th>
-         </tr>
-       </thead>
-       <tbody id="resumeBody">${rows}</tbody>
-     </table>`;
-
-   // QR = TABLEAU JSON BRUT des 2 élèves (ordre demandé)
-   const rowsArray = buildQrRows(summaryData);   // [ {...}, {...} ]
-   buildQR(JSON.stringify(rowsArray));
-
-   // Export CSV
-   document.getElementById('exportCsv').onclick = () => {
-     const csv = toCSV(summaryData);
-     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-     const url = URL.createObjectURL(blob);
-     const a = document.createElement('a'); a.href = url;
-     a.download = `LaserRun_${new Date().toISOString().slice(0,10)}.csv`;
-     document.body.appendChild(a); a.click(); document.body.removeChild(a);
-     URL.revokeObjectURL(url);
+   function renderCounts(){
+     const c={0:0,1:0,2:0,3:0,4:0,5:0};
+     session.shots.forEach(s=>{ if(c.hasOwnProperty(s.leds)) c[s.leds]++; });
+     qs('#liveCounts').innerHTML =
+       `<span class="pill">Nb LED 5 : <b>${c[5]}</b></span>
+        <span class="pill">Nb LED 4 : <b>${c[4]}</b></span>
+        <span class="pill">Nb LED 3 : <b>${c[3]}</b></span>
+        <span class="pill">Nb LED 2 : <b>${c[2]}</b></span>
+        <span class="pill">Nb LED 1 : <b>${c[1]}</b></span>
+        <span class="pill">Nb LED 0 : <b>${c[0]}</b></span>`;
+   }
+   // bouton afficher/masquer le détail des tirs
+   const shotsDetailBox = document.getElementById('shotsDetail');
+   document.getElementById('toggleShots').onclick = ()=>{
+     const willShow = shotsDetailBox.classList.contains('hidden');
+     shotsDetailBox.classList.toggle('hidden');
+     document.getElementById('toggleShots').textContent = willShow ? 'Masquer les détails des tirs' : 'Afficher les détails des tirs';
+     if (willShow) renderShots(); // rafraîchir quand on ouvre
    };
 
-   const act = document.getElementById('activateProf');
-   const deact = document.getElementById('deactivateProf');
-   const apply = document.getElementById('applyEdits');
-   const profHint = document.getElementById('profHint');
-   act.disabled = profMode; deact.disabled = !profMode; apply.disabled = !profMode;
-   profHint.textContent = profMode
-     ? 'Mode Prof activé : corrigez puis “Mettre à jour QR/CSV”.'
-     : 'Saisir le code 57 pour corriger une valeur.';
- }
+   function switchRunner(which){
+     if(session.finished) return;
+     saveTemp();
+     session.active=which;
+     reset();
+     resetRunnerState();
+     paintCourseHeader();
+     loadTemp();
+     renderCounts();
+   }
+   function resetRunnerState(){ session.laps=0; session.shots=[]; session.frac=0; renderLaps(); renderShots(); hideEnd(); }
+   function paintCourseHeader(){
+     const R=session[session.active];
+     document.getElementById('runnerTitle').textContent=`Coureur — ${R.prenom} ${R.nom}`;
+     courseMeta.textContent=`${R.classe} • ${R.sexe}`;
+     lapMetersEl.textContent=session.tourM; targetEl.textContent=session.dureeMin;
+   }
+   const temp={ p1:{laps:0,frac:0,shots:[]}, p2:{laps:0,frac:0,shots:[]} };
+   function saveTemp(){ temp[session.active]={ laps:session.laps, frac:session.frac, shots:JSON.parse(JSON.stringify(session.shots)) }; }
+   function loadTemp(){ const t=temp[session.active]; session.laps=t.laps; session.frac=t.frac; session.shots=JSON.parse(JSON.stringify(t.shots)); renderLaps(); renderShots(); hideEnd(); }
+   const countShotsArray = arr => { const c={0:0,1:0,2:0,3:0,4:0,5:0}; arr.forEach(v=>{ if(c.hasOwnProperty(v)) c[v]++; }); return c; };
 
- function parseEditsFromTable(){
-   const tbody = document.getElementById('resumeBody');
-   const rows = Array.from(tbody.querySelectorAll('tr'));
-   return rows.map(tr=>{
-     const txt = f => (tr.querySelector(`[data-field="${f}"]`)?.textContent||'').trim();
-     const sexeRaw = (txt('sexe')||'').toUpperCase();
-     const sexe = (sexeRaw==='F'||sexeRaw==='M') ? sexeRaw : 'F';
-     const num = (f,def=0) => { const v=Number((txt(f)||'').replace(',', '.')); return Number.isFinite(v)?v:def; };
-     const int = (f,def=0) => { const v=parseInt(txt(f),10); return Number.isFinite(v)?Math.max(0,v):def; };
-     const counts={0:int('nb_led_0'),1:int('nb_led_1'),2:int('nb_led_2'),3:int('nb_led_3'),4:int('nb_led_4'),5:int('nb_led_5')};
+   function computeIndiceFromCounts(counts){
+     const T = counts[0]+counts[1]+counts[2]+counts[3]+counts[4]+counts[5];
+     if(!T) return {indice:0, niveau:'—'};
+     const totalLed = 0*counts[0] + 1*counts[1] + 2*counts[2] + 3*counts[3] + 4*counts[4] + 5*counts[5];
+     const base = (totalLed / (5*T)) * 100;
+     const bonus = 0.10 * (counts[5]/T) * 100;
+     const indice = +(base + bonus).toFixed(2);
+     let niveau = 'à travailler 🔴';
+     if(indice>=80) niveau='excellent ✅'; else if(indice>=60) niveau='bon 👍'; else if(indice>=40) niveau='en progrès 🟨';
+     return {indice, niveau};
+   }
+
+   function finalizeRunner(){
+     const R=session[session.active];
+     const meters=Math.round((session.laps+(session.frac||0))*session.tourM);
+     const vitesse=+(meters*60/(1000*session.dureeMin)).toFixed(2);
+     const counts=countShotsArray(session.shots.map(s=>s.leds));
      const ind = computeIndiceFromCounts(counts);
-     return {
-       nom:txt('nom'), prenom:txt('prenom'), classe:txt('classe'), sexe,
-       distance:int('distance'), vitesse:+num('vitesse').toFixed(2),
+     session.results[session.active]={ prenom:R.prenom, nom:R.nom, classe:R.classe, sexe:R.sexe,
+       distance:meters, vitesse:vitesse,
        nb_led_0:counts[0], nb_led_1:counts[1], nb_led_2:counts[2], nb_led_3:counts[3], nb_led_4:counts[4], nb_led_5:counts[5],
-       indice_tir:ind.indice, niveau_tir:ind.niveau
+       indice_tir: ind.indice, niveau_tir: ind.niveau
      };
-   });
- }
 
- // Modale indice
- document.getElementById('btnIndiceInfo').onclick = ()=> openModal('modalIndice');
+     hideEnd();
+     courseCard.classList.add('lock'); setTimeout(()=> courseCard.classList.remove('lock'), 300);
 
- document.getElementById('activateProf').onclick = ()=>{
-   const code = (document.getElementById('profCode').value||'').trim();
-   if(code==='57'){ profMode=true; renderSummary(); } else { alert('Code incorrect.'); }
- };
- document.getElementById('deactivateProf').onclick = ()=>{ profMode=false; renderSummary(); };
- document.getElementById('applyEdits').onclick = ()=>{
-   if(!profMode) return;
-   summaryData = parseEditsFromTable();
-   renderSummary();
-   alert('Bilan mis à jour. QR et CSV régénérés.');
- };
-
- // Aller au bilan
- goSummaryBtn.onclick=()=>{
-   const out=[];
-   if(session.results.p1){ const r=session.results.p1;
-     out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse,
-       nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5,
-       indice_tir:r.indice_tir, niveau_tir:r.niveau_tir });
+     const other=session.active==='p1'?'p2':'p1';
+     if(!session.results[other]){
+       alert('Course du coureur terminée.\nPassez au second coureur.');
+       switchRunner(other);
+       return;
+     }
+     session.finished=true;
+     qs('#pickP1').disabled=true; qs('#pickP2').disabled=true;
+     toSummaryWrap.classList.remove('hidden');
+     renderCounts();
    }
-   if(session.results.p2){ const r=session.results.p2;
-     out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse,
-       nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5,
-       indice_tir:r.indice_tir, niveau_tir:r.niveau_tir });
+
+   // ===== bilan / QR =====
+   const backToCourseBtn=qs('#backToCourse'), backHome2Btn=qs('#backHome2'), goSummaryBtn=qs('#goSummary');
+   let summaryData = [], profMode = false;
+
+   function buildQR(text){
+     const box=document.getElementById('qr'); box.innerHTML='';
+     new QRCode(box,{ text, width:256, height:256, correctLevel:QRCode.CorrectLevel.M });
    }
-   summaryData = out;             // <= 1 ou 2 élèves selon ce qui a été terminé
-   show('summary'); profMode=false; renderSummary();
- };
 
- backToCourseBtn.onclick=()=> show('course');
- backHome2Btn.onclick=()=> { if(confirmLeaveIfNeeded()) show('cover'); };
+   // Ordre EXACT : Nom, Prenom, Classe, Distance, 0..5 LED, Indice tir
+   function buildQrRows(dataRows){
+     return dataRows.map(d => ({
+       "Nom": (d.nom||"").toUpperCase(),
+       "Prenom": d.prenom||"",
+       "Classe": d.classe||"",
+       "Distance": Number(d.distance)||0,
+       "0 LED": Number(d.nb_led_0)||0,
+       "1 LED": Number(d.nb_led_1)||0,
+       "2 LED": Number(d.nb_led_2)||0,
+       "3 LED": Number(d.nb_led_3)||0,
+       "4 LED": Number(d.nb_led_4)||0,
+       "5 LED": Number(d.nb_led_5)||0,
+       "Indice tir": Number(d.indice_tir)||0
+     }));
+   }
 
- // init
- validate();
- console.assert(!!V.cover && !!V.duo && !!V.course && !!V.summary,'vues ok');
+   function toCSV(data){
+     const headers=['nom','prenom','classe','sexe','distance','vitesse','nb_led_0','nb_led_1','nb_led_2','nb_led_3','nb_led_4','nb_led_5','indice_tir','niveau_tir'];
+     const esc = s => { s = (s==null?'':String(s)); return /[;\"\n]/.test(s) ? `"${s.replace(/\"/g,'""')}"` : s; };
+     const lines=[ headers.join(';'), ...data.map(d=>headers.map(h=>esc(d[h])).join(';')) ];
+     return lines.join('\n');
+   }
+
+   function renderSummary(){
+     const rows = summaryData.map((d,i) => `
+       <tr data-index="${i}">
+         <td data-field="nom" ${profMode?'contenteditable="true"':''}>${d.nom}</td>
+         <td data-field="prenom" ${profMode?'contenteditable="true"':''}>${d.prenom}</td>
+         <td data-field="classe" ${profMode?'contenteditable="true"':''}>${d.classe}</td>
+         <td data-field="sexe" ${profMode?'contenteditable="true"':''}>${d.sexe}</td>
+         <td data-field="distance" ${profMode?'contenteditable="true"':''}>${d.distance}</td>
+         <td data-field="vitesse" ${profMode?'contenteditable="true"':''}>${d.vitesse}</td>
+         <td data-field="nb_led_0" ${profMode?'contenteditable="true"':''}>${d.nb_led_0}</td>
+         <td data-field="nb_led_1" ${profMode?'contenteditable="true"':''}>${d.nb_led_1}</td>
+         <td data-field="nb_led_2" ${profMode?'contenteditable="true"':''}>${d.nb_led_2}</td>
+         <td data-field="nb_led_3" ${profMode?'contenteditable="true"':''}>${d.nb_led_3}</td>
+         <td data-field="nb_led_4" ${profMode?'contenteditable="true"':''}>${d.nb_led_4}</td>
+         <td data-field="nb_led_5" ${profMode?'contenteditable="true"':''}>${d.nb_led_5}</td>
+         <td>${d.indice_tir}</td>
+         <td>${d.niveau_tir}</td>
+       </tr>
+     `).join('');
+     document.getElementById('resume').innerHTML = `
+       <table id="summaryTable" ${profMode?'class="prof-on"':''}>
+         <thead>
+           <tr>
+             <th>Nom</th><th>Prénom</th><th>Classe</th><th>Sexe</th>
+             <th>Distance (m)</th><th>Vitesse (km/h)</th>
+             <th>Nb LED 0</th><th>Nb LED 1</th><th>Nb LED 2</th><th>Nb LED 3</th><th>Nb LED 4</th><th>Nb LED 5</th>
+             <th>Indice tir</th><th>Niveau</th>
+           </tr>
+         </thead>
+         <tbody id="resumeBody">${rows}</tbody>
+       </table>`;
+
+     // QR = TABLEAU JSON BRUT (tous les élèves terminés)
+     const rowsArray = buildQrRows(summaryData);
+     buildQR(JSON.stringify(rowsArray));
+
+     // Export CSV
+     document.getElementById('exportCsv').onclick = () => {
+       const csv = toCSV(summaryData);
+       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+       const url = URL.createObjectURL(blob);
+       const a = document.createElement('a'); a.href = url;
+       a.download = `LaserRun_${new Date().toISOString().slice(0,10)}.csv`;
+       document.body.appendChild(a); a.click(); document.body.removeChild(a);
+       URL.revokeObjectURL(url);
+     };
+
+     const act = document.getElementById('activateProf');
+     const deact = document.getElementById('deactivateProf');
+     const apply = document.getElementById('applyEdits');
+     const profHint = document.getElementById('profHint');
+     act.disabled = profMode; deact.disabled = !profMode; apply.disabled = !profMode;
+     profHint.textContent = profMode
+       ? 'Mode Prof activé : corrigez puis “Mettre à jour QR/CSV”.'
+       : 'Saisir le code 57 pour corriger une valeur.';
+   }
+
+   function parseEditsFromTable(){
+     const tbody = document.getElementById('resumeBody');
+     const rows = Array.from(tbody.querySelectorAll('tr'));
+     return rows.map(tr=>{
+       const txt = f => (tr.querySelector(`[data-field="${f}"]`)?.textContent||'').trim();
+       const sexeRaw = (txt('sexe')||'').toUpperCase();
+       const sexe = (sexeRaw==='F'||sexeRaw==='M') ? sexeRaw : 'F';
+       const num = (f,def=0) => { const v=Number((txt(f)||'').replace(',', '.')); return Number.isFinite(v)?v:def; };
+       const int = (f,def=0) => { const v=parseInt(txt(f),10); return Number.isFinite(v)?Math.max(0,v):def; };
+       const counts={0:int('nb_led_0'),1:int('nb_led_1'),2:int('nb_led_2'),3:int('nb_led_3'),4:int('nb_led_4'),5:int('nb_led_5')};
+       const ind = computeIndiceFromCounts(counts);
+       return {
+         nom:txt('nom'), prenom:txt('prenom'), classe:txt('classe'), sexe,
+         distance:int('distance'), vitesse:+num('vitesse').toFixed(2),
+         nb_led_0:counts[0], nb_led_1:counts[1], nb_led_2:counts[2], nb_led_3:counts[3], nb_led_4:counts[4], nb_led_5:counts[5],
+         indice_tir:ind.indice, niveau_tir:ind.niveau
+       };
+     });
+   }
+
+   // Modale indice (déjà branchée plus haut)
+   document.getElementById('activateProf').onclick = ()=>{
+     const code = (document.getElementById('profCode').value||'').trim();
+     if(code==='57'){ profMode=true; renderSummary(); } else { alert('Code incorrect.'); }
+   };
+   document.getElementById('deactivateProf').onclick = ()=>{ profMode=false; renderSummary(); };
+   document.getElementById('applyEdits').onclick = ()=>{
+     if(!profMode) return;
+     summaryData = parseEditsFromTable();
+     renderSummary();
+     alert('Bilan mis à jour. QR et CSV régénérés.');
+   };
+
+   // Aller au bilan
+   const backToCourseBtn=qs('#backToCourse'), backHome2Btn=qs('#backHome2'), goSummaryBtn=qs('#goSummary');
+   goSummaryBtn.onclick=()=>{
+     const out=[];
+     if(session.results.p1){ const r=session.results.p1;
+       out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse,
+         nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5,
+         indice_tir:r.indice_tir, niveau_tir:r.niveau_tir });
+     }
+     if(session.results.p2){ const r=session.results.p2;
+       out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse,
+         nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5,
+         indice_tir:r.indice_tir, niveau_tir:r.niveau_tir });
+     }
+     summaryData = out;             // 1 ou 2 élèves selon ce qui a été terminé
+     show('summary'); profMode=false; renderSummary();
+   };
+   backToCourseBtn.onclick=()=> show('course');
+   backHome2Btn.onclick=()=> { if(confirmLeaveIfNeeded()) show('cover'); };
+
+   // init
+   validate();
+   console.assert(!!V.cover && !!V.duo && !!V.course && !!V.summary,'vues ok');
+ });
  </script>
 </body>
 </html>
