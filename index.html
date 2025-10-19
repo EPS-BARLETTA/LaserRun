@@ -56,6 +56,20 @@
  .substack{display:flex; gap:12px; flex-wrap:wrap; justify-content:center;}
  .tagline{color:#6b7280}
 
+ /* Overlays modaux (aide / sécurité) */
+ .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:100;
+   background:rgba(2,6,23,.55);}
+ .modal.show{display:flex;}
+ .modal-card{background:#fff; border-radius:20px; max-width:900px; width:min(92%,900px); max-height:86vh; overflow:auto; box-shadow:0 12px 48px rgba(2,6,23,.25)}
+ .modal-head{position:sticky; top:0; display:flex; align-items:center; gap:12px; padding:16px 18px; color:#fff; font-weight:800}
+ .modal-head.help{background:linear-gradient(90deg,#0a58ff,#7c3aed)}
+ .modal-head.safe{background:linear-gradient(90deg,#22c55e,#0ea5e9)}
+ .modal-body{padding:18px}
+ .modal-body h4{margin:12px 0 6px}
+ .help-list{margin:8px 0 12px; line-height:1.55}
+ .help-list li{margin:6px 0}
+ .modal .closebar{display:flex; justify-content:center; padding:10px}
+
  /* Overlay fin coureur (fraction) */
  #endOverlay{ position:fixed; inset:0; display:none; z-index:60; align-items:center; justify-content:center; background:rgba(2,6,23,.55); }
  #endOverlay.show{display:flex;}
@@ -89,36 +103,70 @@
  </main>
 
  <!-- ===== Modale Aide ===== -->
- <div class="modal hidden" id="modalHelp">
+ <div class="modal" id="modalHelp" aria-modal="true" role="dialog">
    <div class="modal-card">
      <div class="modal-head help"><span>ℹ️</span><span>Mode d'emploi — LaserRun</span></div>
      <div class="modal-body">
-       <p class="muted">Guide rapide pour utiliser l’application en cours d’EPS.</p>
+       <h4>Principe</h4>
+       <p class="muted">Deux coureurs successifs. Chrono, tours, tirs (LED 0–5). À la fin : bilan + QR compatible ScanProf.</p>
+       <h4>Étapes</h4>
        <ol class="help-list">
-         <li>Renseigner pour chaque coureur : <strong>Prénom</strong>, <strong>Nom</strong>, <strong>Classe</strong>, <strong>Sexe</strong>.</li>
-         <li>Définir : <strong>Durée (min)</strong> et <strong>Longueur du tour (m)</strong>.</li>
-         <li>Course : <strong>Start/Pause</strong> le chrono, <strong>+1 / −1</strong> pour les tours.</li>
-         <li>Tir : saisir le <strong>nombre de LED (0–5)</strong> ; les cumuls se mettent à jour.</li>
-         <li>Fin : compléter la <strong>fraction de tour</strong> dans l’overlay, puis <strong>Terminer</strong> pour passer au 2ᵉ coureur → <strong>QR</strong>.</li>
+         <li><strong>Saisie</strong> : prénom, nom, classe, sexe pour chaque coureur.</li>
+         <li><strong>Paramètres</strong> : durée (min) et longueur d’un tour (m).</li>
+         <li><strong>Course</strong> : Start/Pause, +1/−1 tour, saisir les tirs (0–5 LED).</li>
+         <li><strong>Fin du coureur</strong> : choisir la fraction de tour dans l’overlay, valider.</li>
+         <li><strong>Fin des 2 coureurs</strong> : bouton central “Aller au bilan”.</li>
        </ol>
-       <div class="btns"><button class="b-slate" data-close>Fermer</button></div>
+       <h4>Conseils</h4>
+       <ul class="help-list">
+         <li>Le bouton <em>Réinit.</em> remet chrono+tours+tirs à zéro pour le coureur actif.</li>
+         <li>Le nom de classe est normalisé automatiquement (ex. “4ème A”, “4 a” → <strong>4A</strong>).</li>
+       </ul>
      </div>
+     <div class="closebar"><button class="b-slate" data-close>Fermer</button></div>
    </div>
  </div>
 
  <!-- ===== Modale Fiche sécurité ===== -->
- <div class="modal hidden" id="modalSafety">
+ <div class="modal" id="modalSafety" aria-modal="true" role="dialog">
    <div class="modal-card">
-     <div class="modal-head safe"><span>🛟</span><span>Fiche sécurité — LaserRun</span></div>
+     <div class="modal-head safe"><span>🛟</span><span>Fiche sécurité — LaserRun (Lycée Vauban)</span></div>
      <div class="modal-body">
        <h4>Avant l’activité</h4>
-       <ul class="help-list"><li>Vérifier tracé, zone de tir, matériel.</li></ul>
-       <h4>Pendant</h4>
-       <ul class="help-list"><li>Calme au pas de tir ; respecter les consignes ; surveiller croisements.</li></ul>
-       <h4>Après</h4>
-       <ul class="help-list"><li>Retour au calme, hydratation, rangement.</li></ul>
-       <div class="btns"><button class="b-slate" data-close>Fermer</button></div>
+       <ul class="help-list">
+         <li>Vérifier l’état du circuit (absence d’obstacles, de zones glissantes).</li>
+         <li>Placer les cibles de tir en zone dégagée, stable et sécurisée.</li>
+         <li>Vérifier le matériel laser (fonctionnement, stabilité, sécurité du pistolet).</li>
+         <li>S’assurer que chaque élève porte des chaussures adaptées, bien lacées.</li>
+         <li>Effectuer un échauffement : course légère + mobilisation articulaire + activation musculaire.</li>
+       </ul>
+
+       <h4>Pendant l’activité</h4>
+       <ul class="help-list">
+         <li>Respecter le tracé imposé et ne pas couper les virages.</li>
+         <li>Avancer avec prudence entre les zones de course et les zones de tir.</li>
+         <li>Maintenir le calme dans la zone de tir, ne pas courir dans les stands.</li>
+         <li>Attendre le signal de l’enseignant avant de tirer.</li>
+         <li>En cas de dysfonctionnement du pistolet laser, signaler immédiatement.</li>
+         <li>Ne pas gêner les autres concurrents, respecter les consignes du professeur.</li>
+       </ul>
+
+       <h4>Après l’activité</h4>
+       <ul class="help-list">
+         <li>Ne pas abandonner le matériel n’importe où, le ranger soigneusement.</li>
+         <li>Retour au calme (marche, respiration).</li>
+       </ul>
+
+       <h4>En cas de problème</h4>
+       <ul class="help-list">
+         <li>Ne pas déplacer un élève blessé.</li>
+         <li>Prévenir immédiatement l’enseignant.</li>
+         <li>En cas de malaise (vertige, essoufflement extrême), stopper l’effort et marcher.</li>
+       </ul>
+
+       <p class="muted" style="text-align:center;margin-top:8px">Lycée Vauban – Équipe EPS</p>
      </div>
+     <div class="closebar"><button class="b-slate" data-close>Fermer</button></div>
    </div>
  </div>
 
@@ -288,9 +336,21 @@
  <!-- === Librairie QR (même que RunStats) === -->
  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
- <!-- === Module universel QR compatible ScanProf (JSON direct) === -->
+ <!-- === Module universel QR compatible ScanProf (JSON direct) + normalisation classe === -->
  <script>
- // Génère un QR JSON direct compatible ScanProf (lecture par JSON.parse).
+ function normalizeClasse(input){
+   let s = String(input||'').trim().toLowerCase();
+   s = s.normalize('NFD').replace(/[\u0300-\u036f]/g,''); // enlever accents
+   s = s.replace(/\b(eme|e|er|ere|nd|nde|de|ieme|ii?e|premiere|seconde|terminale)\b/g,'');
+   s = s.replace(/[^a-z0-9]/g,'');
+   const num = (s.match(/\d{1,2}/)||[''])[0];
+   const letter = (s.match(/[a-z]/)||[''])[0];
+   if (num && letter) return num + letter.toUpperCase();
+   if (num) return String(num);
+   if (letter) return letter.toUpperCase();
+   return '';
+ }
+
  function buildScanProfQR(container, rows, opts={}){
    const el = (typeof container === 'string') ? document.getElementById(container) : container;
    if(!el) throw new Error('QR container introuvable');
@@ -299,7 +359,7 @@
    const normalize = (r)=>({
      nom:        String(r.nom || r.Nom || '').toUpperCase(),
      prenom:     String(r.prenom || r.Prenom || r['Prénom'] || '').trim(),
-     classe:     String(r.classe || r.Classe || '').trim(),
+     classe:     normalizeClasse(r.classe || r.Classe || ''),
      sexe:       (String(r.sexe || r.Sexe || '').toUpperCase()==='M' ? 'M' : 'F'),
      distance:   Number.isFinite(+r.distance) ? parseInt(r.distance,10) : 0,
      vitesse:    Number.isFinite(+r.vitesse)  ? +(+r.vitesse).toFixed(2) : 0,
@@ -324,8 +384,7 @@
        el.appendChild(canvas);
      });
    } else {
-     // Fallback en texte (au cas où la lib ne charge pas)
-     el.textContent = text;
+     el.textContent = text; // fallback
    }
  }
  </script>
@@ -337,14 +396,40 @@
    const on = (id, evt, fn) => { const el=document.getElementById(id); if(el) el.addEventListener(evt, fn); };
    const qs = s => document.querySelector(s);
    const V = { cover: qs('#view-cover'), duo: qs('#view-duo'), course: qs('#view-course'), summary: qs('#view-summary') };
-   const show = name => { Object.values(V).forEach(v=>v.classList.add('hidden')); V[name].classList.remove('hidden'); window.scrollTo(0,0); };
+   const show = name => {
+     // ferme toute modale ouverte avant de changer de vue
+     closeModals(true);
+     Object.values(V).forEach(v=>v.classList.add('hidden'));
+     V[name].classList.remove('hidden');
+     window.scrollTo(0,0);
+   };
+
+   // ===== Modales (ouverture propre + blocage scroll + close sur fond/Escape) =====
+   const openModal = id => {
+     const el=document.getElementById(id);
+     if(!el) return;
+     document.body.style.overflow = 'hidden';
+     el.classList.add('show');
+   };
+   function closeModals(force=false){
+     document.querySelectorAll('.modal').forEach(m=>{
+       if(force || m.classList.contains('show')) m.classList.remove('show');
+     });
+     document.body.style.overflow = '';
+   }
+   on('btnHelp','click', ()=> openModal('modalHelp'));
+   on('btnSafety','click', ()=> openModal('modalSafety'));
+   // clic sur fond = close
+   document.querySelectorAll('.modal').forEach(m=>{
+     m.addEventListener('click', (e)=>{ if(e.target===m) closeModals(); });
+   });
+   // boutons "Fermer"
+   document.querySelectorAll('.modal [data-close]').forEach(b=> b.addEventListener('click', ()=> closeModals()));
+   // Esc
+   document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModals(); });
 
    on('btnStart','click', ()=> { show('duo'); validate(); });
-   const openModal = id => { const el=document.getElementById(id); if(el) el.classList.remove('hidden'); };
-   const closeModals = () => document.querySelectorAll('.modal').forEach(m=>m.classList.add('hidden'));
-   on('btnHelp','click', ()=> openModal('modalHelp')); on('btnSafety','click', ()=> openModal('modalSafety'));
-   document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModals(); });
-   document.querySelectorAll('.modal [data-close]').forEach(b=> b.addEventListener('click', closeModals));
+   on('goHome','click', ()=> { if(confirmLeaveIfNeeded()) show('cover'); });
 
    const clean = s => (s||'').replace(/\s+/g,' ').trim();
    const hasValue = id => { const el = document.getElementById(id); if(!el) return false; return el.tagName === 'SELECT' ? (el.value !== '') : clean(el.value).length > 0; };
@@ -376,7 +461,6 @@
    const session={ p1:null, p2:null, tourM:0, dureeMin:0, active:'p1', laps:0, frac:0, shots:[], results:{p1:null,p2:null}, finished:false };
 
    const confirmLeaveIfNeeded=()=> !(!session.finished && (session.laps>0 || session.shots.length>0 || elapsed>0)) || confirm('Quitter la course ? Les données non terminées pourraient être perdues.');
-   on('goHome','click', ()=> { if(confirmLeaveIfNeeded()) show('cover'); });
    on('backToDuo','click', ()=> { if(confirmLeaveIfNeeded()) show('duo'); });
 
    // accès course
@@ -482,7 +566,7 @@
    function paintCourseHeader(){
      const R=session[session.active];
      const rt=document.getElementById('runnerTitle'); if(rt) rt.textContent=`Coureur — ${R.prenom} ${R.nom}`;
-     const cm=document.getElementById('courseMeta');  if(cm) cm.textContent=`${R.classe} • ${R.sexe}`;
+     const cm=document.getElementById('courseMeta');  if(cm) cm.textContent=`${normalizeClasse(R.classe)} • ${R.sexe}`;
      if(lapMetersEl) lapMetersEl.textContent=session.tourM; if(targetEl) targetEl.textContent=session.dureeMin;
    }
 
@@ -504,7 +588,7 @@
      }
 
      session.results[session.active]={
-       prenom:R.prenom, nom:R.nom, classe:R.classe, sexe:R.sexe, distance:meters, vitesse:vitesse,
+       prenom:R.prenom, nom:R.nom, classe:normalizeClasse(R.classe), sexe:R.sexe, distance:meters, vitesse:vitesse,
        nb_led_0:counts[0], nb_led_1:counts[1], nb_led_2:counts[2], nb_led_3:counts[3], nb_led_4:counts[4], nb_led_5:counts[5],
        indice_tir: indice
      };
@@ -520,7 +604,6 @@
        alert('Coureur 1 terminé. Place au coureur 2.');
      }else{
        session.finished = true;
-       // Affiche l’overlay centré "Aller au bilan"
        const sOver = document.getElementById('summaryOverlay');
        if (sOver) sOver.style.display = 'flex';
      }
@@ -610,7 +693,7 @@
        const T = counts[0]+counts[1]+counts[2]+counts[3]+counts[4]+counts[5];
        let indice=0; if(T>0){ const tot=0*counts[0]+1*counts[1]+2*counts[2]+3*counts[3]+4*counts[4]+5*counts[5]; indice = +(((tot/(5*T))*100 + 0.10*(counts[5]/T)*100).toFixed(2)); }
        return {
-         nom:txt('nom'), prenom:txt('prenom'), classe:txt('classe'), sexe,
+         nom:txt('nom'), prenom:txt('prenom'), classe:normalizeClasse(txt('classe')), sexe,
          distance:int('distance'), vitesse:+num('vitesse').toFixed(2),
          nb_led_0:counts[0], nb_led_1:counts[1], nb_led_2:counts[2], nb_led_3:counts[3], nb_led_4:counts[4], nb_led_5:counts[5],
          indice_tir:indice
@@ -628,8 +711,8 @@
    // Aller au bilan
    on('goSummary','click', ()=>{
      const out=[];
-     if(session.results.p1){ const r=session.results.p1; out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse, nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5, indice_tir:r.indice_tir }); }
-     if(session.results.p2){ const r=session.results.p2; out.push({ nom:r.nom, prenom:r.prenom, classe:r.classe, sexe:r.sexe, distance:r.distance, vitesse:r.vitesse, nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5, indice_tir:r.indice_tir }); }
+     if(session.results.p1){ const r=session.results.p1; out.push({ nom:r.nom, prenom:r.prenom, classe:normalizeClasse(r.classe), sexe:r.sexe, distance:r.distance, vitesse:r.vitesse, nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5, indice_tir:r.indice_tir }); }
+     if(session.results.p2){ const r=session.results.p2; out.push({ nom:r.nom, prenom:r.prenom, classe:normalizeClasse(r.classe), sexe:r.sexe, distance:r.distance, vitesse:r.vitesse, nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5, indice_tir:r.indice_tir }); }
      summaryData = out;
      show('summary'); profMode=false; renderSummary();
    });
@@ -646,7 +729,6 @@
    // init
    validate();
    setTimeout(()=>paintCourseHeader(),0);
-   // masque l’overlay bilan au chargement
    const sOver = document.getElementById('summaryOverlay'); if (sOver) sOver.style.display='none';
  });
  </script>
