@@ -56,7 +56,6 @@
  .substack{display:flex; gap:12px; flex-wrap:wrap; justify-content:center;}
  .tagline{color:#6b7280}
 
- /* Overlay fin obligatoire */
  #endOverlay{ position:fixed; inset:0; display:none; z-index:60; align-items:center; justify-content:center; background:rgba(2,6,23,.55); }
  #endOverlay.show{display:flex;}
  .end-card{ background:#fff; border-radius:20px; padding:20px; width:min(720px,92%);
@@ -64,14 +63,12 @@
  .end-card h3{margin-top:0}
  .end-note{color:var(--muted); margin-top:8px}
 
- /* Modales */
  .modal{position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:50;
    background:linear-gradient(180deg,rgba(2,6,23,.55),rgba(2,6,23,.35));}
  .modal-card{background:#fff; border-radius:20px; max-width:900px; width:92%; overflow:hidden; box-shadow:0 12px 48px rgba(2,6,23,.25)}
  .modal-head{display:flex; align-items:center; gap:12px; padding:16px 18px; color:#fff; font-weight:800}
  .modal-head.help{background:linear-gradient(90deg,#0a58ff,#7c3aed)}
  .modal-head.safe{background:linear-gradient(90deg,#22c55e,#0ea5e9)}
- .modal-head.indice{background:linear-gradient(90deg,#111827,#0a58ff)}
  .modal-body{padding:18px}
  .modal-body h4{margin:12px 0 6px}
  .help-list{margin:8px 0 12px; line-height:1.55}
@@ -229,7 +226,6 @@
        </div>
      </div>
 
-     <!-- panneau fin-bas masqué -->
      <div class="card hidden" id="endCard" style="max-width:720px;margin:12px auto 0"></div>
 
      <div class="btns hidden" id="toSummaryWrap" style="margin-top:12px">
@@ -285,19 +281,16 @@
  <footer><div>LaserRun - Équipe EPS Lycée Vauban - LUXEMBOURG - JB</div></footer>
 
  <!-- libs -->
- <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
  <script>
  'use strict';
  document.addEventListener('DOMContentLoaded', () => {
-   // helper d’attache sûr
    const on = (id, evt, fn) => { const el=document.getElementById(id); if(el) el.addEventListener(evt, fn); };
    const qs = s => document.querySelector(s);
    const V = { cover: qs('#view-cover'), duo: qs('#view-duo'), course: qs('#view-course'), summary: qs('#view-summary') };
    const show = name => { Object.values(V).forEach(v=>v.classList.add('hidden')); V[name].classList.remove('hidden'); window.scrollTo(0,0); };
 
-   // navigation page de garde
    on('btnStart','click', ()=> { show('duo'); validate(); });
    const openModal = id => { const el=document.getElementById(id); if(el) el.classList.remove('hidden'); };
    const closeModals = () => document.querySelectorAll('.modal').forEach(m=>m.classList.add('hidden'));
@@ -305,14 +298,8 @@
    document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModals(); });
    document.querySelectorAll('.modal [data-close]').forEach(b=> b.addEventListener('click', closeModals));
 
-   // validation
    const clean = s => (s||'').replace(/\s+/g,' ').trim();
-   const hasValue = id => {
-     const el = document.getElementById(id);
-     if(!el) return false;
-     if(el.tagName === 'SELECT') return (el.value !== '');
-     return clean(el.value).length > 0;
-   };
+   const hasValue = id => { const el = document.getElementById(id); if(!el) return false; return el.tagName === 'SELECT' ? (el.value !== '') : clean(el.value).length > 0; };
    const okNumber = (v,min) => { const n=+v; return Number.isFinite(n) && n>=min; };
    const val = id => clean(document.getElementById(id).value);
 
@@ -350,7 +337,7 @@
      session.p1={ prenom:val('p1_prenom'), nom:val('p1_nom'), classe:val('p1_classe'), sexe:val('p1_sexe') };
      session.p2={ prenom:val('p2_prenom'), nom:val('p2_nom'), classe:val('p2_classe'), sexe:val('p2_sexe') };
      session.dureeMin=+val('duree_min'); session.tourM=+val('tour_m');
-     session.active='p1'; resetRunnerState(); paintCourseHeader(); show('course');
+     session.active='p1'; resetRunnerState(true); paintCourseHeader(); show('course');
    });
 
    // course
@@ -374,10 +361,15 @@
      const bsc=document.getElementById('btnStartCourse'), bp=document.getElementById('btnPause');
      if(bsc) bsc.disabled=false; if(bp) bp.disabled=true;
    }
-   function reset(){ pause(); elapsed=0; const clk=document.getElementById('clock'); if(clk) clk.textContent='00:00.0';
+   function hardResetChronoUI(){
+     pause();
+     elapsed = 0;
+     const clk=document.getElementById('clock'); if(clk) clk.textContent='00:00.0';
      const br=document.getElementById('btnReset'); if(br) br.disabled=true;
-     session.laps=0; session.shots=[]; session.frac=0; renderLaps(); renderShots(); hideEnd();
+     const bsc=document.getElementById('btnStartCourse'); if(bsc) bsc.disabled=false;
+     const bp=document.getElementById('btnPause'); if(bp) bp.disabled=true;
    }
+   function reset(){ hardResetChronoUI(); session.laps=0; session.shots=[]; session.frac=0; renderLaps(); renderShots(); hideEnd(); }
    function tick(){ elapsed=Date.now()-t0; const cs=Math.floor(elapsed/100); const m=Math.floor(cs/600), s=Math.floor((cs%600)/10), d=cs%10;
      const clk=document.getElementById('clock'); if(clk) clk.textContent=`${m<10?'0':''}${m}:${s<10?'0':''}${s}.${d}`;
      if(m>=session.dureeMin){ pause(); showEnd(); } }
@@ -435,7 +427,11 @@
      if (willShow) renderShots();
    });
 
-   function resetRunnerState(){ session.laps=0; session.shots=[]; session.frac=0; renderLaps(); renderShots(); hideEnd(); }
+   function resetRunnerState(isHard=false){
+     // est-ce le premier accès ? on veut partir chrono à 0
+     if (isHard) hardResetChronoUI();
+     session.laps=0; session.shots=[]; session.frac=0; renderLaps(); renderShots(); hideEnd();
+   }
    function paintCourseHeader(){
      const R=session[session.active];
      const rt=document.getElementById('runnerTitle'); if(rt) rt.textContent=`Coureur — ${R.prenom} ${R.nom}`;
@@ -448,10 +444,9 @@
      const R=session[session.active];
      const meters=Math.round((session.laps+(session.frac||0))*session.tourM);
      const vitesse=+(meters*60/(1000*session.dureeMin)).toFixed(2);
-     const counts = [0,1,2,3,4,5].reduce((a,k)=>(a[k]=0,a),{});
+     const counts = {0:0,1:0,2:0,3:0,4:0,5:0};
      session.shots.forEach(s=>{ if(counts.hasOwnProperty(s.leds)) counts[s.leds]++; });
 
-     // indice tir (base + bonus 10% des 5/5)
      const T = counts[0]+counts[1]+counts[2]+counts[3]+counts[4]+counts[5];
      let indice = 0;
      if(T>0){
@@ -471,29 +466,21 @@
      if(courseCard) { courseCard.classList.add('lock'); setTimeout(()=> courseCard.classList.remove('lock'), 300); }
 
      if(session.active==='p1'){
-       // passer automatiquement au coureur 2
+       // ==== correctif clé : reset chrono au passage P1 -> P2 ====
        session.active = 'p2';
-       resetRunnerState();
+       hardResetChronoUI();     // <— remet le chrono à 00:00 et l'état des boutons OK
+       resetRunnerState();      // tours/tirs/frac
        paintCourseHeader();
        alert('Coureur 1 terminé. Place au coureur 2.');
      }else{
-       // les deux sont faits
        session.finished = true;
        const wrap=document.getElementById('toSummaryWrap');
        if(wrap) wrap.classList.remove('hidden');
      }
    }
 
-   // ======== BILAN / QR (ScanProf SP1) ========
+   // ======== BILAN / QR (JSON direct compatible ScanProf) ========
    let summaryData = [], profMode = false;
-
-   // Encodeur SP1: JSON -> Deflate -> Base64URL avec préfixe "SP1:"
-   const sp1Encode = obj => {
-     const json = JSON.stringify(obj||{});
-     const bytes = window.pako.deflate(json);
-     let bin = ""; for (let i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
-     return "SP1:" + btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-   };
 
    function buildQR(text){
      const box=document.getElementById('qr'); if(!box) return;
@@ -501,28 +488,11 @@
      new QRCode(box,{ text, width:256, height:256, correctLevel:QRCode.CorrectLevel.M });
    }
 
-   // L’ORDRE EST FIGÉ ICI (création des objets dans l’ordre d’insertion)
-   function rowForScanProf(d){
-     const row = {};
-     row["Nom"]       = (d.nom||"").toUpperCase();
-     row["Prenom"]    = d.prenom||"";
-     row["Classe"]    = d.classe||"";
-     row["Distance"]  = Number(d.distance)||0;
-     row["0 LED"]     = Number(d.nb_led_0)||0;
-     row["1 LED"]     = Number(d.nb_led_1)||0;
-     row["2 LED"]     = Number(d.nb_led_2)||0;
-     row["3 LED"]     = Number(d.nb_led_3)||0;
-     row["4 LED"]     = Number(d.nb_led_4)||0;
-     row["5 LED"]     = Number(d.nb_led_5)||0;
-     row["Indice tir"]= Number(d.indice_tir)||0;
-     return row;
-   }
-
    function toCSV(data){
      const headers=['nom','prenom','classe','sexe','distance','vitesse','nb_led_0','nb_led_1','nb_led_2','nb_led_3','nb_led_4','nb_led_5','indice_tir'];
      const esc = s => { s = (s==null?'':String(s)); return /[;\"\n]/.test(s) ? `"${s.replace(/\"/g,'""')}"` : s; };
      const lines=[ headers.join(';'), ...data.map(d=>headers.map(h=>esc(d[h])).join(';')) ];
-     return lines.join('\n');
+     return lines.join('\\n');
    }
 
    function renderSummary(){
@@ -557,13 +527,11 @@
          <tbody id="resumeBody">${rows}</tbody>
        </table>`;
 
-     // === QR ScanProf SP1 (2 élèves dans un même payload) ===
-     const payload = {
-       app: "LaserRun",
-       ts: Math.floor(Date.now()/1000),
-       eleves: summaryData.map(rowForScanProf) // ordre garanti par insertion
-     };
-     buildQR( sp1Encode(payload) );
+     // === QR JSON direct (objet[]), compatible avec startScanner() de ScanProf ===
+     try {
+       const qrText = JSON.stringify(summaryData);
+       buildQR(qrText);
+     } catch(e){ console.error('QR JSON build error', e); }
 
      // CSV
      on('exportCsv', 'click', () => {
@@ -599,7 +567,6 @@
        const num = (f,def=0) => { const v=Number((txt(f)||'').replace(',', '.')); return Number.isFinite(v)?v:def; };
        const int = (f,def=0) => { const v=parseInt(txt(f),10); return Number.isFinite(v)?Math.max(0,v):def; };
        const counts={0:int('nb_led_0'),1:int('nb_led_1'),2:int('nb_led_2'),3:int('nb_led_3'),4:int('nb_led_4'),5:int('nb_led_5')};
-       // recalc indice
        const T = counts[0]+counts[1]+counts[2]+counts[3]+counts[4]+counts[5];
        let indice=0; if(T>0){ const tot=0*counts[0]+1*counts[1]+2*counts[2]+3*counts[3]+4*counts[4]+5*counts[5]; indice = +(((tot/(5*T))*100 + 0.10*(counts[5]/T)*100).toFixed(2)); }
        return {
@@ -629,11 +596,8 @@
    on('backToCourse','click', ()=> show('course'));
    on('backHome2','click', ()=> { if(confirmLeaveIfNeeded()) show('cover'); });
 
-   // init
    validate();
-   // mettre le nom au-dessus du chrono selon le coureur actif
-   const paint = ()=> paintCourseHeader();
-   setTimeout(paint,0);
+   setTimeout(()=>paintCourseHeader(),0);
  });
  </script>
 </body>
