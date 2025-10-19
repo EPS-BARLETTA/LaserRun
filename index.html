@@ -56,9 +56,8 @@
  .substack{display:flex; gap:12px; flex-wrap:wrap; justify-content:center;}
  .tagline{color:#6b7280}
 
- /* Overlays modaux (aide / sécurité) */
- .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:100;
-   background:rgba(2,6,23,.55);}
+ /* Modales Aide/Sécurité plein écran (propres) */
+ .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:100; background:rgba(2,6,23,.55);}
  .modal.show{display:flex;}
  .modal-card{background:#fff; border-radius:20px; max-width:900px; width:min(92%,900px); max-height:86vh; overflow:auto; box-shadow:0 12px 48px rgba(2,6,23,.25)}
  .modal-head{position:sticky; top:0; display:flex; align-items:center; gap:12px; padding:16px 18px; color:#fff; font-weight:800}
@@ -73,8 +72,7 @@
  /* Overlay fin coureur (fraction) */
  #endOverlay{ position:fixed; inset:0; display:none; z-index:60; align-items:center; justify-content:center; background:rgba(2,6,23,.55); }
  #endOverlay.show{display:flex;}
- .end-card{ background:#fff; border-radius:20px; padding:20px; width:min(720px,92%);
-   box-shadow:0 12px 48px rgba(2,6,23,.25); text-align:center; }
+ .end-card{ background:#fff; border-radius:20px; padding:20px; width:min(720px,92%); box-shadow:0 12px 48px rgba(2,6,23,.25); text-align:center; }
  .end-card h3{margin-top:0}
  .end-note{color:var(--muted); margin-top:8px}
 
@@ -120,7 +118,7 @@
        <h4>Conseils</h4>
        <ul class="help-list">
          <li>Le bouton <em>Réinit.</em> remet chrono+tours+tirs à zéro pour le coureur actif.</li>
-         <li>Le nom de classe est normalisé automatiquement (ex. “4ème A”, “4 a” → <strong>4A</strong>).</li>
+         <li>La classe est normalisée automatiquement (ex. “4ème A”, “4 a” → <strong>4A</strong>).</li>
        </ul>
      </div>
      <div class="closebar"><button class="b-slate" data-close>Fermer</button></div>
@@ -134,33 +132,31 @@
      <div class="modal-body">
        <h4>Avant l’activité</h4>
        <ul class="help-list">
-         <li>Vérifier l’état du circuit (absence d’obstacles, de zones glissantes).</li>
+         <li>Vérifier l’état du circuit (absence d’obstacles, zones glissantes).</li>
          <li>Placer les cibles de tir en zone dégagée, stable et sécurisée.</li>
          <li>Vérifier le matériel laser (fonctionnement, stabilité, sécurité du pistolet).</li>
          <li>S’assurer que chaque élève porte des chaussures adaptées, bien lacées.</li>
-         <li>Effectuer un échauffement : course légère + mobilisation articulaire + activation musculaire.</li>
+         <li>Échauffement : course légère + mobilisation articulaire + activation musculaire.</li>
        </ul>
 
        <h4>Pendant l’activité</h4>
        <ul class="help-list">
-         <li>Respecter le tracé imposé et ne pas couper les virages.</li>
-         <li>Avancer avec prudence entre les zones de course et les zones de tir.</li>
-         <li>Maintenir le calme dans la zone de tir, ne pas courir dans les stands.</li>
+         <li>Respecter le tracé imposé, ne pas couper les virages.</li>
+         <li>Prudence entre zones de course et de tir ; calme dans la zone de tir.</li>
          <li>Attendre le signal de l’enseignant avant de tirer.</li>
-         <li>En cas de dysfonctionnement du pistolet laser, signaler immédiatement.</li>
-         <li>Ne pas gêner les autres concurrents, respecter les consignes du professeur.</li>
+         <li>Signaler immédiatement tout dysfonctionnement matériel.</li>
+         <li>Respecter les consignes, ne pas gêner les autres concurrents.</li>
        </ul>
 
        <h4>Après l’activité</h4>
        <ul class="help-list">
-         <li>Ne pas abandonner le matériel n’importe où, le ranger soigneusement.</li>
+         <li>Ranger le matériel soigneusement.</li>
          <li>Retour au calme (marche, respiration).</li>
        </ul>
 
        <h4>En cas de problème</h4>
        <ul class="help-list">
-         <li>Ne pas déplacer un élève blessé.</li>
-         <li>Prévenir immédiatement l’enseignant.</li>
+         <li>Ne pas déplacer un élève blessé ; prévenir immédiatement l’enseignant.</li>
          <li>En cas de malaise (vertige, essoufflement extrême), stopper l’effort et marcher.</li>
        </ul>
 
@@ -336,18 +332,32 @@
  <!-- === Librairie QR (même que RunStats) === -->
  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
- <!-- === Module universel QR compatible ScanProf (JSON direct) + normalisation classe === -->
+ <!-- === Module QR universel + normalisation classe ULTRA-ROBUSTE === -->
  <script>
+ // Correction béton : supprime correctement les suffixes (eme/e/er/ieme/…) ET
+ // prend la lettre juste après le nombre → évite "4E" à la place de "4B".
  function normalizeClasse(input){
-   let s = String(input||'').trim().toLowerCase();
-   s = s.normalize('NFD').replace(/[\u0300-\u036f]/g,''); // enlever accents
-   s = s.replace(/\b(eme|e|er|ere|nd|nde|de|ieme|ii?e|premiere|seconde|terminale)\b/g,'');
-   s = s.replace(/[^a-z0-9]/g,'');
-   const num = (s.match(/\d{1,2}/)||[''])[0];
-   const letter = (s.match(/[a-z]/)||[''])[0];
-   if (num && letter) return num + letter.toUpperCase();
+   let s = String(input||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+   s = s.replace(/\s+/g,'');               // enlever espaces
+   s = s.replace(/[^a-z0-9]/g,'');         // garder alphanum collé
+   // supprimer éléments d'ordinal n'importe où (ieme, ii?e, eme, ere, er, e)
+   s = s.replace(/(ieme|ii?e|eme|ere|er|e)/g, '');
+   // nombre (1–2 chiffres)
+   const numMatch = s.match(/\d{1,2}/);
+   const num = numMatch ? numMatch[0] : '';
+   // lettre APRES le nombre (clé pour éviter "E" de "4emeB")
+   let letter = '';
+   if (num) {
+     const after = s.slice(s.indexOf(num) + num.length);
+     const lm = after.match(/[a-z]/);
+     if (lm) letter = lm[0].toUpperCase();
+   } else {
+     const lm = s.match(/[a-z](?=[^a-z]*$)/); // fallback: dernière lettre
+     if (lm) letter = lm[0].toUpperCase();
+   }
+   if (num && letter) return num + letter;
    if (num) return String(num);
-   if (letter) return letter.toUpperCase();
+   if (letter) return letter;
    return '';
  }
 
@@ -356,7 +366,7 @@
    if(!el) throw new Error('QR container introuvable');
    if(!Array.isArray(rows)) throw new Error('rows doit être un tableau');
 
-   const normalize = (r)=>({
+   const normalizeRow = (r)=>({
      nom:        String(r.nom || r.Nom || '').toUpperCase(),
      prenom:     String(r.prenom || r.Prenom || r['Prénom'] || '').trim(),
      classe:     normalizeClasse(r.classe || r.Classe || ''),
@@ -372,7 +382,7 @@
      indice_tir: Number.isFinite(+r.indice_tir) ? +(+r.indice_tir).toFixed(2) : 0
    });
 
-   const payload = rows.map(normalize);
+   const payload = rows.map(normalizeRow);
    const text = JSON.stringify(payload);
    const width  = opts.width  || 256;
 
@@ -396,44 +406,23 @@
    const on = (id, evt, fn) => { const el=document.getElementById(id); if(el) el.addEventListener(evt, fn); };
    const qs = s => document.querySelector(s);
    const V = { cover: qs('#view-cover'), duo: qs('#view-duo'), course: qs('#view-course'), summary: qs('#view-summary') };
-   const show = name => {
-     // ferme toute modale ouverte avant de changer de vue
-     closeModals(true);
-     Object.values(V).forEach(v=>v.classList.add('hidden'));
-     V[name].classList.remove('hidden');
-     window.scrollTo(0,0);
-   };
+   const show = name => { closeModals(true); Object.values(V).forEach(v=>v.classList.add('hidden')); V[name].classList.remove('hidden'); window.scrollTo(0,0); };
 
-   // ===== Modales (ouverture propre + blocage scroll + close sur fond/Escape) =====
-   const openModal = id => {
-     const el=document.getElementById(id);
-     if(!el) return;
-     document.body.style.overflow = 'hidden';
-     el.classList.add('show');
-   };
-   function closeModals(force=false){
-     document.querySelectorAll('.modal').forEach(m=>{
-       if(force || m.classList.contains('show')) m.classList.remove('show');
-     });
-     document.body.style.overflow = '';
-   }
+   // Modales propres
+   const openModal = id => { const el=document.getElementById(id); if(!el) return; document.body.style.overflow='hidden'; el.classList.add('show'); };
+   function closeModals(force=false){ document.querySelectorAll('.modal').forEach(m=>{ if(force||m.classList.contains('show')) m.classList.remove('show'); }); document.body.style.overflow=''; }
    on('btnHelp','click', ()=> openModal('modalHelp'));
    on('btnSafety','click', ()=> openModal('modalSafety'));
-   // clic sur fond = close
-   document.querySelectorAll('.modal').forEach(m=>{
-     m.addEventListener('click', (e)=>{ if(e.target===m) closeModals(); });
-   });
-   // boutons "Fermer"
+   document.querySelectorAll('.modal').forEach(m=> m.addEventListener('click', e=>{ if(e.target===m) closeModals(); }));
    document.querySelectorAll('.modal [data-close]').forEach(b=> b.addEventListener('click', ()=> closeModals()));
-   // Esc
    document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModals(); });
 
    on('btnStart','click', ()=> { show('duo'); validate(); });
-   on('goHome','click', ()=> { if(confirmLeaveIfNeeded()) show('cover'); });
 
+   // Validation
    const clean = s => (s||'').replace(/\s+/g,' ').trim();
-   const hasValue = id => { const el = document.getElementById(id); if(!el) return false; return el.tagName === 'SELECT' ? (el.value !== '') : clean(el.value).length > 0; };
-   const okNumber = (v,min) => { const n=+v; return Number.isFinite(n) && n>=min; };
+   const hasValue = id => { const el = document.getElementById(id); if(!el) return false; return el.tagName==='SELECT' ? (el.value!=='') : clean(el.value).length>0; };
+   const okNumber = (v,min) => { const n=+v; return Number.isFinite(n)&&n>=min; };
    const val = id => clean(document.getElementById(id).value);
 
    function validate(){
@@ -450,9 +439,8 @@
      const dureeEl=document.getElementById('duree_min'); const tourEl=document.getElementById('tour_m');
      if(dureeEl) dureeEl.style.borderColor = okDur?'#e5e7eb':'#ef4444';
      if(tourEl) tourEl.style.borderColor = okTour?'#e5e7eb':'#ef4444';
-     ok = ok && okDur && okTour;
-     const go = document.getElementById('goCourse'); if(go) go.disabled = !ok;
-     return ok;
+     const go = document.getElementById('goCourse'); if(go) go.disabled = !(ok && okDur && okTour);
+     return ok && okDur && okTour;
    }
    ['p1_prenom','p1_nom','p1_classe','p1_sexe','p2_prenom','p2_nom','p2_classe','p2_sexe','duree_min','tour_m']
      .forEach(id=>{ const el=document.getElementById(id); if(!el) return; el.addEventListener('input',validate); el.addEventListener('change',validate); el.addEventListener('blur',validate); });
@@ -461,6 +449,7 @@
    const session={ p1:null, p2:null, tourM:0, dureeMin:0, active:'p1', laps:0, frac:0, shots:[], results:{p1:null,p2:null}, finished:false };
 
    const confirmLeaveIfNeeded=()=> !(!session.finished && (session.laps>0 || session.shots.length>0 || elapsed>0)) || confirm('Quitter la course ? Les données non terminées pourraient être perdues.');
+   on('goHome','click', ()=> { if(confirmLeaveIfNeeded()) show('cover'); });
    on('backToDuo','click', ()=> { if(confirmLeaveIfNeeded()) show('duo'); });
 
    // accès course
@@ -475,7 +464,7 @@
    // course
    const lapsEl=qs('#laps'), lapMetersEl=qs('#lapMeters'), targetEl=qs('#target');
    const shotsTable=qs('#shotsTable'), runnerTitle=qs('#runnerTitle'), courseMeta=qs('#courseMeta');
-   const endCard=qs('#endCard'), courseCard=qs('#courseCard'), toSummaryWrap=qs('#toSummaryWrap'), liveDistanceEl=qs('#liveDistance');
+   const endCard=qs('#endCard'), courseCard=qs('#courseCard'), liveDistanceEl=qs('#liveDistance');
 
    on('lapPlus','click', ()=>{ if(session.finished) return; session.laps++; renderLaps(); });
    on('lapMinus','click', ()=>{ if(session.finished) return; session.laps=Math.max(0,session.laps-1); renderLaps(); });
@@ -494,8 +483,7 @@
      if(bsc) bsc.disabled=false; if(bp) bp.disabled=true;
    }
    function hardResetChronoUI(){
-     pause();
-     elapsed = 0;
+     pause(); elapsed=0;
      const clk=document.getElementById('clock'); if(clk) clk.textContent='00:00.0';
      const br=document.getElementById('btnReset'); if(br) br.disabled=true;
      const bsc=document.getElementById('btnStartCourse'); if(bsc) bsc.disabled=false;
@@ -513,9 +501,9 @@
      const meters=Math.round((session.laps+(session.frac||0))*session.tourM);
      if(distanceOutOverlay) distanceOutOverlay.textContent = `Distance: ${meters} m (${session.laps} tours + ${session.frac||0} tour)`;
    }
-   function showEnd(){ if(endCard) endCard.classList.add('hidden'); session.frac = session.frac || 0; updateDistanceOutputOverlay();
+   function showEnd(){ session.frac = session.frac || 0; updateDistanceOutputOverlay();
      if(courseCard) courseCard.classList.add('lock'); if(endOverlay) endOverlay.classList.add('show'); if(navigator.vibrate) navigator.vibrate(150); }
-   function hideEnd(){ if(endCard) endCard.classList.add('hidden'); if(endOverlay) endOverlay.classList.remove('show'); if(courseCard) courseCard.classList.remove('lock'); }
+   function hideEnd(){ if(endOverlay) endOverlay.classList.remove('show'); if(courseCard) courseCard.classList.remove('lock'); }
    document.querySelectorAll('[data-frac-overlay]').forEach(b=>{
      b.addEventListener('click', ()=>{ if(session.finished) return; session.frac=+b.getAttribute('data-frac-overlay'); updateDistanceOutputOverlay(); });
    });
@@ -549,15 +537,6 @@
         <span class="pill">Nb LED 1 : <b>${c[1]}</b></span>
         <span class="pill">Nb LED 0 : <b>${c[0]}</b></span>`;
    }
-   const shotsDetailBox = document.getElementById('shotsDetail');
-   on('toggleShots','click', ()=>{
-     if(!shotsDetailBox) return;
-     const willShow = shotsDetailBox.classList.contains('hidden');
-     shotsDetailBox.classList.toggle('hidden');
-     const btn = document.getElementById('toggleShots');
-     if(btn) btn.textContent = willShow ? 'Masquer les détails des tirs' : 'Afficher les détails des tirs';
-     if (willShow) renderShots();
-   });
 
    function resetRunnerState(isHard=false){
      if (isHard) hardResetChronoUI();
@@ -570,7 +549,6 @@
      if(lapMetersEl) lapMetersEl.textContent=session.tourM; if(targetEl) targetEl.textContent=session.dureeMin;
    }
 
-   // passage auto p1 -> p2
    function finalizeRunner(){
      const R=session[session.active];
      const meters=Math.round((session.laps+(session.frac||0))*session.tourM);
@@ -597,9 +575,8 @@
      if(courseCard) { courseCard.classList.add('lock'); setTimeout(()=> courseCard.classList.remove('lock'), 300); }
 
      if(session.active==='p1'){
-       session.active = 'p2';
-       hardResetChronoUI();
-       resetRunnerState();
+       session.active='p2';
+       resetRunnerState(true);
        paintCourseHeader();
        alert('Coureur 1 terminé. Place au coureur 2.');
      }else{
@@ -651,10 +628,8 @@
          <tbody id="resumeBody">${rows}</tbody>
        </table>`;
 
-     // === QR JSON direct (objet[]), compatible avec startScanner() de ScanProf ===
-     try {
-       buildScanProfQR('qr', summaryData, { width:256, height:256 });
-     } catch(e){ console.error('QR JSON build error', e); }
+     // === QR JSON direct compatible ScanProf ===
+     try { buildScanProfQR('qr', summaryData, { width:256 }); } catch(e){ console.error('QR JSON build error', e); }
 
      // CSV
      on('exportCsv', 'click', () => {
