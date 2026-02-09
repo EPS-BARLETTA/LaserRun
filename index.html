@@ -3,709 +3,1448 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>LaserRun</title>
+<title>LaserRun — EPS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
- :root{
-   --bg:#f4f7fb; --card:#ffffff; --ink:#111827; --muted:#6b7280;
-   --primary:#0a58ff; --green:#22c55e; --amber:#f59e0b; --red:#ef4444; --violet:#7c3aed; --slate:#334155;
- }
- *{box-sizing:border-box}
- body{ margin:0;background:var(--bg);color:var(--ink);
-   font:16px/1.4 Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-   min-height:100vh; display:flex; flex-direction:column; padding-bottom:56px; }
- footer{ position:fixed; left:0; right:0; bottom:0; border-top:1px solid #e5e7eb;
-   color:var(--muted); text-align:center; padding:10px 0; background:#fff; }
-
- .shell{max-width:980px;margin:0 auto;padding:16px}
- h1{font-size:clamp(22px,3.4vw,32px);margin:8px 0 4px;font-weight:800;text-align:center}
- h2{font-size:clamp(20px,2.8vw,28px);margin:8px 0 12px;font-weight:800;text-align:center}
- h3{margin:0 0 10px;font-size:18px;text-align:center}
- p{margin:0 0 8px;text-align:center}
- .card{background:#ffffff;border-radius:16px;box-shadow:0 8px 40px rgba(2,6,23,.08);padding:16px;margin:12px 0}
- .btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
- button{border:0;border-radius:16px;padding:14px 18px;font-weight:800;cursor:pointer;font-size:18px}
- .b-primary{background:#0a58ff;color:#fff}
- .b-amber{background:#f59e0b;color:#111}
- .b-red{background:#ef4444;color:#fff}
- .b-violet{background:#7c3aed;color:#fff}
- .b-slate{background:#334155;color:#fff}
- .row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
- .panel{border-radius:16px;padding:16px}
- .panel1{background:#e8f1ff}
- .panel2{background:#e9fbe8}
- .band{background:#eef2f7;border-radius:12px;padding:10px 12px;margin-top:16px;font-weight:700}
- label{display:block;font-weight:800;margin:10px 0 6px}
- input,select{width:100%;padding:14px 16px;border:2px solid #e5e7eb;border-radius:14px;background:#fff;font:inherit}
- input[type=number]{appearance:textfield}
- .muted{color:#6b7280}
- .hidden{display:none!important}
- .center{text-align:center}
- .big{font-size:40px;font-weight:900}
- .xl{font-size:60px;font-weight:900}
- .pill{display:inline-block;padding:6px 12px;border-radius:999px;background:#eef2f7}
- table{width:100%;border-collapse:collapse}
- th,td{padding:12px;border-bottom:1px solid #e5e7eb;text-align:center;font-size:16px}
- .lock *{pointer-events:none; opacity:.7}
- .shot-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px}
-
- #view-cover{min-height:calc(100vh - 56px); display:flex; align-items:center; justify-content:center;}
- .cover-stack{display:flex; flex-direction:column; gap:16px; align-items:center;}
- .substack{display:flex; gap:12px; flex-wrap:wrap; justify-content:center;}
- .tagline{color:#6b7280}
-
- /* Modales Aide/Sécurité plein écran (propres) */
- .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:100; background:rgba(2,6,23,.55);}
- .modal.show{display:flex;}
- .modal-card{background:#fff; border-radius:20px; max-width:900px; width:min(92%,900px); max-height:86vh; overflow:auto; box-shadow:0 12px 48px rgba(2,6,23,.25)}
- .modal-head{position:sticky; top:0; display:flex; align-items:center; gap:12px; padding:16px 18px; color:#fff; font-weight:800}
- .modal-head.help{background:linear-gradient(90deg,#0a58ff,#7c3aed)}
- .modal-head.safe{background:linear-gradient(90deg,#22c55e,#0ea5e9)}
- .modal-body{padding:18px}
- .modal-body h4{margin:12px 0 6px}
- .help-list{margin:8px 0 12px; line-height:1.55}
- .help-list li{margin:6px 0}
- .modal .closebar{display:flex; justify-content:center; padding:10px}
-
- /* Overlay fin coureur (fraction) */
- #endOverlay{ position:fixed; inset:0; display:none; z-index:60; align-items:center; justify-content:center; background:rgba(2,6,23,.55); }
- #endOverlay.show{display:flex;}
- .end-card{ background:#fff; border-radius:20px; padding:20px; width:min(720px,92%); box-shadow:0 12px 48px rgba(2,6,23,.25); text-align:center; }
- .end-card h3{margin-top:0}
- .end-note{color:var(--muted); margin-top:8px}
-
- /* Overlay fin des 2 coureurs → bouton bilan centré */
- #summaryOverlay{ position:fixed; inset:0; display:none; z-index:70; align-items:center; justify-content:center; background:rgba(2,6,23,.55); }
+:root{
+  --bg:#f4f7fb; --card:#ffffff; --ink:#0b1220; --muted:#6b7280;
+  --primary:#0a58ff; --green:#22c55e; --amber:#f59e0b; --red:#ef4444; --violet:#7c3aed; --slate:#334155;
+  --ring:0 10px 40px rgba(2,6,23,.08); --radius:18px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:16px/1.4 "Inter",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  min-height:100vh; display:flex; flex-direction:column; padding-bottom:56px;
+}
+body.runner-p1{background:#eef4ff;}
+body.runner-p2{background:#eefdf2;}
+body.runner-p1 #courseCard{background:#dfeaff;}
+body.runner-p2 #courseCard{background:#def9e2;}
+footer{
+  position:fixed; left:0; right:0; bottom:0; border-top:1px solid #e5e7eb;
+  background:#fff; text-align:center; color:var(--muted); padding:10px 0;
+}
+.shell{max-width:980px;margin:0 auto;padding:16px;width:100%}
+h1,h2,h3{margin:8px 0;font-weight:800;text-align:center}
+h1{font-size:clamp(24px,4vw,38px)}
+h2{font-size:clamp(20px,3vw,30px)}
+h3{font-size:clamp(18px,2.4vw,24px)}
+p{margin:6px 0;text-align:center}
+.card{
+  background:var(--card); border-radius:var(--radius); box-shadow:var(--ring);
+  padding:18px; margin:12px 0;
+}
+.chrono-card{text-align:center}
+.btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;align-items:center}
+button{
+  border:0;border-radius:16px;padding:14px 18px;font-weight:800;cursor:pointer;font-size:18px;
+  background:#eef2f7;color:var(--ink);transition:transform .1s;
+}
+button:active{transform:scale(.98)}
+button[disabled]{opacity:.55;cursor:not-allowed;transform:none}
+.b-primary{background:var(--primary);color:#fff}
+.b-amber{background:var(--amber);color:#111827}
+.b-red{background:var(--red);color:#fff}
+.b-violet{background:var(--violet);color:#fff}
+.b-slate{background:var(--slate);color:#fff}
+.b-mini{font-size:14px;padding:8px 12px;border-radius:12px}
+label{display:block;font-weight:800;margin:10px 0 6px}
+input,select{
+  width:100%;padding:14px 16px;border:2px solid #e5e7eb;border-radius:14px;background:#fff;font:inherit;
+}
+input[type=number]{appearance:textfield}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.panel{border-radius:18px;padding:16px 18px}
+.panel1{background:#e0edff}
+.panel2{background:#e4fbe7}
+.band{background:#eef2f7;border-radius:14px;padding:10px 14px;margin-top:18px;font-weight:700;text-align:center}
+.muted{color:var(--muted)}
+.hidden{display:none!important}
+.center{text-align:center}
+.big{font-size:46px;font-weight:900;text-align:center}
+.xl{font-size:64px;font-weight:900}
+.pill{display:inline-block;padding:6px 12px;border-radius:999px;background:#eef2f7;font-weight:700}
+.shot-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:12px}
+.shot-grid button{padding:16px 0;font-size:20px;border-radius:14px}
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:16px}
+th,td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:center}
+td[contenteditable="true"]{background:rgba(134,180,255,.18);border-radius:8px}
+.chip{display:inline-block;padding:6px 10px;border-radius:10px;background:#e0f2fe;margin:4px;font-weight:700}
+#qr canvas{display:block;margin:0 auto}
+.prof-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.prof-row input{max-width:160px;text-align:center}
+.lock{pointer-events:none;opacity:.7}
+.cover-stack{display:flex;flex-direction:column;gap:18px;align-items:center}
+.substack{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.tagline{color:var(--muted)}
+#view-cover{min-height:calc(100vh - 56px);display:flex;align-items:center;justify-content:center}
+#shotsDetail table button{font-size:14px}
+.course-note{font-size:15px;text-align:center;margin-top:6px;color:var(--muted)}
+.modal{
+  position:fixed;inset:0;display:none;align-items:center;justify-content:center;
+  background:rgba(15,23,42,.72);z-index:90;padding:12px;
+}
+.modal.show{display:flex}
+.modal-card{
+  background:#fff;border-radius:20px;max-width:900px;width:min(92%,900px);max-height:88vh;
+  overflow:auto;box-shadow:0 14px 40px rgba(15,23,42,.18);
+}
+.modal-head{
+  position:sticky;top:0;display:flex;gap:12px;align-items:center;padding:16px 18px;
+  color:#fff;font-weight:800
+}
+.modal-head.help{background:linear-gradient(90deg,#0a58ff,#7c3aed)}
+.modal-head.safe{background:linear-gradient(90deg,#22c55e,#0ea5e9)}
+.modal-body{padding:18px;color:var(--ink)}
+.modal-body ol,.modal-body ul{margin:8px 0 12px;padding-left:20px;text-align:left;line-height:1.55}
+.modal .closebar{display:flex;justify-content:center;padding:12px}
+.overlay{
+  position:fixed;inset:0;display:none;align-items:center;justify-content:center;
+  background:rgba(15,23,42,.78);z-index:80;padding:16px;
+}
+.overlay.show{display:flex}
+.end-card{
+  background:#fff;border-radius:20px;padding:20px;width:min(640px,92%);box-shadow:0 12px 40px rgba(15,23,42,.26);
+  text-align:center
+}
+.overlay .btns button{min-width:140px}
+.table-card{padding:0}
+.table-card table{margin:0}
+.help-list li,.modal-body li{margin:6px 0}
+.qr-box{min-height:100px;text-align:center}
+.course-actions{margin-top:18px}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;opacity:0;transition:.25s;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,-6px)}
+.validation-errors{
+  background:#fee2e2;border:1px solid #fecaca;color:#991b1b;border-radius:14px;padding:12px 16px;
+  margin-top:14px;font-weight:600;text-align:left;
+}
+.validation-errors ul{margin:8px 0 0;padding-left:20px}
+.validation-errors li{margin:2px 0}
+.action-log{margin-top:18px}
+.log-list{margin:10px 0 0;padding-left:18px;text-align:left;font-size:15px;line-height:1.4;max-height:220px;overflow:auto}
+.log-list li{margin:4px 0}
+.log-list li.alert{color:#dc2626;font-weight:700}
+.summary-log .log-list{max-height:240px}
+.summary-log .log-list.hidden{display:none}
+.warn{color:#dc2626;font-weight:800;text-align:center;margin:8px 0 0}
+.kbd-hints{font-size:14px;color:#cbd5f5;margin-top:12px}
+@media (max-width:760px){
+  .row{grid-template-columns:1fr}
+  .shot-grid{grid-template-columns:repeat(3,1fr)}
+}
 </style>
 </head>
 <body>
- <!-- ===== Page de garde ===== -->
- <main class="shell" id="view-cover">
-   <section class="card center" style="padding:28px 20px">
-     <div class="cover-stack">
-       <div>
-         <h1>LaserRun</h1>
-         <p class="tagline">Application EPS — compatible ScanProf</p>
-       </div>
-       <div class="btns" style="margin-top:12px">
-         <button class="b-primary" id="btnStart">▶️ Démarrer</button>
-       </div>
-       <div class="substack">
-         <button class="b-slate" id="btnHelp">ℹ️ Aide</button>
-         <button class="b-amber" id="btnSafety">🛟 Fiche sécurité</button>
-       </div>
-     </div>
-   </section>
- </main>
+<!-- Couverture -->
+<main class="shell" id="view-cover">
+  <section class="card center" style="padding:28px 22px">
+    <div class="cover-stack">
+      <div>
+        <h1>LaserRun EPS</h1>
+        <p class="tagline">Chrono, tirs (0–5 LED) et QR compatible ScanProf</p>
+      </div>
+      <div class="btns">
+        <button class="b-primary" id="btnStart">▶️ Démarrer</button>
+      </div>
+      <div class="substack">
+        <button class="b-slate" id="btnHelp">ℹ️ Mode d'emploi</button>
+        <button class="b-amber" id="btnSafety">🛟 Fiche sécurité</button>
+      </div>
+      <div class="substack">
+        <button class="b-amber" id="btnRestoreSession" disabled>🔄 Restaurer la dernière session</button>
+        <button class="b-red" id="btnClearSession" disabled>🧹 Réinitialiser la sauvegarde</button>
+      </div>
+    </div>
+  </section>
+</main>
 
- <!-- ===== Modale Aide ===== -->
- <div class="modal" id="modalHelp" aria-modal="true" role="dialog">
-   <div class="modal-card">
-     <div class="modal-head help"><span>ℹ️</span><span>Mode d'emploi — LaserRun</span></div>
-     <div class="modal-body">
-       <h4>Principe</h4>
-       <p class="muted">Deux coureurs successifs. Chrono, tours, tirs (LED 0–5). À la fin : bilan + QR compatible ScanProf.</p>
-       <h4>Étapes</h4>
-       <ol class="help-list">
-         <li><strong>Saisie</strong> : prénom, nom, classe, sexe pour chaque coureur.</li>
-         <li><strong>Paramètres</strong> : durée (min) et longueur d’un tour (m).</li>
-         <li><strong>Course</strong> : Start/Pause, +1/−1 tour, saisir les tirs (0–5 LED).</li>
-         <li><strong>Fin du coureur</strong> : choisir la fraction de tour dans l’overlay, valider.</li>
-         <li><strong>Fin des 2 coureurs</strong> : bouton central “Aller au bilan”.</li>
-       </ol>
-       <h4>Conseils</h4>
-       <ul class="help-list">
-         <li>Le bouton <em>Réinit.</em> remet chrono+tours+tirs à zéro pour le coureur actif.</li>
-         <li>La classe est normalisée automatiquement (ex. “4ème A”, “4 a” → <strong>4A</strong>).</li>
-       </ul>
-     </div>
-     <div class="closebar"><button class="b-slate" data-close>Fermer</button></div>
-   </div>
- </div>
+<!-- Modale Aide -->
+<div class="modal" id="modalHelp" aria-modal="true" role="dialog">
+  <div class="modal-card">
+    <div class="modal-head help"><span>ℹ️</span><span>Mode d'emploi — LaserRun</span></div>
+    <div class="modal-body">
+      <h4>🚀 Principe</h4>
+      <p>Deux coureurs se relaient : chrono, tours réalisés, tirs (0 à 5 LED). Ensuite, un bilan + QR prêt pour ScanProf.</p>
+      <h4>🧭 Parcours d’utilisation</h4>
+      <ol>
+        <li>📝 Saisis prénom, classe et dossard (optionnel) pour chacun.</li>
+        <li>⏱️ Indique la durée cible et la longueur d’un tour.</li>
+        <li>▶️ Lance le chrono, ajoute les tours ➕/➖ et enregistre les tirs (0–5 LED).</li>
+        <li>🏁 Quand le coureur termine, clique sur “Terminer le coureur” et choisis la fraction de tour.</li>
+        <li>📊 Une fois les deux coureurs validés, accède au bilan + QR ScanProf.</li>
+      </ol>
+      <h4>💡 Astuces</h4>
+      <ul class="help-list">
+        <li>🔄 “Réinit.” remet chrono + tours + tirs à zéro pour le coureur actif (protégé par code si chrono en cours).</li>
+        <li>🏷️ La classe est normalisée automatiquement (ex. “4ème a” → <strong>4A</strong>).</li>
+        <li>📱 Le QR exporte les résultats directement dans le format attendu par ScanProf.</li>
+        <li>⚠️ Saisie trop rapide = alerte + vérification de l’historique avant de scanner.</li>
+      </ul>
+    </div>
+    <div class="closebar"><button class="b-slate" data-close>Fermer</button></div>
+  </div>
+</div>
 
- <!-- ===== Modale Fiche sécurité ===== -->
- <div class="modal" id="modalSafety" aria-modal="true" role="dialog">
-   <div class="modal-card">
-     <div class="modal-head safe"><span>🛟</span><span>Fiche sécurité — LaserRun (Lycée Vauban)</span></div>
-     <div class="modal-body">
-       <h4>Avant l’activité</h4>
-       <ul class="help-list">
-         <li>Vérifier l’état du circuit (absence d’obstacles, zones glissantes).</li>
-         <li>Placer les cibles de tir en zone dégagée, stable et sécurisée.</li>
-         <li>Vérifier le matériel laser (fonctionnement, stabilité, sécurité du pistolet).</li>
-         <li>S’assurer que chaque élève porte des chaussures adaptées, bien lacées.</li>
-         <li>Échauffement : course légère + mobilisation articulaire + activation musculaire.</li>
-       </ul>
+<!-- Modale sécurité -->
+<div class="modal" id="modalSafety" aria-modal="true" role="dialog">
+  <div class="modal-card">
+    <div class="modal-head safe"><span>🛟</span><span>🛡️ RÈGLES DE SÉCURITÉ – LASER RUN</span></div>
+    <div class="modal-body">
+      <h4>▶️ Avant de commencer</h4>
+      <ul class="help-list">
+        <li>👟 Chaussures attachées et adaptées</li>
+        <li>📣 J’écoute les consignes du professeur</li>
+        <li>⛔ Je n’entre pas dans la zone de tir sans autorisation</li>
+      </ul>
+      <h4>🏃 Pendant l’activité</h4>
+      <ul class="help-list">
+        <li>➡️ Je respecte le parcours et le sens de circulation</li>
+        <li>🤝 Je fais attention aux autres, sans pousser</li>
+      </ul>
+      <h4>🎯 Zone de tir</h4>
+      <ul class="help-list">
+        <li>✋ Je reste calme et immobile</li>
+        <li>👁️ Je vise uniquement la cible</li>
+        <li>⏱️ J’attends le signal pour tirer</li>
+        <li>🚫 Je ne joue pas avec le pistolet laser</li>
+        <li>❗ Je signale tout problème (fatigue, chute, matériel)</li>
+      </ul>
+      <h4>😮‍💨 Après l’activité</h4>
+      <ul class="help-list">
+        <li>🚶 Je marche pour récupérer</li>
+        <li>💧 Je bois de l’eau</li>
+        <li>📦 Je range correctement le matériel</li>
+        <li>🔇 Je quitte la zone calmement</li>
+      </ul>
+      <h4>⚠️ Attention</h4>
+      <ul class="help-list">
+        <li>🚨 Si je ne respecte pas les règles → arrêt de l’activité</li>
+        <li>✅ Ces règles assurent ma sécurité et celle des autres</li>
+      </ul>
+      <p class="muted" style="text-align:center">Équipe EPS — Lycée Vauban</p>
+    </div>
+    <div class="closebar"><button class="b-slate" data-close>Fermer</button></div>
+  </div>
+</div>
 
-       <h4>Pendant l’activité</h4>
-       <ul class="help-list">
-         <li>Respecter le tracé imposé, ne pas couper les virages.</li>
-         <li>Prudence entre zones de course et de tir ; calme dans la zone de tir.</li>
-         <li>Attendre le signal de l’enseignant avant de tirer.</li>
-         <li>Signaler immédiatement tout dysfonctionnement matériel.</li>
-         <li>Respecter les consignes, ne pas gêner les autres concurrents.</li>
-       </ul>
+<!-- Saisie -->
+<main class="shell hidden" id="view-duo">
+  <section class="card">
+    <h2>Saisie des coureurs</h2>
+    <p class="muted">Identité et paramètres communs.</p>
+    <div class="row">
+      <div class="panel panel1">
+        <h3>Coureur 1</h3>
+        <label>Prénom</label><input id="p1_prenom" maxlength="60" autocomplete="off" />
+        <label>ID / Dossard</label><input id="p1_id" maxlength="16" autocomplete="off" placeholder="ex. D12" />
+        <label>Classe</label><input id="p1_classe" maxlength="60" autocomplete="off" />
+      </div>
+      <div class="panel panel2">
+        <h3>Coureur 2</h3>
+        <label>Prénom</label><input id="p2_prenom" maxlength="60" autocomplete="off" />
+        <label>ID / Dossard</label><input id="p2_id" maxlength="16" autocomplete="off" placeholder="ex. D34" />
+        <label>Classe</label><input id="p2_classe" maxlength="60" autocomplete="off" />
+      </div>
+    </div>
+    <div class="band">Paramètres communs</div>
+    <div class="row">
+      <div>
+        <label>Durée (minutes)</label>
+        <input id="duree_min" type="number" inputmode="numeric" min="1" step="1" placeholder="ex. 20" />
+      </div>
+      <div>
+        <label>Longueur d'un tour (m)</label>
+        <input id="tour_m" type="number" inputmode="numeric" min="10" step="1" placeholder="ex. 200" />
+      </div>
+    </div>
+    <div id="validationErrors" class="validation-errors hidden" aria-live="polite"></div>
+    <div class="btns" style="margin-top:18px">
+      <button class="b-primary" id="goCourse" disabled>Accéder à la course</button>
+      <button class="b-slate" id="goHome">🏠 Accueil</button>
+    </div>
+  </section>
+</main>
 
-       <h4>Après l’activité</h4>
-       <ul class="help-list">
-         <li>Ranger le matériel soigneusement.</li>
-         <li>Retour au calme (marche, respiration).</li>
-       </ul>
+<!-- Course -->
+<main class="shell hidden" id="view-course">
+  <section class="card" id="courseCard">
+    <div class="btns" style="margin-bottom:8px">
+      <button class="b-slate" id="backToDuo">⬅ Retour saisie</button>
+      <span class="pill" id="courseMeta">—</span>
+    </div>
+    <h2 id="runnerTitle">Coureur —</h2>
 
-       <h4>En cas de problème</h4>
-       <ul class="help-list">
-         <li>Ne pas déplacer un élève blessé ; prévenir immédiatement l’enseignant.</li>
-         <li>En cas de malaise (vertige, essoufflement extrême), stopper l’effort et marcher.</li>
-       </ul>
+    <div class="card chrono-card">
+      <div class="xl" id="clock">00:00.0</div>
+      <div class="btns" style="margin-top:10px">
+        <button class="b-slate" id="btnStartCourse">▶️ Start</button>
+        <button class="b-amber" id="btnPause" disabled>⏸️ Pause</button>
+        <button class="b-red" id="btnReset" disabled>↺ Réinit.</button>
+      </div>
+      <p class="muted">Durée cible : <strong id="target">—</strong> min</p>
+    </div>
 
-       <p class="muted" style="text-align:center;margin-top:8px">Lycée Vauban – Équipe EPS</p>
-     </div>
-     <div class="closebar"><button class="b-slate" data-close>Fermer</button></div>
-   </div>
- </div>
+    <div class="row">
+      <div class="card">
+        <h3>🏁 Tours</h3>
+        <div class="big" id="laps">0</div>
+        <p class="muted">1 tour = <span id="lapMeters">—</span> m</p>
+        <p class="muted"><strong>Distance provisoire :</strong> <span id="liveDistance">0</span> m</p>
+        <div class="btns">
+          <button class="b-slate" id="lapPlus" aria-label="Ajouter un tour">+1 tour</button>
+          <button class="b-slate" id="lapMinus" aria-label="Retirer un tour">−1</button>
+        </div>
+      </div>
 
- <!-- ===== Saisie ===== -->
- <main class="shell hidden" id="view-duo">
-   <section class="card">
-     <h2>Saisie des informations</h2>
-     <p class="muted">Identité des deux coureurs + paramètres communs.</p>
-     <div class="row">
-       <div class="panel panel1">
-         <h3>COUREUR 1</h3>
-         <label>Prénom</label><input id="p1_prenom" maxlength="60" autocomplete="off"/>
-         <label>Nom</label><input id="p1_nom" maxlength="60" autocomplete="off"/>
-         <label>Classe</label><input id="p1_classe" maxlength="60" autocomplete="off"/>
-         <label>Sexe</label><select id="p1_sexe"><option value="">—</option><option>F</option><option>M</option></select>
-       </div>
-       <div class="panel panel2">
-         <h3>COUREUR 2</h3>
-         <label>Prénom</label><input id="p2_prenom" maxlength="60" autocomplete="off"/>
-         <label>Nom</label><input id="p2_nom" maxlength="60" autocomplete="off"/>
-         <label>Classe</label><input id="p2_classe" maxlength="60" autocomplete="off"/>
-         <label>Sexe</label><select id="p2_sexe"><option value="">—</option><option>F</option><option>M</option></select>
-       </div>
-     </div>
+      <div class="card">
+        <h3>🎯 Tir — LED allumées</h3>
+        <div class="shot-grid">
+          <button class="b-slate" data-quick="0" aria-label="Enregistrer 0 LED">0</button>
+          <button class="b-slate" data-quick="1" aria-label="Enregistrer 1 LED">1</button>
+          <button class="b-slate" data-quick="2" aria-label="Enregistrer 2 LED">2</button>
+          <button class="b-slate" data-quick="3" aria-label="Enregistrer 3 LED">3</button>
+          <button class="b-slate" data-quick="4" aria-label="Enregistrer 4 LED">4</button>
+          <button class="b-slate" data-quick="5" aria-label="Enregistrer 5 LED">5</button>
+        </div>
+        <p class="muted" id="liveCounts" style="margin-top:10px">Aucun tir enregistré.</p>
+        <div class="btns" style="margin-top:8px">
+          <button class="b-slate" id="toggleShots" aria-label="Afficher ou masquer les détails des tirs" disabled>Afficher les détails des tirs</button>
+        </div>
+        <p class="kbd-hints">Raccourcis : 0–5 pour LED. Supprimez un tir depuis la liste détaillée.</p>
+        <div id="shotsDetail" class="hidden table-wrap" style="margin-top:8px">
+          <table>
+            <thead>
+              <tr><th>#</th><th>LED</th><th>Action</th></tr>
+            </thead>
+            <tbody id="shotsTable">
+              <tr><td colspan="3" class="muted">Aucun tir pour l’instant.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
-     <div class="band">Paramètres de course (communs)</div>
-     <div class="row">
-       <div>
-         <label>Durée (minutes)</label>
-         <input id="duree_min" type="number" inputmode="numeric" min="1" step="1" placeholder="ex. 20"/>
-       </div>
-       <div>
-         <label>Longueur d'un tour (m)</label>
-         <input id="tour_m" type="number" inputmode="numeric" min="10" step="1" placeholder="ex. 200"/>
-       </div>
-     </div>
+    <div class="card course-actions">
+      <p class="muted">Quand le coureur termine ou quand le chrono atteint la durée cible, ouvrez l’overlay pour renseigner la fraction de tour.</p>
+      <div class="btns">
+        <button class="b-amber" id="openFinish">✅ Terminer le coureur</button>
+        <button class="b-primary" id="goSummary" disabled>📊 Aller au bilan</button>
+      </div>
+      <p class="muted" id="courseSummaryHint">Terminez les deux coureurs pour débloquer le bilan.</p>
+    </div>
+  </section>
 
-     <div class="btns" style="margin-top:18px">
-       <button class="b-primary" id="goCourse" disabled>Accéder à la course</button>
-       <button class="b-slate" id="goHome">🏠 Accueil</button>
-     </div>
-   </section>
- </main>
+</main>
 
- <!-- ===== Course ===== -->
- <main class="shell hidden" id="view-course">
-   <section class="card center" id="courseCard">
-     <div class="btns" style="margin-bottom:8px">
-       <button class="b-slate" id="backToDuo">⬅ Retour saisie</button>
-       <span class="pill" id="courseMeta">—</span>
-     </div>
-     <h2 id="runnerTitle">Coureur — </h2>
+<!-- Overlay fin coureur -->
+<div class="overlay" id="endOverlay" aria-modal="true" role="dialog">
+  <div class="end-card">
+    <h3>Fin du coureur</h3>
+    <p class="muted">Ajouter la fraction finale de tour puis valider.</p>
+    <div class="btns" style="margin:10px 0">
+      <button class="b-slate" data-frac-overlay="0" aria-label="Ajouter zéro tour">+ 0</button>
+      <button class="b-slate" data-frac-overlay="0.25" aria-label="Ajouter un quart de tour">+ 1/4</button>
+      <button class="b-slate" data-frac-overlay="0.5" aria-label="Ajouter un demi tour">+ 1/2</button>
+      <button class="b-slate" data-frac-overlay="0.75" aria-label="Ajouter trois quarts de tour">+ 3/4</button>
+    </div>
+    <p class="muted" id="distanceOutOverlay">Distance : — m</p>
+    <div class="btns" style="margin-top:12px">
+      <button class="b-amber" id="finishRunnerOverlay">Valider le coureur</button>
+      <button class="b-slate" id="cancelFinish">Annuler</button>
+    </div>
+  </div>
+</div>
 
-     <div class="card" style="max-width:720px;margin:0 auto 12px">
-       <div class="xl" id="clock">00:00.0</div>
-       <div class="btns" style="margin-top:8px">
-         <button class="b-slate" id="btnStartCourse">▶️ Start</button>
-         <button class="b-amber" id="btnPause" disabled>⏸️ Pause</button>
-         <button class="b-red" id="btnReset" disabled>↺ Réinit.</button>
-       </div>
-       <p class="muted">Durée cible : <strong id="target"></strong> min</p>
-     </div>
+<!-- Overlay fins des 2 coureurs -->
+<div class="overlay" id="summaryOverlay" aria-modal="true" role="dialog">
+  <div class="end-card">
+    <h3>✅ Les deux coureurs sont validés</h3>
+    <p class="muted">Consulter le bilan + QR.</p>
+    <div class="btns" style="margin-top:10px">
+      <button class="b-primary" id="goSummaryFromOverlay">📊 Aller au bilan</button>
+    </div>
+  </div>
+</div>
 
-     <div class="row" style="max-width:720px;margin:0 auto">
-       <div class="card">
-         <h3>🏁 Tours</h3>
-         <div class="big" id="laps">0</div>
-         <p class="muted">1 tour = <span id="lapMeters">—</span> m</p>
-         <p class="muted"><strong>Distance provisoire :</strong> <span id="liveDistance">0</span> m</p>
-         <div class="btns">
-           <button class="b-slate" id="lapPlus">+1 tour</button>
-           <button class="b-slate" id="lapMinus">−1</button>
-         </div>
-       </div>
+<!-- Overlay verrou prof -->
+<div class="overlay" id="guardOverlay" aria-modal="true" role="dialog">
+  <div class="end-card">
+    <h3>Action protégée</h3>
+    <p class="muted" id="guardMessage">Pour valider cette action, demandez à votre professeur.</p>
+    <input type="password" id="guardCode" inputmode="numeric" placeholder="Code professeur" />
+    <div class="btns" style="margin-top:12px">
+      <button class="b-amber" id="guardConfirm">Valider</button>
+      <button class="b-slate" id="guardCancel">Fermer</button>
+    </div>
+  </div>
+</div>
 
-       <div class="card">
-         <h3>🎯 Tir — Nombre de LED allumées</h3>
-         <div class="shot-grid">
-           <button class="b-slate" data-quick="0">0</button>
-           <button class="b-slate" data-quick="1">1</button>
-           <button class="b-slate" data-quick="2">2</button>
-           <button class="b-slate" data-quick="3">3</button>
-           <button class="b-slate" data-quick="4">4</button>
-           <button class="b-slate" data-quick="5">5</button>
-         </div>
-         <p class="muted" id="liveCounts" style="margin-top:10px"></p>
+<!-- Bilan -->
+<main class="shell hidden" id="view-summary">
+  <section class="card center">
+    <h2>Bilan — QR compatible ScanProf</h2>
+    <p class="warn hidden" id="qrWarning">⚠️ Vérifier l’historique avant de scanner le QR.</p>
+    <div id="qr" class="card qr-box">QR généré dès qu’un résultat est disponible.</div>
 
-         <div class="btns" style="margin-top:8px">
-           <button class="b-slate" id="toggleShots">Afficher les détails des tirs</button>
-         </div>
+    <div class="card">
+      <div class="prof-row">
+        <button class="b-slate" id="activateProf">🔓 Activer mode Prof</button>
+        <button class="b-amber" id="deactivateProf" disabled>🔒 Désactiver</button>
+        <button class="b-violet" id="applyEdits" disabled>💾 Mettre à jour QR/CSV</button>
+        <button class="b-violet" id="exportCsv" disabled>⬇️ Export CSV</button>
+        <button class="b-violet" id="exportJson" disabled>⬇️ Export JSON</button>
+      </div>
+      <p class="muted" id="profHint" style="margin-top:8px">Cliquez sur “Activer mode Prof” et renseignez le code secret pour éditer les valeurs.</p>
+    </div>
 
-         <div id="shotsDetail" class="hidden" style="overflow:auto;margin-top:8px">
-           <table>
-             <thead><tr><th>#</th><th>LED allumées</th><th>Action</th></tr></thead>
-             <tbody id="shotsTable"></tbody>
-           </table>
-         </div>
-       </div>
-     </div>
+    <div class="card table-card" id="resume">
+      <p class="muted" style="margin:12px">Aucun résultat pour l’instant.</p>
+    </div>
 
-     <!-- panneau fin-bas masqué -->
-     <div class="card hidden" id="endCard" style="max-width:720px;margin:12px auto 0"></div>
+    <div class="btns" style="margin-top:12px">
+      <button class="b-slate" id="backToCourse">⬅ Retour course</button>
+      <button class="b-violet" id="backHome2">🏠 Accueil</button>
+    </div>
 
-     <div class="btns hidden" id="toSummaryWrap" style="margin-top:12px">
-       <button class="b-primary" id="goSummary">📊 Aller au bilan</button>
-     </div>
-   </section>
- </main>
+    <div class="card action-log summary-log">
+      <h3>📝 Historique rapide</h3>
+      <p class="muted">Accessible uniquement en fin de course.</p>
+      <div class="btns" style="margin:10px 0">
+        <button class="b-slate" id="toggleActionLog">Afficher l’historique</button>
+        <button class="b-mini b-slate" id="clearActionLog">Effacer l’historique</button>
+      </div>
+      <div id="actionLogContainer" class="hidden">
+        <ul class="log-list" id="actionLogList">
+          <li class="muted">Aucune action enregistrée.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</main>
 
- <!-- ===== OVERLAY Fin ===== -->
- <div id="endOverlay" aria-modal="true" role="dialog">
-   <div class="end-card">
-     <h3>⏳ Temps écoulé</h3>
-     <p class="muted">Compléter la fraction de tour si besoin, puis valider la course.</p>
-     <div class="btns" style="margin:10px 0 4px">
-       <button class="b-slate" data-frac-overlay="0">+ 0</button>
-       <button class="b-slate" data-frac-overlay="0.25">+ 1/4</button>
-       <button class="b-slate" data-frac-overlay="0.5">+ 1/2</button>
-       <button class="b-slate" data-frac-overlay="0.75">+ 3/4</button>
-     </div>
-     <p class="end-note" id="distanceOutOverlay">Distance: — m</p>
-     <div class="btns" style="margin-top:8px">
-       <button class="b-slate" id="finishRunnerOverlay">✅ Terminer la course</button>
-     </div>
-   </div>
- </div>
+<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+<footer>LaserRun — Équipe EPS Lycée Vauban — JB</footer>
 
- <!-- ===== OVERLAY Fin des 2 coureurs ===== -->
- <div id="summaryOverlay" aria-modal="true" role="dialog">
-   <div class="end-card">
-     <h3>✅ Les deux courses sont terminées</h3>
-     <p class="muted">Consulter le bilan et le QR compatible ScanProf.</p>
-     <div class="btns" style="margin-top:8px">
-       <button class="b-primary" id="goSummaryFromOverlay">📊 Aller au bilan</button>
-     </div>
-   </div>
- </div>
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
- <!-- ===== Bilan / QR ===== -->
- <main class="shell hidden" id="view-summary">
-   <section class="card center">
-     <h2>Bilan — QR compatible ScanProf</h2>
-     <div id="qr" class="card" style="display:inline-block"></div>
+<!-- Helpers QR -->
+<script>
+function normalizeClasse(input){
+  let s = String(input||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  s = s.replace(/\s+/g,'').replace(/[^a-z0-9]/g,'');
+  s = s.replace(/(ieme|ii?e|eme|ere|er|e)/g,'');
+  const numMatch = s.match(/\d{1,2}/);
+  const num = numMatch ? numMatch[0] : '';
+  let letter = '';
+  if(num){
+    const after = s.slice(s.indexOf(num) + num.length);
+    const lm = after.match(/[a-z]/);
+    if(lm) letter = lm[0].toUpperCase();
+  }else{
+    const lm = s.match(/[a-z](?=[^a-z]*$)/);
+    if(lm) letter = lm[0].toUpperCase();
+  }
+  if(num && letter) return num + letter;
+  if(num) return String(num);
+  if(letter) return letter;
+  return '';
+}
 
-     <div class="card prof-tools">
-       <div class="prof-row" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
-         <input id="profCode" type="password" inputmode="numeric" placeholder="Entrer le code prof"/>
-         <button class="b-slate" id="activateProf">🔓 Activer mode Prof</button>
-         <button class="b-amber" id="deactivateProf" disabled>🔒 Désactiver</button>
-         <button class="b-violet" id="applyEdits" disabled>💾 Mettre à jour QR/CSV</button>
-         <button class="b-violet" id="exportCsv">⬇️ Export CSV</button>
-       </div>
-       <p class="muted" id="profHint" style="margin-top:8px"></p>
-     </div>
+function escapeHtml(str){
+  return String(str ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
 
-     <div id="resume"></div>
+function buildScanProfQR(container, rows, opts={}){
+  const el = (typeof container === 'string') ? document.getElementById(container) : container;
+  if(!el) return;
+  const payload = rows.map(r=>({
+    prenom:String(r.prenom||'').trim(),
+    id_coureur:String(r.id_coureur||'').trim(),
+    classe:normalizeClasse(r.classe||''),
+    distance:Number.isFinite(+r.distance)?parseInt(r.distance,10):0,
+    vitesse:Number.isFinite(+r.vitesse)?+(+r.vitesse).toFixed(2):0,
+    nb_led_0:parseInt(r.nb_led_0||0,10)||0,
+    nb_led_1:parseInt(r.nb_led_1||0,10)||0,
+    nb_led_2:parseInt(r.nb_led_2||0,10)||0,
+    nb_led_3:parseInt(r.nb_led_3||0,10)||0,
+    nb_led_4:parseInt(r.nb_led_4||0,10)||0,
+    nb_led_5:parseInt(r.nb_led_5||0,10)||0,
+    indice_tir:Number.isFinite(+r.indice_tir)?+(+r.indice_tir).toFixed(2):0
+  }));
+  const text = JSON.stringify(payload);
+  el.innerHTML = '';
+  const width = opts.width || 260;
+  if(window.QRCode && typeof window.QRCode.toCanvas === 'function'){
+    const canvas = document.createElement('canvas');
+    QRCode.toCanvas(canvas, text, { errorCorrectionLevel:'M', width, margin:2 }, err=>{
+      if(err){ console.error(err); el.textContent='QR indisponible.'; return; }
+      el.appendChild(canvas);
+    });
+  }else{
+    el.textContent = text;
+  }
+}
+</script>
 
-     <div class="btns" style="margin-top:8px">
-       <button class="b-slate" id="backToCourse">⬅ Retour course</button>
-       <button class="b-violet" id="backHome2">🏠 Accueil</button>
-     </div>
-   </section>
- </main>
+<!-- App -->
+<script>
+'use strict';
+const PROF_CODE = '57';
+document.addEventListener('DOMContentLoaded', ()=>{
+  const qs = sel => document.querySelector(sel);
+  const qsa = sel => Array.from(document.querySelectorAll(sel));
+  const STORAGE_KEY = 'laserRunState_v2';
+  const focusableSelector = 'a[href],button:not([disabled]),textarea,input,select,[tabindex]:not([tabindex="-1"])';
+  const formFieldIds = ['p1_prenom','p1_id','p1_classe','p2_prenom','p2_id','p2_classe','duree_min','tour_m'];
+  const bodyEl = document.body;
+  const views = {
+    cover: qs('#view-cover'),
+    duo: qs('#view-duo'),
+    course: qs('#view-course'),
+    summary: qs('#view-summary')
+  };
+  let currentView = 'cover';
+  const session = freshSession();
+  let summaryData = [];
+  let profMode = false;
+  let actionLog = [];
+  let suspicionFlag = false;
+  let timer = null;
+  let running = false;
+  let elapsed = 0;
+  let t0 = 0;
+  let shotsVisible = false;
+  let endOverlayOpen = false;
+  let activeModal = null;
+  let lastModalTrigger = null;
+  let lastOverlayTrigger = null;
+  const storageAvailable = (()=>{ try{ const k='laserRunCheck'; localStorage.setItem(k,'1'); localStorage.removeItem(k); return true; }catch(err){ return false; }})();
+  const toastEl = qs('#toast');
+  const lapsEl = qs('#laps');
+  const liveDistanceEl = qs('#liveDistance');
+  const lapMetersEl = qs('#lapMeters');
+  const targetEl = qs('#target');
+  const runnerTitle = qs('#runnerTitle');
+  const courseMeta = qs('#courseMeta');
+  const courseCard = qs('#courseCard');
+  const shotsTable = qs('#shotsTable');
+  const toggleShotsBtn = qs('#toggleShots');
+  const shotsDetail = qs('#shotsDetail');
+  const validationBox = qs('#validationErrors');
+  const endOverlay = qs('#endOverlay');
+  const summaryOverlay = qs('#summaryOverlay');
+  const guardOverlay = qs('#guardOverlay');
+  const guardMessage = qs('#guardMessage');
+  const guardCode = qs('#guardCode');
+  const actionLogContainer = qs('#actionLogContainer');
+  const toggleLogBtn = qs('#toggleActionLog');
+  const actionLogList = qs('#actionLogList');
+  const fullChronoLaps = qs('#fullChronoLaps');
+  const fullChronoShots = qs('#fullChronoShots');
+  const fullChronoLed = qs('#fullChronoLed');
 
- <footer><div>LaserRun - Équipe EPS Lycée Vauban - LUXEMBOURG - JB</div></footer>
+  const rapidConfig = {
+    lap:{times:[], limit:2, window:2500, message:'Tours enregistrés trop rapidement. Professeur requis.', log:'Alerte : tours très rapides'},
+    shot:{times:[], limit:2, window:2000, message:'Tirs enregistrés trop rapidement. Professeur requis.', log:'Alerte : tirs très rapides'}
+  };
+  let pendingGuardAction = null;
 
- <!-- === Librairie QR (même que RunStats) === -->
- <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  const fieldRules = {
+    p1_prenom:{label:'Prénom coureur 1', required:true, pattern:/^[A-Za-zÀ-ÖØ-öø-ÿ' -]+$/, minLength:2},
+    p1_id:{label:'ID / Dossard coureur 1', required:false, pattern:/^[A-Za-z0-9-]*$/, maxLength:16},
+    p1_classe:{label:'Classe coureur 1', required:true, pattern:/^[0-9A-Za-zÀ-ÖØ-öø-ÿ -]+$/, minLength:1, maxLength:20},
+    p2_prenom:{label:'Prénom coureur 2', required:true, pattern:/^[A-Za-zÀ-ÖØ-öø-ÿ' -]+$/, minLength:2},
+    p2_id:{label:'ID / Dossard coureur 2', required:false, pattern:/^[A-Za-z0-9-]*$/, maxLength:16},
+    p2_classe:{label:'Classe coureur 2', required:true, pattern:/^[0-9A-Za-zÀ-ÖØ-öø-ÿ -]+$/, minLength:1, maxLength:20},
+    duree_min:{label:'Durée (minutes)', required:true, type:'number', min:1},
+    tour_m:{label:'Longueur d\'un tour (m)', required:true, type:'number', min:10}
+  };
 
- <!-- === Module QR universel + normalisation classe ULTRA-ROBUSTE === -->
- <script>
- // Correction béton : supprime correctement les suffixes (eme/e/er/ieme/…) ET
- // prend la lettre juste après le nombre → évite "4E" à la place de "4B".
- function normalizeClasse(input){
-   let s = String(input||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-   s = s.replace(/\s+/g,'');               // enlever espaces
-   s = s.replace(/[^a-z0-9]/g,'');         // garder alphanum collé
-   // supprimer éléments d'ordinal n'importe où (ieme, ii?e, eme, ere, er, e)
-   s = s.replace(/(ieme|ii?e|eme|ere|er|e)/g, '');
-   // nombre (1–2 chiffres)
-   const numMatch = s.match(/\d{1,2}/);
-   const num = numMatch ? numMatch[0] : '';
-   // lettre APRES le nombre (clé pour éviter "E" de "4emeB")
-   let letter = '';
-   if (num) {
-     const after = s.slice(s.indexOf(num) + num.length);
-     const lm = after.match(/[a-z]/);
-     if (lm) letter = lm[0].toUpperCase();
-   } else {
-     const lm = s.match(/[a-z](?=[^a-z]*$)/); // fallback: dernière lettre
-     if (lm) letter = lm[0].toUpperCase();
-   }
-   if (num && letter) return num + letter;
-   if (num) return String(num);
-   if (letter) return letter;
-   return '';
- }
+  function freshSession(){
+    return {
+      p1:null,
+      p2:null,
+      active:'p1',
+      finished:false,
+      laps:0,
+      frac:0,
+      shots:[],
+      tourM:0,
+      dureeMin:0,
+      results:{p1:null,p2:null}
+    };
+  }
 
- function buildScanProfQR(container, rows, opts={}){
-   const el = (typeof container === 'string') ? document.getElementById(container) : container;
-   if(!el) throw new Error('QR container introuvable');
-   if(!Array.isArray(rows)) throw new Error('rows doit être un tableau');
+  const clean = (s='') => s.replace(/\s+/g,' ').trim();
+  const val = id => clean(document.getElementById(id)?.value || '');
 
-   const normalizeRow = (r)=>({
-     nom:        String(r.nom || r.Nom || '').toUpperCase(),
-     prenom:     String(r.prenom || r.Prenom || r['Prénom'] || '').trim(),
-     classe:     normalizeClasse(r.classe || r.Classe || ''),
-     sexe:       (String(r.sexe || r.Sexe || '').toUpperCase()==='M' ? 'M' : 'F'),
-     distance:   Number.isFinite(+r.distance) ? parseInt(r.distance,10) : 0,
-     vitesse:    Number.isFinite(+r.vitesse)  ? +(+r.vitesse).toFixed(2) : 0,
-     nb_led_0:   parseInt(r.nb_led_0||r['0 LED']||0,10) || 0,
-     nb_led_1:   parseInt(r.nb_led_1||r['1 LED']||0,10) || 0,
-     nb_led_2:   parseInt(r.nb_led_2||r['2 LED']||0,10) || 0,
-     nb_led_3:   parseInt(r.nb_led_3||r['3 LED']||0,10) || 0,
-     nb_led_4:   parseInt(r.nb_led_4||r['4 LED']||0,10) || 0,
-     nb_led_5:   parseInt(r.nb_led_5||r['5 LED']||0,10) || 0,
-     indice_tir: Number.isFinite(+r.indice_tir) ? +(+r.indice_tir).toFixed(2) : 0
-   });
+  function show(name){
+    Object.entries(views).forEach(([key,view])=>{
+      if(!view) return;
+      if(key===name) view.classList.remove('hidden');
+      else view.classList.add('hidden');
+    });
+    currentView = name;
+    window.scrollTo({top:0,behavior:'auto'});
+    updateRunnerTheme();
+    persistState();
+  }
 
-   const payload = rows.map(normalizeRow);
-   const text = JSON.stringify(payload);
-   const width  = opts.width  || 256;
+  function showToast(msg){
+    if(!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    setTimeout(()=> toastEl.classList.remove('show'), 2200);
+  }
 
-   el.innerHTML = '';
-   if (window.QRCode && typeof window.QRCode.toCanvas === 'function') {
-     const canvas = document.createElement('canvas');
-     QRCode.toCanvas(canvas, text, { errorCorrectionLevel:'M', width, margin:2 }, (err)=>{
-       if(err){ console.error(err); el.textContent = 'QR erreur.'; return; }
-       el.appendChild(canvas);
-     });
-   } else {
-     el.textContent = text; // fallback
-   }
- }
- </script>
+  function showValidationErrors(missing=[], invalid=[]){
+    if(!validationBox) return;
+    if(!missing.length && !invalid.length){
+      validationBox.classList.add('hidden');
+      validationBox.innerHTML = '';
+      return;
+    }
+    const items = [...missing, ...invalid].map(txt=>`<li>${escapeHtml(txt)}</li>`).join('');
+    validationBox.innerHTML = `<strong>À corriger :</strong><ul>${items}</ul>`;
+    validationBox.classList.remove('hidden');
+  }
 
- <!-- === App === -->
- <script>
- 'use strict';
- document.addEventListener('DOMContentLoaded', () => {
-   const on = (id, evt, fn) => { const el=document.getElementById(id); if(el) el.addEventListener(evt, fn); };
-   const qs = s => document.querySelector(s);
-   const V = { cover: qs('#view-cover'), duo: qs('#view-duo'), course: qs('#view-course'), summary: qs('#view-summary') };
-   const show = name => { closeModals(true); Object.values(V).forEach(v=>v.classList.add('hidden')); V[name].classList.remove('hidden'); window.scrollTo(0,0); };
+  function validate(){
+    const missing=[];
+    const invalid=[];
+    Object.entries(fieldRules).forEach(([id,rule])=>{
+      const el = document.getElementById(id);
+      if(!el) return;
+      const value = val(id);
+      let ok = true;
+      if(rule.type==='number'){
+        if(value===''){
+          if(rule.required){ missing.push(rule.label); ok=false; }
+        }else{
+          const num = Number(value);
+          if(!Number.isFinite(num)){
+            ok=false; invalid.push(`${rule.label} : valeur invalide`);
+          }else if(rule.min!=null && num<rule.min){
+            ok=false; invalid.push(`${rule.label} (min ${rule.min})`);
+          }
+        }
+      }else{
+        if(rule.required && !value){
+          ok=false; missing.push(rule.label);
+        }else if(value){
+          if(rule.minLength && value.length<rule.minLength){
+            ok=false; invalid.push(`${rule.label} (min ${rule.minLength} caractères)`);
+          }
+          if(rule.maxLength && value.length>rule.maxLength){
+            ok=false; invalid.push(`${rule.label} (max ${rule.maxLength} caractères)`);
+          }
+          if(rule.pattern && !rule.pattern.test(value)){
+            ok=false; invalid.push(`${rule.label} : format invalide`);
+          }
+        }
+      }
+      if(el) el.style.borderColor = ok ? '#e5e7eb' : '#ef4444';
+    });
+    showValidationErrors(missing, invalid);
+    const btn = qs('#goCourse');
+    if(btn) btn.disabled = !!(missing.length || invalid.length);
+    return !(missing.length || invalid.length);
+  }
 
-   // Modales propres
-   const openModal = id => { const el=document.getElementById(id); if(!el) return; document.body.style.overflow='hidden'; el.classList.add('show'); };
-   function closeModals(force=false){ document.querySelectorAll('.modal').forEach(m=>{ if(force||m.classList.contains('show')) m.classList.remove('show'); }); document.body.style.overflow=''; }
-   on('btnHelp','click', ()=> openModal('modalHelp'));
-   on('btnSafety','click', ()=> openModal('modalSafety'));
-   document.querySelectorAll('.modal').forEach(m=> m.addEventListener('click', e=>{ if(e.target===m) closeModals(); }));
-   document.querySelectorAll('.modal [data-close]').forEach(b=> b.addEventListener('click', ()=> closeModals()));
-   document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModals(); });
+  function updateRestoreButtons(){
+    const restoreBtn = qs('#btnRestoreSession');
+    const clearBtn = qs('#btnClearSession');
+    const available = storageAvailable && !!localStorage.getItem(STORAGE_KEY);
+    if(restoreBtn) restoreBtn.disabled = !available;
+    if(clearBtn) clearBtn.disabled = !available;
+  }
 
-   on('btnStart','click', ()=> { show('duo'); validate(); });
+  function persistState(){
+    if(!storageAvailable) return;
+    try{
+      const formValues = {};
+      formFieldIds.forEach(id=>{ const el = document.getElementById(id); formValues[id] = el ? el.value : ''; });
+      const data = {
+        form:formValues,
+        session:{
+          p1:session.p1,
+          p2:session.p2,
+          active:session.active,
+          finished:session.finished,
+          laps:session.laps,
+          frac:session.frac,
+          shots:[...session.shots],
+          tourM:session.tourM,
+          dureeMin:session.dureeMin,
+          results:{p1:session.results.p1, p2:session.results.p2}
+        },
+        summary:summaryData,
+        profMode,
+        actionLog,
+        suspicious:suspicionFlag,
+        view:currentView
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      updateRestoreButtons();
+    }catch(err){
+      console.warn('Persist error', err);
+    }
+  }
 
-   // Validation
-   const clean = s => (s||'').replace(/\s+/g,' ').trim();
-   const hasValue = id => { const el = document.getElementById(id); if(!el) return false; return el.tagName==='SELECT' ? (el.value!=='') : clean(el.value).length>0; };
-   const okNumber = (v,min) => { const n=+v; return Number.isFinite(n)&&n>=min; };
-   const val = id => clean(document.getElementById(id).value);
+  function restoreState(){
+    if(!storageAvailable){ showToast('Sauvegarde indisponible.'); return; }
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw){ showToast('Aucune sauvegarde disponible.'); return; }
+      const data = JSON.parse(raw);
+      Object.entries(data.form||{}).forEach(([id,value])=>{ const el = document.getElementById(id); if(el) el.value = value; });
+      Object.assign(session, freshSession(), data.session||{});
+      session.shots = Array.isArray(data.session?.shots) ? data.session.shots.map(n=>Number(n)||0) : [];
+      session.results = data.session?.results || {p1:null,p2:null};
+      summaryData = Array.isArray(data.summary) ? data.summary : [];
+      profMode = !!data.profMode;
+      actionLog = Array.isArray(data.actionLog) ? data.actionLog.filter(item=>item && typeof item.text==='string').slice(0,40) : [];
+      suspicionFlag = !!data.suspicious;
+      shotsVisible = false;
+      shotsDetail?.classList.add('hidden');
+      if(toggleShotsBtn) toggleShotsBtn.textContent = 'Afficher les détails des tirs';
+      hardResetChrono();
+      renderClock();
+      renderLaps();
+      renderShots();
+      renderCounts();
+      paintCourseHeader();
+      updateSummaryButton();
+      renderSummary();
+      renderActionLog();
+      updateQrWarning();
+      validate();
+      const view = data.view && views[data.view] ? data.view : 'duo';
+      show(view);
+      showToast('Session restaurée.');
+    }catch(err){
+      console.error(err);
+      showToast('Restauration impossible.');
+    }
+  }
 
-   function validate(){
-     const fields=['p1_prenom','p1_nom','p1_classe','p1_sexe','p2_prenom','p2_nom','p2_classe','p2_sexe'];
-     let ok=true;
-     fields.forEach(id=>{
-       const el=document.getElementById(id);
-       const good=hasValue(id);
-       if(el) el.style.borderColor = good?'#e5e7eb':'#ef4444';
-       ok = ok && good;
-     });
-     const okDur=okNumber(val('duree_min'),1);
-     const okTour=okNumber(val('tour_m'),10);
-     const dureeEl=document.getElementById('duree_min'); const tourEl=document.getElementById('tour_m');
-     if(dureeEl) dureeEl.style.borderColor = okDur?'#e5e7eb':'#ef4444';
-     if(tourEl) tourEl.style.borderColor = okTour?'#e5e7eb':'#ef4444';
-     const go = document.getElementById('goCourse'); if(go) go.disabled = !(ok && okDur && okTour);
-     return ok && okDur && okTour;
-   }
-   ['p1_prenom','p1_nom','p1_classe','p1_sexe','p2_prenom','p2_nom','p2_classe','p2_sexe','duree_min','tour_m']
-     .forEach(id=>{ const el=document.getElementById(id); if(!el) return; el.addEventListener('input',validate); el.addEventListener('change',validate); el.addEventListener('blur',validate); });
+  function clearSavedState(){
+    if(!storageAvailable) return;
+    localStorage.removeItem(STORAGE_KEY);
+    updateRestoreButtons();
+    showToast('Sauvegarde supprimée.');
+  }
 
-   // état
-   const session={ p1:null, p2:null, tourM:0, dureeMin:0, active:'p1', laps:0, frac:0, shots:[], results:{p1:null,p2:null}, finished:false };
+  function hardResetChrono(){
+    clearInterval(timer);
+    timer = null;
+    running = false;
+    elapsed = 0;
+    renderClock();
+    const startBtn = qs('#btnStartCourse');
+    const pauseBtn = qs('#btnPause');
+    const resetBtn = qs('#btnReset');
+    if(startBtn) startBtn.disabled = false;
+    if(pauseBtn) pauseBtn.disabled = true;
+    if(resetBtn) resetBtn.disabled = true;
+  }
 
-   const confirmLeaveIfNeeded=()=> !(!session.finished && (session.laps>0 || session.shots.length>0 || elapsed>0)) || confirm('Quitter la course ? Les données non terminées pourraient être perdues.');
-   on('goHome','click', ()=> { if(confirmLeaveIfNeeded()) show('cover'); });
-   on('backToDuo','click', ()=> { if(confirmLeaveIfNeeded()) show('duo'); });
+  function formatChrono(ms){
+    const cs = Math.floor(ms/100);
+    const m = Math.floor(cs/600);
+    const s = Math.floor((cs%600)/10);
+    const d = cs%10;
+    return `${m<10?'0':''}${m}:${s<10?'0':''}${s}.${d}`;
+  }
 
-   // accès course
-   on('goCourse','click', ()=>{
-     if(!validate()) { alert('Complétez tous les champs + chiffres.'); return; }
-     session.p1={ prenom:val('p1_prenom'), nom:val('p1_nom'), classe:val('p1_classe'), sexe:val('p1_sexe') };
-     session.p2={ prenom:val('p2_prenom'), nom:val('p2_nom'), classe:val('p2_classe'), sexe:val('p2_sexe') };
-     session.dureeMin=+val('duree_min'); session.tourM=+val('tour_m');
-     session.active='p1'; resetRunnerState(true); paintCourseHeader(); show('course');
-   });
+  function renderClock(){
+    const text = formatChrono(elapsed);
+    const main = qs('#clock');
+    if(main) main.textContent = text;
+  }
 
-   // course
-   const lapsEl=qs('#laps'), lapMetersEl=qs('#lapMeters'), targetEl=qs('#target');
-   const shotsTable=qs('#shotsTable'), runnerTitle=qs('#runnerTitle'), courseMeta=qs('#courseMeta');
-   const endCard=qs('#endCard'), courseCard=qs('#courseCard'), liveDistanceEl=qs('#liveDistance');
+  function renderLaps(){
+    if(lapsEl) lapsEl.textContent = session.laps;
+    const meters = Math.round((session.laps + (session.frac||0)) * session.tourM);
+    if(liveDistanceEl) liveDistanceEl.textContent = Number.isFinite(meters) && meters>0 ? meters : 0;
+    updateDistanceOutputOverlay();
+  }
 
-   on('lapPlus','click', ()=>{ if(session.finished) return; session.laps++; renderLaps(); });
-   on('lapMinus','click', ()=>{ if(session.finished) return; session.laps=Math.max(0,session.laps-1); renderLaps(); });
+  function renderShots(){
+    if(!shotsTable) return;
+    if(!session.shots.length){
+      shotsTable.innerHTML = '<tr><td colspan="3" class="muted">Aucun tir enregistré.</td></tr>';
+      shotsDetail?.classList.add('hidden');
+      shotsVisible = false;
+      updateShotButtons();
+      return;
+    }
+    const rows = session.shots.map((leds,idx)=>`<tr data-index="${idx}"><td>${idx+1}</td><td>${leds}</td><td><button type="button" class="b-red b-mini" data-remove="${idx}">Retirer</button></td></tr>`).join('');
+    shotsTable.innerHTML = rows;
+    updateShotButtons();
+  }
 
-   document.querySelectorAll('[data-quick]').forEach(btn=>{
-     btn.addEventListener('click', ()=>{ if(session.finished) return; const v=+btn.getAttribute('data-quick'); addShot(v); });
-   });
+  function renderCounts(){
+    const counts = {0:0,1:0,2:0,3:0,4:0,5:0};
+    session.shots.forEach(leds=>{ if(counts.hasOwnProperty(leds)) counts[leds]++; });
+    const live = qs('#liveCounts');
+    if(!session.shots.length){
+      if(live) live.textContent = 'Aucun tir enregistré.';
+    }else if(live){
+      live.innerHTML = Object.keys(counts).sort((a,b)=>b-a).map(led=>`<span class="chip">${led} LED : <strong>${counts[led]}</strong></span>`).join('');
+    }
+  }
 
-   let t0=0, elapsed=0, timer=null, running=false;
-   function start(){ if(session.finished||running) return; running=true; t0=Date.now()-elapsed; timer=setInterval(tick,100);
-     const bsc=document.getElementById('btnStartCourse'), bp=document.getElementById('btnPause'), br=document.getElementById('btnReset');
-     if(bsc) bsc.disabled=true; if(bp) bp.disabled=false; if(br) br.disabled=false;
-   }
-   function pause(){ if(!running) return; clearInterval(timer); running=false;
-     const bsc=document.getElementById('btnStartCourse'), bp=document.getElementById('btnPause');
-     if(bsc) bsc.disabled=false; if(bp) bp.disabled=true;
-   }
-   function hardResetChronoUI(){
-     pause(); elapsed=0;
-     const clk=document.getElementById('clock'); if(clk) clk.textContent='00:00.0';
-     const br=document.getElementById('btnReset'); if(br) br.disabled=true;
-     const bsc=document.getElementById('btnStartCourse'); if(bsc) bsc.disabled=false;
-     const bp=document.getElementById('btnPause'); if(bp) bp.disabled=true;
-   }
-   function reset(){ hardResetChronoUI(); session.laps=0; session.shots=[]; session.frac=0; renderLaps(); renderShots(); hideEnd(); }
-   function tick(){ elapsed=Date.now()-t0; const cs=Math.floor(elapsed/100); const m=Math.floor(cs/600), s=Math.floor((cs%600)/10), d=cs%10;
-     const clk=document.getElementById('clock'); if(clk) clk.textContent=`${m<10?'0':''}${m}:${s<10?'0':''}${s}.${d}`;
-     if(m>=session.dureeMin){ pause(); showEnd(); } }
-   on('btnStartCourse','click', start); on('btnPause','click', pause); on('btnReset','click', reset);
+  function updateShotButtons(){
+    const hasShots = session.shots.length>0;
+    if(toggleShotsBtn){
+      toggleShotsBtn.disabled = !hasShots;
+      toggleShotsBtn.textContent = shotsVisible ? 'Masquer les détails des tirs' : 'Afficher les détails des tirs';
+    }
+  }
 
-   // overlay fin coureur
-   const endOverlay = document.getElementById('endOverlay'); const distanceOutOverlay = document.getElementById('distanceOutOverlay');
-   function updateDistanceOutputOverlay(){
-     const meters=Math.round((session.laps+(session.frac||0))*session.tourM);
-     if(distanceOutOverlay) distanceOutOverlay.textContent = `Distance: ${meters} m (${session.laps} tours + ${session.frac||0} tour)`;
-   }
-   function showEnd(){ session.frac = session.frac || 0; updateDistanceOutputOverlay();
-     if(courseCard) courseCard.classList.add('lock'); if(endOverlay) endOverlay.classList.add('show'); if(navigator.vibrate) navigator.vibrate(150); }
-   function hideEnd(){ if(endOverlay) endOverlay.classList.remove('show'); if(courseCard) courseCard.classList.remove('lock'); }
-   document.querySelectorAll('[data-frac-overlay]').forEach(b=>{
-     b.addEventListener('click', ()=>{ if(session.finished) return; session.frac=+b.getAttribute('data-frac-overlay'); updateDistanceOutputOverlay(); });
-   });
-   on('finishRunnerOverlay','click', ()=> finalizeRunner());
+  function updateDistanceOutputOverlay(){
+    const out = qs('#distanceOutOverlay');
+    if(!out) return;
+    const meters = Math.round((session.laps + (session.frac||0)) * session.tourM);
+    out.textContent = `Distance : ${Number.isFinite(meters) && meters>0 ? meters : 0} m (${session.laps} tours + ${session.frac||0})`;
+  }
 
-   function renderLaps(){
-     if(lapsEl) lapsEl.textContent=session.laps;
-     if(liveDistanceEl) liveDistanceEl.textContent = Math.round((session.laps+(session.frac||0))*session.tourM);
-     updateDistanceOutputOverlay();
-   }
-   function addShot(leds){ const n=session.shots.length+1; session.shots.push({n,leds}); renderShots(); renderCounts(); }
-   function renderShots(){
-     if(!shotsTable) return;
-     shotsTable.innerHTML='';
-     [...session.shots].reverse().forEach(s=>{
-       const tr=document.createElement('tr');
-       tr.innerHTML=`<td>${s.n}</td><td>${s.leds}</td><td><button class="b-red">Retirer</button></td>`;
-       tr.querySelector('button').onclick=()=>{ if(session.finished) return; session.shots=session.shots.filter(x=>x.n!==s.n).map((x,i)=>({n:i+1,leds:x.leds})); renderShots(); renderCounts(); };
-       shotsTable.append(tr);
-     });
-   }
-   function renderCounts(){
-     const c={0:0,1:0,2:0,3:0,4:0,5:0};
-     session.shots.forEach(s=>{ if(c.hasOwnProperty(s.leds)) c[s.leds]++; });
-     const liveCounts=document.getElementById('liveCounts');
-     if(liveCounts) liveCounts.innerHTML =
-       `<span class="pill">Nb LED 5 : <b>${c[5]}</b></span>
-        <span class="pill">Nb LED 4 : <b>${c[4]}</b></span>
-        <span class="pill">Nb LED 3 : <b>${c[3]}</b></span>
-        <span class="pill">Nb LED 2 : <b>${c[2]}</b></span>
-        <span class="pill">Nb LED 1 : <b>${c[1]}</b></span>
-        <span class="pill">Nb LED 0 : <b>${c[0]}</b></span>`;
-   }
+  function resetRunnerState(hard=false){
+    if(hard) hardResetChrono();
+    session.laps = 0;
+    session.frac = 0;
+    session.shots = [];
+    shotsVisible = false;
+    shotsDetail?.classList.add('hidden');
+    if(toggleShotsBtn){
+      toggleShotsBtn.disabled = true;
+      toggleShotsBtn.textContent = 'Afficher les détails des tirs';
+    }
+    renderLaps();
+    renderShots();
+    renderCounts();
+    persistState();
+  }
 
-   function resetRunnerState(isHard=false){
-     if (isHard) hardResetChronoUI();
-     session.laps=0; session.shots=[]; session.frac=0; renderLaps(); renderShots(); hideEnd();
-   }
-   function paintCourseHeader(){
-     const R=session[session.active];
-     const rt=document.getElementById('runnerTitle'); if(rt) rt.textContent=`Coureur — ${R.prenom} ${R.nom}`;
-     const cm=document.getElementById('courseMeta');  if(cm) cm.textContent=`${normalizeClasse(R.classe)} • ${R.sexe}`;
-     if(lapMetersEl) lapMetersEl.textContent=session.tourM; if(targetEl) targetEl.textContent=session.dureeMin;
-   }
+  function paintCourseHeader(){
+    updateRunnerTheme();
+    const R = session[session.active];
+    if(!R){
+      if(runnerTitle) runnerTitle.textContent = 'Coureur —';
+      if(courseMeta) courseMeta.textContent = '—';
+      return;
+    }
+    if(runnerTitle) runnerTitle.textContent = `Coureur — ${R.prenom}${R.id ? ` (#${R.id})` : ''}`;
+    const classe = normalizeClasse(R.classe);
+    const parts = [];
+    parts.push(classe || 'Classe ?');
+    if(R.id) parts.push(`ID ${R.id}`);
+    if(courseMeta) courseMeta.textContent = parts.join(' • ');
+    if(lapMetersEl) lapMetersEl.textContent = session.tourM || '—';
+    if(targetEl) targetEl.textContent = session.dureeMin || '—';
+  }
 
-   function finalizeRunner(){
-     const R=session[session.active];
-     const meters=Math.round((session.laps+(session.frac||0))*session.tourM);
-     const vitesse=+(meters*60/(1000*session.dureeMin)).toFixed(2);
-     const counts = {0:0,1:0,2:0,3:0,4:0,5:0};
-     session.shots.forEach(s=>{ if(counts.hasOwnProperty(s.leds)) counts[s.leds]++; });
+  function addShot(leds){
+    if(session.finished) return;
+    const num = Number(leds);
+    if(!Number.isInteger(num) || num<0 || num>5) return;
+    session.shots.push(num);
+    renderShots();
+    renderCounts();
+    addLog(`Tir enregistré : ${num} LED`);
+    trackRapid('shot');
+    persistState();
+  }
 
-     const T = counts[0]+counts[1]+counts[2]+counts[3]+counts[4]+counts[5];
-     let indice = 0;
-     if(T>0){
-       const totalLed = 0*counts[0] + 1*counts[1] + 2*counts[2] + 3*counts[3] + 4*counts[4] + 5*counts[5];
-       const base = (totalLed / (5*T)) * 100;
-       const bonus = 0.10 * (counts[5]/T) * 100;
-       indice = +(base + bonus).toFixed(2);
-     }
+  function computeIndice(counts){
+    const total = Object.values(counts).reduce((a,b)=>a+b,0);
+    if(total===0) return 0;
+    const ledSum = 0*counts[0]+1*counts[1]+2*counts[2]+3*counts[3]+4*counts[4]+5*counts[5];
+    const base = (ledSum/(5*total))*100;
+    const bonus = 0.10 * (counts[5]/total) * 100;
+    return +(base + bonus).toFixed(2);
+  }
 
-     session.results[session.active]={
-       prenom:R.prenom, nom:R.nom, classe:normalizeClasse(R.classe), sexe:R.sexe, distance:meters, vitesse:vitesse,
-       nb_led_0:counts[0], nb_led_1:counts[1], nb_led_2:counts[2], nb_led_3:counts[3], nb_led_4:counts[4], nb_led_5:counts[5],
-       indice_tir: indice
-     };
+  function warnClasse(raw, normalized, label){
+    if(!normalized){
+      showToast(`Classe non reconnue pour ${label}.`);
+      addLog(`Classe à vérifier pour ${label}`);
+    }
+  }
 
-     hideEnd();
-     if(courseCard) { courseCard.classList.add('lock'); setTimeout(()=> courseCard.classList.remove('lock'), 300); }
+  function showEndOverlay(trigger, force=false){
+    if(session.finished || endOverlayOpen) return;
+    if(running && !force){
+      showToast('Chrono en cours. Demandez à votre professeur pour terminer.');
+      return;
+    }
+    pause();
+    session.frac = session.frac || 0;
+    updateDistanceOutputOverlay();
+    courseCard?.classList.add('lock');
+    endOverlay?.classList.add('show');
+    endOverlayOpen = true;
+    lastOverlayTrigger = trigger || document.activeElement;
+  }
 
-     if(session.active==='p1'){
-       session.active='p2';
-       resetRunnerState(true);
-       paintCourseHeader();
-       alert('Coureur 1 terminé. Place au coureur 2.');
-     }else{
-       session.finished = true;
-       const sOver = document.getElementById('summaryOverlay');
-       if (sOver) sOver.style.display = 'flex';
-     }
-   }
+  function hideEndOverlay(){
+    if(!endOverlayOpen) return;
+    endOverlay?.classList.remove('show');
+    courseCard?.classList.remove('lock');
+    endOverlayOpen = false;
+    if(lastOverlayTrigger && typeof lastOverlayTrigger.focus==='function') lastOverlayTrigger.focus();
+    lastOverlayTrigger = null;
+  }
 
-   // ======== BILAN / QR (JSON direct compatible ScanProf) ========
-   let summaryData = [], profMode = false;
 
-   function toCSV(data){
-     const headers=['nom','prenom','classe','sexe','distance','vitesse','nb_led_0','nb_led_1','nb_led_2','nb_led_3','nb_led_4','nb_led_5','indice_tir'];
-     const esc = s => { s = (s==null?'':String(s)); return /[;\"\n]/.test(s) ? `"${s.replace(/\"/g,'""')}"` : s; };
-     const lines=[ headers.join(';'), ...data.map(d=>headers.map(h=>esc(d[h])).join(';')) ];
-     return lines.join('\n');
-   }
+  function start(){
+    if(session.finished || running) return;
+    running = true;
+    t0 = Date.now()-elapsed;
+    timer = setInterval(tick,100);
+    const startBtn = qs('#btnStartCourse');
+    const pauseBtn = qs('#btnPause');
+    const resetBtn = qs('#btnReset');
+    if(startBtn) startBtn.disabled = true;
+    if(pauseBtn) pauseBtn.disabled = false;
+    if(resetBtn) resetBtn.disabled = false;
+    addLog('Chrono démarré');
+  }
 
-   function renderSummary(){
-     const rows = summaryData.map((d,i) => `
-       <tr data-index="${i}">
-         <td data-field="nom" ${profMode?'contenteditable="true"':''}>${d.nom}</td>
-         <td data-field="prenom" ${profMode?'contenteditable="true"':''}>${d.prenom}</td>
-         <td data-field="classe" ${profMode?'contenteditable="true"':''}>${d.classe}</td>
-         <td data-field="sexe" ${profMode?'contenteditable="true"':''}>${d.sexe}</td>
-         <td data-field="distance" ${profMode?'contenteditable="true"':''}>${d.distance}</td>
-         <td data-field="vitesse" ${profMode?'contenteditable="true"':''}>${d.vitesse}</td>
-         <td data-field="nb_led_0" ${profMode?'contenteditable="true"':''}>${d.nb_led_0}</td>
-         <td data-field="nb_led_1" ${profMode?'contenteditable="true"':''}>${d.nb_led_1}</td>
-         <td data-field="nb_led_2" ${profMode?'contenteditable="true"':''}>${d.nb_led_2}</td>
-         <td data-field="nb_led_3" ${profMode?'contenteditable="true"':''}>${d.nb_led_3}</td>
-         <td data-field="nb_led_4" ${profMode?'contenteditable="true"':''}>${d.nb_led_4}</td>
-         <td data-field="nb_led_5" ${profMode?'contenteditable="true"':''}>${d.nb_led_5}</td>
-         <td>${d.indice_tir}</td>
-       </tr>
-     `).join('');
-     const resume=document.getElementById('resume');
-     if(resume) resume.innerHTML = `
-       <table id="summaryTable" ${profMode?'class="prof-on"':''}>
-         <thead>
-           <tr>
-             <th>Nom</th><th>Prénom</th><th>Classe</th><th>Sexe</th>
-             <th>Distance (m)</th><th>Vitesse (km/h)</th>
-             <th>Nb LED 0</th><th>Nb LED 1</th><th>Nb LED 2</th><th>Nb LED 3</th><th>Nb LED 4</th><th>Nb LED 5</th>
-             <th>Indice tir</th>
-           </tr>
-         </thead>
-         <tbody id="resumeBody">${rows}</tbody>
-       </table>`;
+  function pause(){
+    if(!running) return;
+    clearInterval(timer);
+    timer = null;
+    running = false;
+    const startBtn = qs('#btnStartCourse');
+    const pauseBtn = qs('#btnPause');
+    if(startBtn) startBtn.disabled = false;
+    if(pauseBtn) pauseBtn.disabled = true;
+    addLog('Chrono en pause');
+  }
 
-     // === QR JSON direct compatible ScanProf ===
-     try { buildScanProfQR('qr', summaryData, { width:256 }); } catch(e){ console.error('QR JSON build error', e); }
+  function resetAll(){
+    resetRunnerState(true);
+    addLog('Réinitialisation coureur');
+  }
 
-     // CSV
-     on('exportCsv', 'click', () => {
-       const csv = toCSV(summaryData);
-       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-       const url = URL.createObjectURL(blob);
-       const a = document.createElement('a'); a.href = url;
-       a.download = `LaserRun_${new Date().toISOString().slice(0,10)}.csv`;
-       document.body.appendChild(a); a.click(); document.body.removeChild(a);
-       URL.revokeObjectURL(url);
-     });
+  function tick(){
+    elapsed = Date.now()-t0;
+    renderClock();
+    if(session.dureeMin && elapsed/60000 >= session.dureeMin){
+      showEndOverlay(null,true);
+    }
+  }
 
-     const act = document.getElementById('activateProf');
-     const deact = document.getElementById('deactivateProf');
-     const apply = document.getElementById('applyEdits');
-     const profHint = document.getElementById('profHint');
-     if (act) act.disabled = profMode;
-     if (deact) deact.disabled = !profMode;
-     if (apply) apply.disabled = !profMode;
-     if (profHint) profHint.textContent = profMode
-       ? 'Mode Prof activé : corrigez puis “Mettre à jour QR/CSV”.'
-       : 'Saisir le code 57 pour corriger une valeur.';
-   }
+  function finalizeRunner(){
+    const R = session[session.active];
+    if(!R) return;
+    const meters = Math.round((session.laps + (session.frac||0)) * session.tourM);
+    const vitesse = session.dureeMin ? +((meters*60)/(1000*session.dureeMin)).toFixed(2) : 0;
+    const counts = {0:0,1:0,2:0,3:0,4:0,5:0};
+    session.shots.forEach(leds=>{ if(counts.hasOwnProperty(leds)) counts[leds]++; });
+    const classe = normalizeClasse(R.classe);
+    const result = {
+      prenom:R.prenom,
+      classe:classe,
+      id_coureur:R.id || '',
+      distance:Number.isFinite(meters)?meters:0,
+      vitesse:Number.isFinite(vitesse)?vitesse:0,
+      nb_led_0:counts[0], nb_led_1:counts[1], nb_led_2:counts[2],
+      nb_led_3:counts[3], nb_led_4:counts[4], nb_led_5:counts[5],
+      indice_tir:computeIndice(counts)
+    };
+    const duplicate = Object.values(session.results).filter(Boolean).find(r=>{
+      if(r.id_coureur && result.id_coureur) return r.id_coureur === result.id_coureur;
+      return !r.id_coureur && !result.id_coureur && r.prenom===result.prenom && r.classe===result.classe;
+    });
+    if(duplicate){
+      const proceed = confirm('Doublon détecté (même prénom/classe ou même dossard). Continuer ?');
+      if(!proceed) return;
+      showToast('Doublon confirmé manuellement.');
+    }
+    session.results[session.active] = result;
+    warnClasse(R.classe, classe, R.prenom);
+    addLog(`Coureur validé : ${R.prenom}${R.id ? ` (#${R.id})` : ''}`);
+    hideEndOverlay();
+    resetRunnerState(true);
+    if(session.active==='p1'){
+      session.active='p2';
+      paintCourseHeader();
+      showToast('Coureur 1 enregistré — place au coureur 2.');
+      addLog('Passage au coureur 2');
+    }else{
+      session.finished = true;
+      summaryOverlay?.classList.add('show');
+      showToast('Les deux coureurs sont enregistrés.');
+    }
+    updateSummaryButton();
+    persistState();
+  }
 
-   function parseEditsFromTable(){
-     const tbody = document.getElementById('resumeBody');
-     if(!tbody) return [];
-     const rows = Array.from(tbody.querySelectorAll('tr'));
-     return rows.map(tr=>{
-       const txt = f => (tr.querySelector(`[data-field="${f}"]`)?.textContent||'').trim();
-       const sexeRaw = (txt('sexe')||'').toUpperCase();
-       const sexe = (sexeRaw==='F'||sexeRaw==='M') ? sexeRaw : 'F';
-       const num = (f,def=0) => { const v=Number((txt(f)||'').replace(',', '.')); return Number.isFinite(v)?v:def; };
-       const int = (f,def=0) => { const v=parseInt(txt(f),10); return Number.isFinite(v)?Math.max(0,v):def; };
-       const counts={0:int('nb_led_0'),1:int('nb_led_1'),2:int('nb_led_2'),3:int('nb_led_3'),4:int('nb_led_4'),5:int('nb_led_5')};
-       const T = counts[0]+counts[1]+counts[2]+counts[3]+counts[4]+counts[5];
-       let indice=0; if(T>0){ const tot=0*counts[0]+1*counts[1]+2*counts[2]+3*counts[3]+4*counts[4]+5*counts[5]; indice = +(((tot/(5*T))*100 + 0.10*(counts[5]/T)*100).toFixed(2)); }
-       return {
-         nom:txt('nom'), prenom:txt('prenom'), classe:normalizeClasse(txt('classe')), sexe,
-         distance:int('distance'), vitesse:+num('vitesse').toFixed(2),
-         nb_led_0:counts[0], nb_led_1:counts[1], nb_led_2:counts[2], nb_led_3:counts[3], nb_led_4:counts[4], nb_led_5:counts[5],
-         indice_tir:indice
-       };
-     });
-   }
+  function confirmLeaveIfNeeded(){
+    const dirty = !session.finished && (session.laps>0 || session.shots.length>0 || elapsed>0);
+    return !dirty || confirm('Quitter ? Les données non enregistrées seront perdues.');
+  }
 
-   on('activateProf','click', ()=>{
-     const code = (document.getElementById('profCode').value||'').trim();
-     if(code==='57'){ profMode=true; renderSummary(); } else { alert('Code incorrect.'); }
-   });
-   on('deactivateProf','click', ()=>{ profMode=false; renderSummary(); });
-   on('applyEdits','click', ()=>{ if(!profMode) return; summaryData = parseEditsFromTable(); renderSummary(); alert('Bilan mis à jour. QR et CSV régénérés.'); });
+  function updateSummaryButton(){
+    const btn = qs('#goSummary');
+    const hint = qs('#courseSummaryHint');
+    const hasResult = !!(session.results.p1 || session.results.p2);
+    const ready = hasResult && session.finished;
+    if(btn) btn.disabled = !ready;
+    if(hint){
+      if(!hasResult) hint.textContent = 'Terminez au moins un coureur pour débloquer le bilan.';
+      else if(!session.finished) hint.textContent = 'Bilan accessible après les deux coureurs.';
+      else hint.textContent = 'Les deux coureurs sont enregistrés.';
+    }
+  }
 
-   // Aller au bilan
-   on('goSummary','click', ()=>{
-     const out=[];
-     if(session.results.p1){ const r=session.results.p1; out.push({ nom:r.nom, prenom:r.prenom, classe:normalizeClasse(r.classe), sexe:r.sexe, distance:r.distance, vitesse:r.vitesse, nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5, indice_tir:r.indice_tir }); }
-     if(session.results.p2){ const r=session.results.p2; out.push({ nom:r.nom, prenom:r.prenom, classe:normalizeClasse(r.classe), sexe:r.sexe, distance:r.distance, vitesse:r.vitesse, nb_led_0:r.nb_led_0, nb_led_1:r.nb_led_1, nb_led_2:r.nb_led_2, nb_led_3:r.nb_led_3, nb_led_4:r.nb_led_4, nb_led_5:r.nb_led_5, indice_tir:r.indice_tir }); }
-     summaryData = out;
-     show('summary'); profMode=false; renderSummary();
-   });
-   on('backToCourse','click', ()=> show('course'));
-   on('backHome2','click', ()=> { if(confirmLeaveIfNeeded()) show('cover'); });
+  function renderSummary(){
+    const resume = qs('#resume');
+    const qrBox = qs('#qr');
+    const exportCsv = qs('#exportCsv');
+    const exportJson = qs('#exportJson');
+    if(!summaryData.length){
+      if(resume) resume.innerHTML = '<p class="muted" style="margin:12px">Aucun résultat pour l’instant.</p>';
+      if(qrBox) qrBox.innerHTML = 'QR généré dès qu’un résultat est disponible.';
+      if(exportCsv) exportCsv.disabled = true;
+      if(exportJson) exportJson.disabled = true;
+      updateProfControls();
+      updateQrWarning();
+      persistState();
+      return;
+    }
+    const rows = summaryData.map((r,i)=>`
+      <tr data-index="${i}">
+        <td data-field="prenom" ${profMode?'contenteditable="true"':''}>${escapeHtml(r.prenom)}</td>
+        <td data-field="id_coureur" ${profMode?'contenteditable="true"':''}>${escapeHtml(r.id_coureur||'')}</td>
+        <td data-field="classe" ${profMode?'contenteditable="true"':''}>${escapeHtml(r.classe)}</td>
+        <td data-field="distance" ${profMode?'contenteditable="true"':''}>${r.distance}</td>
+        <td data-field="vitesse" ${profMode?'contenteditable="true"':''}>${r.vitesse}</td>
+        <td data-field="nb_led_0" ${profMode?'contenteditable="true"':''}>${r.nb_led_0}</td>
+        <td data-field="nb_led_1" ${profMode?'contenteditable="true"':''}>${r.nb_led_1}</td>
+        <td data-field="nb_led_2" ${profMode?'contenteditable="true"':''}>${r.nb_led_2}</td>
+        <td data-field="nb_led_3" ${profMode?'contenteditable="true"':''}>${r.nb_led_3}</td>
+        <td data-field="nb_led_4" ${profMode?'contenteditable="true"':''}>${r.nb_led_4}</td>
+        <td data-field="nb_led_5" ${profMode?'contenteditable="true"':''}>${r.nb_led_5}</td>
+        <td data-field="indice_tir" ${profMode?'contenteditable="true"':''}>${r.indice_tir}</td>
+      </tr>`).join('');
+    if(resume){
+      resume.innerHTML = `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Prénom</th><th>ID</th><th>Classe</th>
+                <th>Distance (m)</th><th>Vitesse (km/h)</th>
+                <th>0 LED</th><th>1 LED</th><th>2 LED</th><th>3 LED</th><th>4 LED</th><th>5 LED</th><th>Indice tir</th>
+              </tr>
+            </thead>
+            <tbody id="resumeBody">${rows}</tbody>
+          </table>
+        </div>`;
+    }
+    buildScanProfQR('qr', summaryData, {width:280});
+    if(exportCsv) exportCsv.disabled = false;
+    if(exportJson) exportJson.disabled = false;
+    updateProfControls();
+    updateQrWarning();
+    persistState();
+  }
 
-   // Bouton overlay "Aller au bilan"
-   on('goSummaryFromOverlay','click', ()=>{
-     const sOver = document.getElementById('summaryOverlay');
-     if (sOver) sOver.style.display = 'none';
-     document.getElementById('goSummary')?.click();
-   });
+  function parseEditsFromTable(){
+    const tbody = qs('#resumeBody');
+    if(!tbody) return [];
+    return Array.from(tbody.querySelectorAll('tr')).map(tr=>{
+      const txt = field => (tr.querySelector(`[data-field="${field}"]`)?.textContent || '').trim();
+      const toInt = field => { const num = parseInt(txt(field),10); return Number.isFinite(num)?Math.max(0,num):0; };
+      const toFloat = field => { const num = Number((txt(field)||'').replace(',', '.')); return Number.isFinite(num)?num:0; };
+      const counts = {0:toInt('nb_led_0'),1:toInt('nb_led_1'),2:toInt('nb_led_2'),3:toInt('nb_led_3'),4:toInt('nb_led_4'),5:toInt('nb_led_5')};
+      return {
+        prenom:txt('prenom'),
+        id_coureur:txt('id_coureur'),
+        classe:normalizeClasse(txt('classe')),
+        distance:toInt('distance'),
+        vitesse:+toFloat('vitesse').toFixed(2),
+        nb_led_0:counts[0], nb_led_1:counts[1], nb_led_2:counts[2],
+        nb_led_3:counts[3], nb_led_4:counts[4], nb_led_5:counts[5],
+        indice_tir:computeIndice(counts)
+      };
+    });
+  }
 
-   // init
-   validate();
-   setTimeout(()=>paintCourseHeader(),0);
-   const sOver = document.getElementById('summaryOverlay'); if (sOver) sOver.style.display='none';
- });
- </script>
+  function toCSV(data){
+    const headers=['prenom','id_coureur','classe','distance','vitesse','nb_led_0','nb_led_1','nb_led_2','nb_led_3','nb_led_4','nb_led_5','indice_tir'];
+    const esc = s => { s = s==null?'':String(s); return /[;"\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s; };
+    return [headers.join(';'), ...data.map(row=>headers.map(h=>esc(row[h])).join(';'))].join('\n');
+  }
+
+  function updateProfControls(){
+    const act = qs('#activateProf');
+    const deact = qs('#deactivateProf');
+    const apply = qs('#applyEdits');
+    const hint = qs('#profHint');
+    const exportCsv = qs('#exportCsv');
+    const exportJson = qs('#exportJson');
+    if(act) act.disabled = profMode;
+    if(deact) deact.disabled = !profMode;
+    if(apply) apply.disabled = !profMode || !summaryData.length;
+    if(exportCsv) exportCsv.disabled = !summaryData.length;
+    if(exportJson) exportJson.disabled = !summaryData.length;
+    if(hint) hint.textContent = profMode
+      ? 'Mode Prof actif : corrigez puis “Mettre à jour QR/CSV/JSON”.'
+      : 'Cliquez sur “Activer mode Prof” puis renseignez le code secret pour corriger.';
+  }
+
+  function exportJson(){
+    if(!summaryData.length) return;
+    const blob = new Blob([JSON.stringify(summaryData,null,2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `LaserRun_${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function addLog(text, type='info'){
+    actionLog.unshift({time:Date.now(), text, type});
+    if(actionLog.length>40) actionLog.pop();
+    renderActionLog();
+    persistState();
+  }
+
+  function renderActionLog(){
+    const list = actionLogList;
+    if(!list) return;
+    if(!actionLog.length){
+      list.innerHTML = '<li class="muted">Aucune action enregistrée.</li>';
+      return;
+    }
+    list.innerHTML = actionLog.map(item=>{
+      const t = new Date(item.time || Date.now());
+      const h = String(t.getHours()).padStart(2,'0');
+      const m = String(t.getMinutes()).padStart(2,'0');
+      const isAlert = item.type==='alert';
+      const icon = isAlert ? '⚠️ ' : '';
+      return `<li class="${isAlert?'alert':''}"><strong>${h}:${m}</strong> — ${icon}${escapeHtml(item.text)}</li>`;
+    }).join('');
+  }
+
+  function updateQrWarning(){
+    const warn = qs('#qrWarning');
+    if(!warn) return;
+    warn.classList.toggle('hidden', !suspicionFlag);
+  }
+
+  function markSuspicion(){
+    const wasFlagged = suspicionFlag;
+    suspicionFlag = true;
+    updateQrWarning();
+    if(!wasFlagged) persistState();
+  }
+
+  function updateRunnerTheme(){
+    if(!bodyEl) return;
+    if(currentView!=='course'){
+      bodyEl.classList.remove('runner-p1','runner-p2');
+      return;
+    }
+    bodyEl.classList.toggle('runner-p1', session.active==='p1');
+    bodyEl.classList.toggle('runner-p2', session.active==='p2');
+  }
+
+  function closeGuardOverlay(){
+    guardOverlay?.classList.remove('show');
+    if(guardCode) guardCode.value = '';
+    pendingGuardAction = null;
+  }
+
+  function requestProfApproval(label, action){
+    if(!guardOverlay || !guardMessage || !guardCode){
+      alert('Action protégée. Professeur requis.');
+      return;
+    }
+    pendingGuardAction = action;
+    guardMessage.textContent = `Pour valider “${label}”, demandez à votre professeur.`;
+    guardCode.value = '';
+    guardOverlay.classList.add('show');
+    setTimeout(()=> guardCode?.focus(), 10);
+  }
+
+  function guardSensitiveAction(label, action){
+    if(running){
+      requestProfApproval(label, action);
+      return true;
+    }
+    action();
+    return false;
+  }
+
+  function trackRapid(type){
+    const conf = rapidConfig[type];
+    if(!conf) return;
+    const now = Date.now();
+    conf.times.push(now);
+    while(conf.times.length && now - conf.times[0] > conf.window){
+      conf.times.shift();
+    }
+    if(conf.times.length >= conf.limit){
+      showToast(conf.message);
+      addLog(conf.log, 'alert');
+      markSuspicion();
+      conf.times = [now];
+    }
+  }
+
+  function getFocusable(container){
+    return Array.from(container.querySelectorAll(focusableSelector)).filter(el=>!el.hasAttribute('disabled'));
+  }
+
+  function closeModals(){
+    if(activeModal) activeModal.classList.remove('show');
+    document.body.style.overflow='';
+    if(lastModalTrigger && typeof lastModalTrigger.focus==='function') lastModalTrigger.focus();
+    activeModal = null;
+    lastModalTrigger = null;
+  }
+
+  function openModal(id, trigger){
+    const modal = document.getElementById(id);
+    if(!modal) return;
+    closeModals();
+    activeModal = modal;
+    lastModalTrigger = trigger || document.activeElement;
+    document.body.style.overflow='hidden';
+    modal.classList.add('show');
+    requestAnimationFrame(()=> modal.querySelector('[data-close]')?.focus());
+  }
+
+  document.addEventListener('keydown', e=>{
+    if(activeModal){
+      if(e.key==='Escape'){ e.preventDefault(); closeModals(); return; }
+      if(e.key==='Tab'){
+        const focusables = getFocusable(activeModal);
+        if(!focusables.length){ e.preventDefault(); return; }
+        const index = focusables.indexOf(document.activeElement);
+        if(e.shiftKey){
+          if(index<=0){ focusables[focusables.length-1].focus(); e.preventDefault(); }
+        }else{
+          if(index===focusables.length-1){ focusables[0].focus(); e.preventDefault(); }
+        }
+      }
+      return;
+    }
+    if(e.key==='Escape'){
+      if(endOverlayOpen){ hideEndOverlay(); e.preventDefault(); return; }
+      if(summaryOverlay?.classList.contains('show')){ summaryOverlay.classList.remove('show'); e.preventDefault(); return; }
+      if(guardOverlay?.classList.contains('show')){ closeGuardOverlay(); e.preventDefault(); return; }
+    }
+    const target = e.target;
+    const isInput = target && (target.tagName==='INPUT' || target.tagName==='TEXTAREA' || target.tagName==='SELECT' || target.isContentEditable);
+    if(currentView==='course' && !isInput){
+      if(/^[0-5]$/.test(e.key)){ addShot(Number(e.key)); e.preventDefault(); }
+      if(e.key==='Enter' && endOverlayOpen){ finalizeRunner(); e.preventDefault(); }
+    }
+  });
+
+  // Event bindings
+  qsa('.modal').forEach(modal=> modal.addEventListener('click', ev=>{ if(ev.target===modal) closeModals(); }));
+  qsa('[data-close]').forEach(btn=> btn.addEventListener('click', closeModals));
+  endOverlay?.addEventListener('click', e=>{ if(e.target===endOverlay) hideEndOverlay(); });
+  summaryOverlay?.addEventListener('click', e=>{ if(e.target===summaryOverlay) summaryOverlay.classList.remove('show'); });
+  guardOverlay?.addEventListener('click', e=>{ if(e.target===guardOverlay) closeGuardOverlay(); });
+  qs('#guardConfirm')?.addEventListener('click', ()=>{
+    const code = (guardCode?.value || '').trim();
+    if(code===PROF_CODE){
+      const action = pendingGuardAction;
+      closeGuardOverlay();
+      if(typeof action==='function') action();
+      showToast('Action autorisée.');
+    }else{
+      alert('Code incorrect.');
+    }
+  });
+  qs('#guardCancel')?.addEventListener('click', closeGuardOverlay);
+
+  qs('#btnHelp')?.addEventListener('click', e=> openModal('modalHelp', e.currentTarget));
+  qs('#btnSafety')?.addEventListener('click', e=> openModal('modalSafety', e.currentTarget));
+  qs('#btnStart')?.addEventListener('click', ()=>{ show('duo'); validate(); });
+  qs('#btnRestoreSession')?.addEventListener('click', restoreState);
+  qs('#btnClearSession')?.addEventListener('click', ()=>{ if(confirm('Supprimer la sauvegarde locale ?')) clearSavedState(); });
+
+  qs('#btnStartCourse')?.addEventListener('click', start);
+  qs('#btnPause')?.addEventListener('click', pause);
+  qs('#btnReset')?.addEventListener('click', ()=> guardSensitiveAction('Réinitialiser le coureur', resetAll));
+
+  qs('#openFinish')?.addEventListener('click', e=>{
+    if(running){
+      requestProfApproval('Terminer le coureur', ()=> showEndOverlay(e.currentTarget, true));
+    }else{
+      showEndOverlay(e.currentTarget);
+    }
+  });
+  qs('#cancelFinish')?.addEventListener('click', hideEndOverlay);
+  qsa('[data-frac-overlay]').forEach(btn=> btn.addEventListener('click', ()=>{
+    if(session.finished) return;
+    session.frac = Number(btn.getAttribute('data-frac-overlay')) || 0;
+    updateDistanceOutputOverlay();
+    addLog(`Fraction choisie : ${session.frac}`);
+    persistState();
+  }));
+  qs('#finishRunnerOverlay')?.addEventListener('click', finalizeRunner);
+
+  qs('#goSummaryFromOverlay')?.addEventListener('click', ()=>{
+    summaryOverlay?.classList.remove('show');
+    qs('#goSummary')?.click();
+  });
+
+  qs('#lapPlus')?.addEventListener('click', ()=>{
+    if(session.finished) return;
+    session.laps++;
+    renderLaps();
+    addLog('+1 tour');
+    trackRapid('lap');
+    persistState();
+  });
+  qs('#lapMinus')?.addEventListener('click', ()=>{
+    if(session.finished) return;
+    session.laps = Math.max(0, session.laps-1);
+    renderLaps();
+    addLog('-1 tour');
+    trackRapid('lap');
+    persistState();
+  });
+
+  qsa('[data-quick]').forEach(btn=> btn.addEventListener('click', ()=> addShot(btn.getAttribute('data-quick'))));
+
+  shotsTable?.addEventListener('click', e=>{
+    const btn = e.target.closest('button[data-remove]');
+    if(!btn || session.finished) return;
+    const idx = Number(btn.getAttribute('data-remove'));
+    if(Number.isInteger(idx)){
+      const removed = session.shots.splice(idx,1)[0];
+      renderShots();
+      renderCounts();
+      addLog(`Tir retiré (#${idx+1} : ${removed} LED)`);
+      persistState();
+    }
+  });
+
+  toggleShotsBtn?.addEventListener('click', ()=>{
+    if(toggleShotsBtn.disabled) return;
+    shotsVisible = !shotsVisible;
+    shotsDetail?.classList.toggle('hidden', !shotsVisible);
+    toggleShotsBtn.textContent = shotsVisible ? 'Masquer les détails des tirs' : 'Afficher les détails des tirs';
+  });
+  qs('#clearActionLog')?.addEventListener('click', ()=>{ actionLog = []; renderActionLog(); persistState(); });
+  toggleLogBtn?.addEventListener('click', ()=>{
+    if(!actionLogContainer || !toggleLogBtn) return;
+    const nowHidden = actionLogContainer.classList.toggle('hidden');
+    toggleLogBtn.textContent = nowHidden ? 'Afficher l’historique' : 'Masquer l’historique';
+  });
+
+  qs('#activateProf')?.addEventListener('click', ()=>{
+    const code = prompt('Code Prof ?');
+    if((code || '').trim()===PROF_CODE){ profMode = true; renderSummary(); showToast('Mode Prof actif.'); }
+    else if(code!==null) alert('Code incorrect.');
+  });
+  qs('#deactivateProf')?.addEventListener('click', ()=>{ profMode=false; renderSummary(); showToast('Mode Prof désactivé.'); });
+  qs('#applyEdits')?.addEventListener('click', ()=>{
+    if(!profMode) return;
+    summaryData = parseEditsFromTable();
+    renderSummary();
+    alert('Bilan mis à jour. QR et exports régénérés.');
+    addLog('Bilan corrigé manuellement');
+  });
+  qs('#exportCsv')?.addEventListener('click', ()=>{
+    if(!summaryData.length) return;
+    const blob = new Blob([toCSV(summaryData)], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `LaserRun_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+  qs('#exportJson')?.addEventListener('click', exportJson);
+
+  qs('#goCourse')?.addEventListener('click', ()=>{
+    if(!validate()){ showToast('Complétez les champs requis.'); return; }
+    session.p1 = { prenom:val('p1_prenom'), classe:val('p1_classe'), id:val('p1_id') };
+    session.p2 = { prenom:val('p2_prenom'), classe:val('p2_classe'), id:val('p2_id') };
+    session.results = {p1:null,p2:null};
+    session.active = 'p1';
+    session.finished = false;
+    session.dureeMin = Number(val('duree_min'));
+    session.tourM = Number(val('tour_m'));
+    summaryData = [];
+    profMode = false;
+    suspicionFlag = false;
+    resetRunnerState(true);
+    paintCourseHeader();
+    updateSummaryButton();
+    qsa('#qr, #resume').forEach(el=>{ if(el?.id==='qr') el.textContent = 'QR généré dès qu’un résultat est disponible.'; if(el?.id==='resume') el.innerHTML = '<p class="muted" style="margin:12px">Aucun résultat pour l’instant.</p>'; });
+    actionLog = [];
+    renderActionLog();
+    addLog('Session initialisée');
+    updateQrWarning();
+    show('course');
+  });
+
+  qs('#goSummary')?.addEventListener('click', ()=>{
+    const action = ()=>{
+      const out=[];
+      if(session.results.p1) out.push(session.results.p1);
+      if(session.results.p2) out.push(session.results.p2);
+      if(!out.length){ alert('Aucun résultat à afficher pour le moment.'); return; }
+      summaryData = out;
+      show('summary');
+      renderSummary();
+      addLog('Consultation du bilan');
+    };
+    guardSensitiveAction('Accéder au bilan', action);
+  });
+
+  qs('#goHome')?.addEventListener('click', ()=>{
+    guardSensitiveAction('Retour à l’accueil', ()=>{ if(confirmLeaveIfNeeded()) show('cover'); });
+  });
+  qs('#backToDuo')?.addEventListener('click', ()=>{
+    guardSensitiveAction('Retour à la saisie', ()=>{ if(confirmLeaveIfNeeded()) show('duo'); });
+  });
+  qs('#backHome2')?.addEventListener('click', ()=>{
+    guardSensitiveAction('Retour à l’accueil', ()=>{ if(confirmLeaveIfNeeded()) show('cover'); });
+  });
+  qs('#backToCourse')?.addEventListener('click', ()=> show('course'));
+
+  formFieldIds.forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    const handler = ()=>{ validate(); persistState(); };
+    el.addEventListener('input', handler);
+    el.addEventListener('change', handler);
+  });
+
+  renderClock();
+  renderActionLog();
+  validate();
+  updateSummaryButton();
+  updateRestoreButtons();
+  updateQrWarning();
+});
+</script>
+
 </body>
 </html>
